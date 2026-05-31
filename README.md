@@ -72,3 +72,4 @@ python -m pytest -q
 
 - `docs/research/hk_index_mean_reversion.md` records the HSI / Hang Seng TECH ETF mean-reversion backtest. Current conclusion: keep as `research_candidate`; do not enable live trading yet.
 - `docs/research/hk_etf_regime_rotation.md` records the HK-listed ETF regime rotation backtest. Current conclusion: promising but still keep as `research_candidate` because the 2021-2023 train period was negative.
+- `docs/research/hk_listed_global_etf_rotation.md` records a HK-listed global ETF rotation follow-up. Current conclusion: keep in research backlog because the conservative version improves return but has a materially worse drawdown than the current HK ETF basket.

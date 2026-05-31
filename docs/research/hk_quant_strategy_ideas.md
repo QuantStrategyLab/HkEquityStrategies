@@ -45,6 +45,8 @@ Possible signals:
 
 Why first: it uses the same `market_history` input style as `hk_index_mean_reversion`, is easier to backtest cleanly, and avoids single-name borrow and fundamental data issues.
 
+Follow-up research added on 2026-06-01: `docs/research/hk_listed_global_etf_rotation.md` tests a HKEX-listed global ETF universe using `02834` Nasdaq 100, `02840` gold, `03175` crude-oil futures ETF, local HK/China ETFs, and `03110` high-dividend ETF. The conservative monthly top-2 version improved full-sample annualized return to 15.41%, but max drawdown worsened to -34.44%, so it should stay in the research backlog rather than replace `hk_etf_regime_rotation`. `03010` Asia ex-Japan needs data cleaning and `03195` S&P 500 has too short a sample for this baseline.
+
 ### 2. Low-volatility dividend quality rotation
 
 Monthly or quarterly rotation among liquid Hong Kong large/mid caps:
