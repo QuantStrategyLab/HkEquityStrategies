@@ -88,3 +88,30 @@ def test_print_hk_runtime_readiness_json():
     assert payload["platform"] == "ibkr"
     assert payload["canonical_profile"] == HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE
     assert payload["platform_dry_run_env"]["IBKR_MARKET_DATA_SYMBOL_SUFFIX"] == ".HK"
+
+
+def test_smoke_hk_listed_global_etf_rotation_dry_run_json():
+    script = Path(__file__).resolve().parents[1] / "scripts" / "smoke_hk_listed_global_etf_rotation_dry_run.py"
+    completed = subprocess.run(
+        [sys.executable, str(script), "--json"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    payload = json.loads(completed.stdout)
+    assert payload["status"] == "pass"
+    assert payload["profile"] == HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE
+    assert payload["checks"] == {
+        "strategy_actionable": True,
+        "uses_direct_market_history": True,
+        "weights_non_empty": True,
+        "gross_exposure_lte_one": True,
+        "ibkr_dry_run_only": True,
+        "longbridge_dry_run_only": True,
+        "longbridge_requires_portfolio_snapshot": True,
+        "ibkr_weight_native": True,
+    }
+    assert 0.0 < payload["gross_exposure"] <= 1.0
+    assert payload["platforms"]["ibkr"]["market_defaults"]["market_exchange"] == "SEHK"
+    assert payload["platforms"]["longbridge"]["market_defaults"]["symbol_suffix"] == ".HK"
