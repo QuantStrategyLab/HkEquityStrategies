@@ -9,11 +9,13 @@ from quant_platform_kit.strategy_contracts import (
 
 from hk_equity_strategies.catalog import (
     HK_BLUE_CHIP_LEADER_ROTATION_PROFILE,
+    HK_INDEX_MEAN_REVERSION_PROFILE,
     get_strategy_definition,
     get_strategy_definitions,
     resolve_canonical_profile,
 )
-from hk_equity_strategies.strategies import blue_chip_leader_rotation as strategy
+from hk_equity_strategies.strategies import blue_chip_leader_rotation as blue_chip_strategy
+from hk_equity_strategies.strategies import hk_index_mean_reversion as index_mr_strategy
 
 IBKR_PLATFORM = "ibkr"
 LONGBRIDGE_PLATFORM = "longbridge"
@@ -26,13 +28,17 @@ PLATFORM_NATIVE_TARGET_MODES: dict[str, str] = {
 
 BASE_RUNTIME_ADAPTERS: dict[str, StrategyRuntimeAdapter] = {
     HK_BLUE_CHIP_LEADER_ROTATION_PROFILE: StrategyRuntimeAdapter(
-        status_icon=strategy.STATUS_ICON,
-        required_feature_columns=strategy.REQUIRED_FEATURE_COLUMNS,
-        snapshot_date_columns=strategy.SNAPSHOT_DATE_COLUMNS,
-        max_snapshot_month_lag=strategy.MAX_SNAPSHOT_MONTH_LAG,
-        require_snapshot_manifest=strategy.REQUIRE_SNAPSHOT_MANIFEST,
-        snapshot_contract_version=strategy.SNAPSHOT_CONTRACT_VERSION,
-        managed_symbols_extractor=strategy.extract_managed_symbols,
+        status_icon=blue_chip_strategy.STATUS_ICON,
+        required_feature_columns=blue_chip_strategy.REQUIRED_FEATURE_COLUMNS,
+        snapshot_date_columns=blue_chip_strategy.SNAPSHOT_DATE_COLUMNS,
+        max_snapshot_month_lag=blue_chip_strategy.MAX_SNAPSHOT_MONTH_LAG,
+        require_snapshot_manifest=blue_chip_strategy.REQUIRE_SNAPSHOT_MANIFEST,
+        snapshot_contract_version=blue_chip_strategy.SNAPSHOT_CONTRACT_VERSION,
+        managed_symbols_extractor=blue_chip_strategy.extract_managed_symbols,
+    ),
+    HK_INDEX_MEAN_REVERSION_PROFILE: StrategyRuntimeAdapter(
+        status_icon=index_mr_strategy.STATUS_ICON,
+        managed_symbols_extractor=index_mr_strategy.extract_managed_symbols,
     ),
 }
 
@@ -106,6 +112,8 @@ def derive_runtime_input_mode(required_inputs: frozenset[str] | set[str] | tuple
     normalized = frozenset(str(value).strip() for value in required_inputs)
     if normalized == frozenset({"feature_snapshot"}):
         return "feature_snapshot"
+    if normalized == frozenset({"market_history"}):
+        return "market_history"
     return "+".join(sorted(normalized)) or "none"
 
 

@@ -3,6 +3,7 @@
 __all__ = [
     "HK_EQUITY_DOMAIN",
     "HK_BLUE_CHIP_LEADER_ROTATION_PROFILE",
+    "HK_INDEX_MEAN_REVERSION_PROFILE",
     "STRATEGY_CATALOG",
     "STRATEGY_DEFINITIONS",
     "get_compatible_platforms",
@@ -25,6 +26,7 @@ def __getattr__(name: str):
     if name in {
         "HK_EQUITY_DOMAIN",
         "HK_BLUE_CHIP_LEADER_ROTATION_PROFILE",
+        "HK_INDEX_MEAN_REVERSION_PROFILE",
         "STRATEGY_CATALOG",
         "STRATEGY_DEFINITIONS",
         "get_compatible_platforms",
