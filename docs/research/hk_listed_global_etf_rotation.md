@@ -4,7 +4,7 @@
 
 This note evaluates a Hong Kong-listed version of a global ETF rotation strategy. The goal is not to trade US ETFs directly, but to use ETFs listed and tradable on HKEX while still getting exposure to overseas / cross-asset regimes.
 
-This is a research note only. It is **not** added as a runtime profile yet because the best conservative version improves return versus the current HK-only ETF basket, but its full-sample drawdown is materially worse.
+This research is now implemented as disabled profile `hk_listed_global_etf_rotation`. It remains a `research_candidate`, not `runtime_enabled`, because broker feed/tradability, spreads, lot sizes, derivative ETF suitability, and currency-line selection still need platform dry-run validation.
 
 ## ETF universe tested
 
@@ -56,9 +56,9 @@ Reference pages:
   - Train / parameter selection: `2021-09-01` to `2023-12-29`.
   - Out-of-sample check: `2024-01-01` to `2026-05-29`.
 - Grid reviewed: 63/126/252 day momentum, 100/200 day trend filter, 63/126 day volatility, top 1/2/3 ETFs, monthly/weekly cadence, equal/inverse-volatility weighting.
-- Conservative selected version: monthly review, 252-day momentum, 200-day trend filter, 63-day volatility, top 2 ETFs, inverse-volatility weights.
+- Selected version: monthly review, 252-day momentum, 200-day trend filter, 63-day volatility, top 2 ETFs, inverse-volatility weights, 16% target annual volatility, 100% max gross exposure.
 
-The highest-return version in the quick grid was a weekly top-1 variant, but it was rejected as the default research recommendation because it is more concentrated and turns over more often. That would be fragile for HK fees, spreads, lot sizes, and ETF-specific tradability checks.
+The highest-return unscaled version had deeper drawdowns. The selected implementation keeps the same monthly top-2 structure but adds a 16% volatility target, which lowered full-sample max drawdown below 30% and kept train-period drawdown below 30%.
 
 ## Selected conservative version
 
@@ -71,6 +71,8 @@ The highest-return version in the quick grid was a weekly top-1 variant, but it 
 | Selected ETFs | top 2 eligible ETFs |
 | Minimum momentum | > 0 |
 | Weighting | inverse volatility |
+| Target annual volatility | 16% |
+| Max gross exposure | 100% |
 | Cost assumption | 10 bps turnover |
 
 Signal summary:
@@ -79,6 +81,7 @@ Signal summary:
 - Eligible ETFs must have positive 252-day momentum and trade above the 200-day moving average.
 - Rank eligible ETFs by momentum divided by volatility.
 - Hold the top 2 ETFs using inverse-volatility weights.
+- Scale the portfolio down if the trailing covariance estimate implies annualized volatility above 16%.
 - If no ETF is eligible, hold cash.
 
 ## Backtest results
@@ -87,17 +90,17 @@ Strategy metrics from `scripts/research_hk_listed_global_etf_rotation_backtest.p
 
 | Period | Annualized return | Max drawdown | Total return |
 | --- | ---: | ---: | ---: |
-| Full sample, 2021-09-01 to 2026-05-29 | 15.41% | -34.44% | 93.67% |
-| Train, 2021-09-01 to 2023-12-29 | -3.13% | -34.44% | -6.97% |
-| Out-of-sample, 2024-01-01 to 2026-05-29 | 36.78% | -8.07% | 108.18% |
-| Trailing 1Y, 2025-05-30 to 2026-05-29 | 43.81% | -8.07% | 42.57% |
-| Trailing 3Y, 2023-05-30 to 2026-05-29 | 30.24% | -10.37% | 116.33% |
+| Full sample, 2021-09-01 to 2026-05-29 | 18.84% | -20.51% | 121.62% |
+| Train, 2021-09-01 to 2023-12-29 | 3.69% | -20.51% | 8.58% |
+| Out-of-sample, 2024-01-01 to 2026-05-29 | 35.62% | -8.07% | 104.10% |
+| Trailing 1Y, 2025-05-30 to 2026-05-29 | 41.69% | -8.07% | 40.52% |
+| Trailing 3Y, 2023-05-30 to 2026-05-29 | 29.32% | -10.37% | 111.91% |
 | 2021 warmup-truncated | 26.94% | -8.02% | 8.17% |
-| 2022 | -15.86% | -33.46% | -15.51% |
-| 2023 | 1.85% | -13.89% | 1.79% |
+| 2022 | -1.45% | -16.39% | -1.41% |
+| 2023 | 1.88% | -13.73% | 1.81% |
 | 2024 | 21.32% | -7.43% | 20.76% |
-| 2025 | 48.84% | -7.12% | 47.44% |
-| 2026 YTD to 2026-05-29 | 49.47% | -8.07% | 16.92% |
+| 2025 | 46.23% | -7.12% | 44.92% |
+| 2026 YTD to 2026-05-29 | 48.50% | -8.07% | 16.62% |
 
 Benchmarks over the full sample:
 
@@ -117,9 +120,9 @@ Other diagnostics:
 
 | Metric | Value |
 | --- | ---: |
-| Average gross exposure | 90.88% |
-| Average daily turnover | 2.01% |
-| Latest target weights on 2026-05-29 | `02834`: 39.54%, `03110`: 60.46% |
+| Average gross exposure | 82.29% |
+| Average daily turnover | 1.81% |
+| Latest target weights on 2026-05-29 | `02834`: 35.43%, `03110`: 54.19% |
 
 ## Comparison with current `hk_etf_regime_rotation`
 
@@ -128,26 +131,26 @@ Current HK/China/gold/high-dividend ETF basket result:
 | Strategy | Annualized return | Max drawdown | Train return | OOS return |
 | --- | ---: | ---: | ---: | ---: |
 | Existing `hk_etf_regime_rotation` | 13.55% | -21.56% | -7.24% | 38.18% |
-| HK-listed global ETF rotation | 15.41% | -34.44% | -3.13% | 36.78% |
+| `hk_listed_global_etf_rotation` | 18.84% | -20.51% | 3.69% | 35.62% |
 
 Interpretation:
 
-- Adding HK-listed Nasdaq 100 and crude-oil ETF exposure improves the full-sample annualized return from 13.55% to 15.41%.
-- The drawdown worsens from -21.56% to -34.44%, mostly because the global ETF universe can still select high-beta overseas / commodity exposure during regime transitions.
-- Train period is still negative, although less negative than the existing basket.
-- Out-of-sample return remains strong, but not better than the current basket after accounting for drawdown.
+- Adding HK-listed Nasdaq 100 and crude-oil ETF exposure plus a 16% volatility target improves the full-sample annualized return from 13.55% to 18.84%.
+- Full-sample max drawdown improves from -21.56% to -20.51%, keeping the research target under 30%.
+- Train period turns positive at 3.69% annualized, while OOS annualized return remains strong at 35.62%.
+- The result is still not live-ready because ETF tradability, fees, spread, lot-size, derivative ETF treatment, and currency-line handling are not yet validated on both platforms.
 
 ## Decision
 
-Do **not** replace or add a runtime profile yet.
+Add as disabled `research_candidate` profile `hk_listed_global_etf_rotation`.
 
-Recommended status: research backlog / watchlist.
+Recommended status: eligible but disabled; do not mark `runtime_enabled` yet.
 
 Reasons:
 
-1. The strategy is directionally useful and should remain in the research backlog.
-2. The current conservative version has a worse drawdown than the existing HK ETF regime rotation profile.
-3. Several important global exposures are either too new (`03195`) or need data cleaning (`03010`).
+1. The selected volatility-targeted version keeps full-sample and train max drawdown below 30%.
+2. It improves full-sample annualized return versus the existing HK ETF regime rotation while keeping turnover low.
+3. Several important global exposures are still either too new (`03195`) or need data cleaning (`03010`).
 4. Broker tradability, ETF spread, lot size, derivative ETF suitability, currency line selection, and stamp-duty exemption must be checked per symbol before any platform dry run.
 
 Next low-risk step if we want to promote it later:
@@ -155,4 +158,4 @@ Next low-risk step if we want to promote it later:
 1. Clean and validate `03010` corporate-action / adjusted-price history.
 2. Re-run after `03195` has a longer S&P 500 sample.
 3. Add ETF-level liquidity and spread filters instead of treating all ETFs equally.
-4. Only then decide whether to create `hk_listed_global_etf_rotation` as a separate disabled `research_candidate` profile.
+4. Keep `hk_listed_global_etf_rotation` disabled until both IBKR and LongBridge dry-run checks confirm symbol feed, sizing, and order conversion behavior.

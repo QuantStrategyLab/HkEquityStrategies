@@ -18,22 +18,26 @@ from quant_platform_kit.common.strategies import (
 from hk_equity_strategies.strategies import blue_chip_leader_rotation as blue_chip_strategy
 from hk_equity_strategies.strategies import hk_etf_regime_rotation as etf_rotation_strategy
 from hk_equity_strategies.strategies import hk_index_mean_reversion as index_mr_strategy
+from hk_equity_strategies.strategies import hk_listed_global_etf_rotation as global_etf_strategy
 
 HK_EQUITY_DOMAIN = blue_chip_strategy.HK_EQUITY_DOMAIN
 HK_BLUE_CHIP_LEADER_ROTATION_PROFILE = blue_chip_strategy.PROFILE_NAME
 HK_INDEX_MEAN_REVERSION_PROFILE = index_mr_strategy.PROFILE_NAME
 HK_ETF_REGIME_ROTATION_PROFILE = etf_rotation_strategy.PROFILE_NAME
+HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE = global_etf_strategy.PROFILE_NAME
 
 STRATEGY_PLATFORM_COMPATIBILITY: dict[str, frozenset[str]] = {
     HK_BLUE_CHIP_LEADER_ROTATION_PROFILE: frozenset({"ibkr", "longbridge"}),
     HK_INDEX_MEAN_REVERSION_PROFILE: frozenset({"ibkr", "longbridge"}),
     HK_ETF_REGIME_ROTATION_PROFILE: frozenset({"ibkr", "longbridge"}),
+    HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE: frozenset({"ibkr", "longbridge"}),
 }
 
 STRATEGY_REQUIRED_INPUTS: dict[str, frozenset[str]] = {
     HK_BLUE_CHIP_LEADER_ROTATION_PROFILE: frozenset({"feature_snapshot"}),
     HK_INDEX_MEAN_REVERSION_PROFILE: frozenset({"market_history"}),
     HK_ETF_REGIME_ROTATION_PROFILE: frozenset({"market_history"}),
+    HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE: frozenset({"market_history"}),
 }
 
 STRATEGY_DEFAULT_CONFIG: dict[str, dict[str, object]] = {
@@ -81,8 +85,24 @@ STRATEGY_DEFAULT_CONFIG: dict[str, dict[str, object]] = {
         "min_momentum": etf_rotation_strategy.DEFAULT_MIN_MOMENTUM,
         "rebalance_frequency": etf_rotation_strategy.DEFAULT_REBALANCE_FREQUENCY,
         "weighting_mode": etf_rotation_strategy.DEFAULT_WEIGHTING_MODE,
+        "target_annual_volatility": etf_rotation_strategy.DEFAULT_TARGET_ANNUAL_VOLATILITY,
+        "max_gross_exposure": etf_rotation_strategy.DEFAULT_MAX_GROSS_EXPOSURE,
         "min_history_days": etf_rotation_strategy.DEFAULT_MIN_HISTORY_DAYS,
         "execution_cash_reserve_ratio": etf_rotation_strategy.DEFAULT_EXECUTION_CASH_RESERVE_RATIO,
+    },
+    HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE: {
+        "universe_symbols": global_etf_strategy.DEFAULT_UNIVERSE_SYMBOLS,
+        "momentum_window_days": global_etf_strategy.DEFAULT_MOMENTUM_WINDOW_DAYS,
+        "trend_window_days": global_etf_strategy.DEFAULT_TREND_WINDOW_DAYS,
+        "volatility_window_days": global_etf_strategy.DEFAULT_VOLATILITY_WINDOW_DAYS,
+        "top_n": global_etf_strategy.DEFAULT_TOP_N,
+        "min_momentum": global_etf_strategy.DEFAULT_MIN_MOMENTUM,
+        "rebalance_frequency": global_etf_strategy.DEFAULT_REBALANCE_FREQUENCY,
+        "weighting_mode": global_etf_strategy.DEFAULT_WEIGHTING_MODE,
+        "target_annual_volatility": global_etf_strategy.DEFAULT_TARGET_ANNUAL_VOLATILITY,
+        "max_gross_exposure": global_etf_strategy.DEFAULT_MAX_GROSS_EXPOSURE,
+        "min_history_days": global_etf_strategy.DEFAULT_MIN_HISTORY_DAYS,
+        "execution_cash_reserve_ratio": global_etf_strategy.DEFAULT_EXECUTION_CASH_RESERVE_RATIO,
     },
 }
 
@@ -90,12 +110,14 @@ STRATEGY_ENTRYPOINT_ATTRIBUTES: dict[str, str] = {
     HK_BLUE_CHIP_LEADER_ROTATION_PROFILE: "hk_blue_chip_leader_rotation_entrypoint",
     HK_INDEX_MEAN_REVERSION_PROFILE: "hk_index_mean_reversion_entrypoint",
     HK_ETF_REGIME_ROTATION_PROFILE: "hk_etf_regime_rotation_entrypoint",
+    HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE: "hk_listed_global_etf_rotation_entrypoint",
 }
 
 STRATEGY_TARGET_MODES: dict[str, str] = {
     HK_BLUE_CHIP_LEADER_ROTATION_PROFILE: "weight",
     HK_INDEX_MEAN_REVERSION_PROFILE: "weight",
     HK_ETF_REGIME_ROTATION_PROFILE: "weight",
+    HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE: "weight",
 }
 
 
@@ -141,6 +163,11 @@ STRATEGY_DEFINITIONS: dict[str, StrategyDefinition] = {
         component_name="signal_logic",
         module_path="hk_equity_strategies.strategies.hk_etf_regime_rotation",
     ),
+    HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE: _build_strategy_definition(
+        HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE,
+        component_name="signal_logic",
+        module_path="hk_equity_strategies.strategies.hk_listed_global_etf_rotation",
+    ),
 }
 
 STRATEGY_METADATA: dict[str, StrategyMetadata] = {
@@ -182,6 +209,20 @@ STRATEGY_METADATA: dict[str, StrategyMetadata] = {
         asset_scope="hk_listed_etfs",
         benchmark="02800",
         role="hk_non_snapshot_etf_regime_rotation",
+        status="research_candidate",
+    ),
+    HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE: StrategyMetadata(
+        canonical_profile=HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE,
+        display_name="HK-listed Global ETF Rotation",
+        description=(
+            "Research candidate for volatility-targeted rotation across HK-listed local, global equity, "
+            "gold, and crude-oil ETFs using daily market history."
+        ),
+        aliases=("hk_global_etf_rotation", "hk_listed_global_rotation"),
+        cadence="monthly review",
+        asset_scope="hk_listed_global_etfs",
+        benchmark="02800",
+        role="hk_non_snapshot_global_etf_rotation",
         status="research_candidate",
     ),
 }

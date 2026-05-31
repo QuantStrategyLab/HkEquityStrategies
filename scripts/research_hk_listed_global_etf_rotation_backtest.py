@@ -64,6 +64,8 @@ class RotationConfig:
     rebalance_frequency: RebalanceFrequency = "monthly"
     min_momentum: float = 0.0
     min_history_days: int = 260
+    target_annual_volatility: float | None = 0.16
+    max_gross_exposure: float = 1.0
     cost_bps: float = 10.0
 
 
@@ -86,7 +88,10 @@ def _download_close(config: BacktestConfig) -> pd.DataFrame:
     return close
 
 
-def _eligible_scores(close: pd.DataFrame, rotation: RotationConfig) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+def _eligible_scores(
+    close: pd.DataFrame,
+    rotation: RotationConfig,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     returns = close.pct_change().fillna(0.0)
     momentum = close.pct_change(rotation.momentum_window_days)
     trend = close / close.rolling(rotation.trend_window_days).mean() - 1.0
@@ -136,7 +141,31 @@ def _weights_for_date(close: pd.DataFrame, as_of: pd.Timestamp, rotation: Rotati
         raise ValueError("weighting_mode must be 'inverse_volatility' or 'equal'")
     inverse_vols = [(symbol, 1.0 / max(volatility_value, 1e-12)) for symbol, _score, volatility_value in ranked]
     total_inverse_vol = sum(value for _symbol, value in inverse_vols)
-    return {symbol: value / total_inverse_vol for symbol, value in inverse_vols}
+    weights = {symbol: value / total_inverse_vol for symbol, value in inverse_vols}
+    return _apply_volatility_target(history, weights, rotation)
+
+
+def _apply_volatility_target(
+    close: pd.DataFrame,
+    weights: dict[str, float],
+    rotation: RotationConfig,
+) -> dict[str, float]:
+    if not weights:
+        return {}
+    returns = close.loc[:, list(weights)].pct_change().fillna(0.0)
+    covariance = returns.tail(rotation.volatility_window_days).cov() * 252
+    portfolio_variance = 0.0
+    for left, left_weight in weights.items():
+        for right, right_weight in weights.items():
+            portfolio_variance += left_weight * right_weight * float(covariance.loc[left, right])
+    realized_volatility = math.sqrt(max(portfolio_variance, 0.0))
+    gross_exposure = sum(weights.values())
+    scale = min(1.0, rotation.max_gross_exposure / max(gross_exposure, 1e-12))
+    if rotation.target_annual_volatility is not None and realized_volatility > 0.0:
+        scale = min(scale, rotation.target_annual_volatility / realized_volatility)
+    if scale >= 1.0:
+        return weights
+    return {symbol: value * scale for symbol, value in weights.items()}
 
 
 def _rebalance_dates(close: pd.DataFrame, frequency: RebalanceFrequency) -> pd.DatetimeIndex:

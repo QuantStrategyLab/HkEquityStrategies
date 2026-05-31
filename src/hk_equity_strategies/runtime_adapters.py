@@ -11,6 +11,7 @@ from hk_equity_strategies.catalog import (
     HK_BLUE_CHIP_LEADER_ROTATION_PROFILE,
     HK_INDEX_MEAN_REVERSION_PROFILE,
     HK_ETF_REGIME_ROTATION_PROFILE,
+    HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE,
     get_strategy_definition,
     get_strategy_definitions,
     resolve_canonical_profile,
@@ -18,6 +19,7 @@ from hk_equity_strategies.catalog import (
 from hk_equity_strategies.strategies import blue_chip_leader_rotation as blue_chip_strategy
 from hk_equity_strategies.strategies import hk_etf_regime_rotation as etf_rotation_strategy
 from hk_equity_strategies.strategies import hk_index_mean_reversion as index_mr_strategy
+from hk_equity_strategies.strategies import hk_listed_global_etf_rotation as global_etf_strategy
 
 IBKR_PLATFORM = "ibkr"
 LONGBRIDGE_PLATFORM = "longbridge"
@@ -45,6 +47,10 @@ BASE_RUNTIME_ADAPTERS: dict[str, StrategyRuntimeAdapter] = {
     HK_ETF_REGIME_ROTATION_PROFILE: StrategyRuntimeAdapter(
         status_icon=etf_rotation_strategy.STATUS_ICON,
         managed_symbols_extractor=etf_rotation_strategy.extract_managed_symbols,
+    ),
+    HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE: StrategyRuntimeAdapter(
+        status_icon=global_etf_strategy.STATUS_ICON,
+        managed_symbols_extractor=global_etf_strategy.extract_managed_symbols,
     ),
 }
 

@@ -33,6 +33,8 @@ DEFAULT_TOP_N = 2
 DEFAULT_MIN_MOMENTUM = 0.0
 DEFAULT_REBALANCE_FREQUENCY = "monthly"
 DEFAULT_WEIGHTING_MODE = "inverse_volatility"
+DEFAULT_TARGET_ANNUAL_VOLATILITY: float | None = None
+DEFAULT_MAX_GROSS_EXPOSURE = 1.0
 DEFAULT_MIN_HISTORY_DAYS = 260
 DEFAULT_EXECUTION_CASH_RESERVE_RATIO = 0.02
 
@@ -168,6 +170,8 @@ def compute_latest_signal(
     top_n: int = DEFAULT_TOP_N,
     min_momentum: float = DEFAULT_MIN_MOMENTUM,
     weighting_mode: str = DEFAULT_WEIGHTING_MODE,
+    target_annual_volatility: float | None = DEFAULT_TARGET_ANNUAL_VOLATILITY,
+    max_gross_exposure: float = DEFAULT_MAX_GROSS_EXPOSURE,
     min_history_days: int = DEFAULT_MIN_HISTORY_DAYS,
 ) -> dict[str, object]:
     if momentum_window_days <= 1:
@@ -180,6 +184,10 @@ def compute_latest_signal(
         raise ValueError("top_n must be at least 1")
     if min_history_days <= max(momentum_window_days, trend_window_days, volatility_window_days):
         raise ValueError("min_history_days must be greater than all lookback windows")
+    if target_annual_volatility is not None and float(target_annual_volatility) <= 0.0:
+        raise ValueError("target_annual_volatility must be positive when set")
+    if float(max_gross_exposure) <= 0.0:
+        raise ValueError("max_gross_exposure must be positive")
 
     symbols = normalize_universe_symbols(universe_symbols)
     close = build_close_matrix(market_history, universe_symbols=symbols)
@@ -239,6 +247,16 @@ def compute_latest_signal(
         else:
             raise ValueError("weighting_mode must be 'inverse_volatility' or 'equal'")
 
+    realized_portfolio_volatility = 0.0
+    if weights:
+        weights, realized_portfolio_volatility = apply_portfolio_volatility_target(
+            returns,
+            weights,
+            volatility_window_days=int(volatility_window_days),
+            target_annual_volatility=target_annual_volatility,
+            max_gross_exposure=float(max_gross_exposure),
+        )
+
     cash_weight = max(0.0, 1.0 - sum(weights.values()))
     signal_state = "risk_on" if weights else "cash"
     return {
@@ -256,9 +274,46 @@ def compute_latest_signal(
         "top_n": int(top_n),
         "min_momentum": float(min_momentum),
         "weighting_mode": normalized_weighting_mode,
+        "target_annual_volatility": (
+            None if target_annual_volatility is None else float(target_annual_volatility)
+        ),
+        "max_gross_exposure": float(max_gross_exposure),
+        "realized_portfolio_volatility": float(realized_portfolio_volatility),
         "weights": weights,
     }
 
+
+
+
+def apply_portfolio_volatility_target(
+    returns: pd.DataFrame,
+    weights: Mapping[str, float],
+    *,
+    volatility_window_days: int,
+    target_annual_volatility: float | None,
+    max_gross_exposure: float,
+) -> tuple[dict[str, float], float]:
+    if not weights:
+        return {}, 0.0
+
+    selected_symbols = [symbol for symbol in weights if symbol in returns.columns]
+    if not selected_symbols:
+        return dict(weights), 0.0
+
+    covariance = returns.loc[:, selected_symbols].tail(int(volatility_window_days)).cov() * 252
+    portfolio_variance = 0.0
+    for left in selected_symbols:
+        for right in selected_symbols:
+            portfolio_variance += float(weights[left]) * float(weights[right]) * float(covariance.loc[left, right])
+    realized_volatility = math.sqrt(max(portfolio_variance, 0.0))
+
+    gross_exposure = sum(float(value) for value in weights.values())
+    scale = min(1.0, float(max_gross_exposure) / max(gross_exposure, 1e-12))
+    if target_annual_volatility is not None and realized_volatility > 0.0:
+        scale = min(scale, float(target_annual_volatility) / realized_volatility)
+    if scale >= 1.0:
+        return dict(weights), realized_volatility
+    return {symbol: float(value) * scale for symbol, value in weights.items()}, realized_volatility
 
 def build_target_weights(market_history: Any, **kwargs: Any) -> tuple[dict[str, float], dict[str, object]]:
     signal = compute_latest_signal(market_history, **kwargs)
