@@ -31,6 +31,12 @@ IBKR_MARKET_TIMEZONE=Asia/Hong_Kong
 IBKR_MARKET_EXCHANGE=SEHK
 IBKR_MARKET_CURRENCY=HKD
 IBKR_MARKET_DATA_SYMBOL_SUFFIX=.HK
+IBKR_DRY_RUN_ONLY=true
+```
+
+Snapshot-backed profiles additionally require snapshot artifacts:
+
+```bash
 IBKR_FEATURE_SNAPSHOT_PATH=<published/hk_blue_chip_leader_rotation_feature_snapshot_latest.csv>
 IBKR_FEATURE_SNAPSHOT_MANIFEST_PATH=<published/hk_blue_chip_leader_rotation_feature_snapshot_latest.csv.manifest.json>
 ```
@@ -41,15 +47,38 @@ Runtime variables required for HK deployment:
 
 ```bash
 ACCOUNT_REGION=HK
+ACCOUNT_PREFIX=HK
+LONGBRIDGE_DRY_RUN_ONLY=true
 # or explicit overrides:
 LONGBRIDGE_MARKET=HK
 LONGBRIDGE_MARKET_CALENDAR=XHKG
 LONGBRIDGE_MARKET_TIMEZONE=Asia/Hong_Kong
 LONGBRIDGE_SYMBOL_SUFFIX=.HK
 LONGBRIDGE_TRADING_CURRENCY=HKD
+```
+
+Snapshot-backed profiles additionally require snapshot artifacts:
+
+```bash
 LONGBRIDGE_FEATURE_SNAPSHOT_PATH=<published/hk_blue_chip_leader_rotation_feature_snapshot_latest.csv>
 LONGBRIDGE_FEATURE_SNAPSHOT_MANIFEST_PATH=<published/hk_blue_chip_leader_rotation_feature_snapshot_latest.csv.manifest.json>
 ```
+
+## Runtime readiness checklist
+
+Render the strategy-package readiness plan before changing either platform:
+
+```bash
+python scripts/print_hk_runtime_readiness.py --profile hk_listed_global_etf_rotation --platform ibkr --json
+python scripts/print_hk_runtime_readiness.py --profile hk_listed_global_etf_rotation --platform longbridge --json
+```
+
+The plan is intentionally `dry_run_only=true` by default and does not deploy Cloud Run. It records:
+
+- HK market defaults: `HK` / `XHKG` / `Asia/Hong_Kong` / `SEHK` / `HKD` / `.HK`.
+- Managed symbols and required direct `market_history` inputs.
+- Platform target conversion: IBKR accepts weight targets directly; LongBridge needs a portfolio snapshot for weight-to-value conversion.
+- Dry-run checks for market-data permission, order preview, integer-share and broker lot-size validation, HKD cash lines, and notifications.
 
 ## Contract boundaries
 

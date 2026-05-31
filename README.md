@@ -71,6 +71,17 @@ Draft optional but recommended columns: `as_of`, `snapshot_date`, `market_cap_hk
 
 `get_runtime_enabled_profiles()` returns only profiles that are eligible for platform rollout. `hk_listed_global_etf_rotation` is currently runtime-enabled, while `hk_blue_chip_leader_rotation`, `hk_index_mean_reversion`, and `hk_etf_regime_rotation` remain disabled. Platform repositories still own the production rollout decision: do not change production Cloud Run `RUNTIME_TARGET_JSON` / `STRATEGY_PROFILE` to a HK profile unless the deployment account, HK market overrides, dry-run checks, and operator approval are in place.
 
+## HK runtime readiness
+
+Use the packaged readiness command before changing IBKR or LongBridge runtime settings:
+
+```bash
+python scripts/print_hk_runtime_readiness.py --profile hk_listed_global_etf_rotation --platform ibkr --json
+python scripts/print_hk_runtime_readiness.py --profile hk_listed_global_etf_rotation --platform longbridge --json
+```
+
+The output is a dry-run checklist, not a deployment action. It covers HK market defaults, managed symbols, direct `market_history` requirements, LongBridge weight-to-value conversion, order preview, integer-share / lot-size checks, HKD cash lines, and the Cloud Run rollout guard.
+
 ## Local validation
 
 ```bash

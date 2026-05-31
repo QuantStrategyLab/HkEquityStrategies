@@ -8,6 +8,7 @@ __all__ = [
     "HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE",
     "STRATEGY_CATALOG",
     "STRATEGY_DEFINITIONS",
+    "build_hk_runtime_readiness",
     "get_compatible_platforms",
     "get_platform_runtime_adapter",
     "get_profile_aliases",
@@ -31,7 +32,6 @@ def __getattr__(name: str):
         "HK_INDEX_MEAN_REVERSION_PROFILE",
         "HK_ETF_REGIME_ROTATION_PROFILE",
         "HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE",
-    "HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE",
         "STRATEGY_CATALOG",
         "STRATEGY_DEFINITIONS",
         "get_compatible_platforms",
@@ -54,4 +54,8 @@ def __getattr__(name: str):
         from .runtime_adapters import get_platform_runtime_adapter as _get_platform_runtime_adapter
 
         return _get_platform_runtime_adapter
+    if name == "build_hk_runtime_readiness":
+        from .runtime_readiness import build_hk_runtime_readiness as _build_hk_runtime_readiness
+
+        return _build_hk_runtime_readiness
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
