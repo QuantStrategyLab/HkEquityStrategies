@@ -3,6 +3,7 @@ from __future__ import annotations
 from hk_equity_strategies.catalog import (
     HK_BLUE_CHIP_LEADER_ROTATION_PROFILE,
     HK_INDEX_MEAN_REVERSION_PROFILE,
+    HK_ETF_REGIME_ROTATION_PROFILE,
 )
 from hk_equity_strategies.runtime_adapters import (
     describe_platform_runtime_requirements,
@@ -54,6 +55,23 @@ def test_index_mean_reversion_runtime_adapter_uses_market_history():
 
 def test_index_mean_reversion_runtime_requirements_are_direct_inputs():
     requirements = describe_platform_runtime_requirements(HK_INDEX_MEAN_REVERSION_PROFILE, platform_id="longbridge")
+
+    assert requirements["profile_group"] == "direct_runtime_inputs"
+    assert requirements["input_mode"] == "market_history"
+    assert requirements["requires_snapshot_artifacts"] is False
+    assert requirements["requires_snapshot_manifest_path"] is False
+
+
+def test_etf_regime_rotation_runtime_adapter_uses_market_history():
+    adapter = get_platform_runtime_adapter(HK_ETF_REGIME_ROTATION_PROFILE, platform_id="ibkr")
+
+    assert adapter.available_inputs == frozenset({"market_history"})
+    assert adapter.available_capabilities == frozenset({"broker_client"})
+    assert adapter.require_snapshot_manifest is False
+
+
+def test_etf_regime_rotation_runtime_requirements_are_direct_inputs():
+    requirements = describe_platform_runtime_requirements(HK_ETF_REGIME_ROTATION_PROFILE, platform_id="longbridge")
 
     assert requirements["profile_group"] == "direct_runtime_inputs"
     assert requirements["input_mode"] == "market_history"

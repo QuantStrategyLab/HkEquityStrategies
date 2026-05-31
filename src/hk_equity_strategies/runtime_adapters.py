@@ -10,11 +10,13 @@ from quant_platform_kit.strategy_contracts import (
 from hk_equity_strategies.catalog import (
     HK_BLUE_CHIP_LEADER_ROTATION_PROFILE,
     HK_INDEX_MEAN_REVERSION_PROFILE,
+    HK_ETF_REGIME_ROTATION_PROFILE,
     get_strategy_definition,
     get_strategy_definitions,
     resolve_canonical_profile,
 )
 from hk_equity_strategies.strategies import blue_chip_leader_rotation as blue_chip_strategy
+from hk_equity_strategies.strategies import hk_etf_regime_rotation as etf_rotation_strategy
 from hk_equity_strategies.strategies import hk_index_mean_reversion as index_mr_strategy
 
 IBKR_PLATFORM = "ibkr"
@@ -39,6 +41,10 @@ BASE_RUNTIME_ADAPTERS: dict[str, StrategyRuntimeAdapter] = {
     HK_INDEX_MEAN_REVERSION_PROFILE: StrategyRuntimeAdapter(
         status_icon=index_mr_strategy.STATUS_ICON,
         managed_symbols_extractor=index_mr_strategy.extract_managed_symbols,
+    ),
+    HK_ETF_REGIME_ROTATION_PROFILE: StrategyRuntimeAdapter(
+        status_icon=etf_rotation_strategy.STATUS_ICON,
+        managed_symbols_extractor=etf_rotation_strategy.extract_managed_symbols,
     ),
 }
 

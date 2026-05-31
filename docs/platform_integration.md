@@ -2,12 +2,12 @@
 
 ## Supported platforms
 
-`hk_blue_chip_leader_rotation` and `hk_index_mean_reversion` declare future support for:
+`hk_blue_chip_leader_rotation`, `hk_index_mean_reversion`, and `hk_etf_regime_rotation` declare future support for:
 
 - `ibkr` (`InteractiveBrokersPlatform`)
 - `longbridge` (`LongBridgePlatform`)
 
-The strategy package does not import platform code. Platforms load it through the same catalog/runtime-adapter contract used by `UsEquityStrategies`. `hk_blue_chip_leader_rotation` is `architecture_scaffold`; `hk_index_mean_reversion` is `research_candidate`. Platforms should show both as eligible-but-disabled until a profile is promoted to `runtime_enabled`.
+The strategy package does not import platform code. Platforms load it through the same catalog/runtime-adapter contract used by `UsEquityStrategies`. `hk_blue_chip_leader_rotation` is `architecture_scaffold`; `hk_index_mean_reversion` and `hk_etf_regime_rotation` are `research_candidate`. Platforms should show all of them as eligible-but-disabled until a profile is promoted to `runtime_enabled`.
 
 ## Required platform mode
 
@@ -50,7 +50,7 @@ LONGBRIDGE_FEATURE_SNAPSHOT_MANIFEST_PATH=<published/hk_blue_chip_leader_rotatio
 
 ## Do not enable yet
 
-Do not set `STRATEGY_PROFILE=hk_blue_chip_leader_rotation` or `STRATEGY_PROFILE=hk_index_mean_reversion` in Cloud Run while the profiles are not `runtime_enabled`. The current package is only for integration wiring, catalog validation, adapter compatibility checks, and research replay.
+Do not set `STRATEGY_PROFILE=hk_blue_chip_leader_rotation`, `STRATEGY_PROFILE=hk_index_mean_reversion`, or `STRATEGY_PROFILE=hk_etf_regime_rotation` in Cloud Run while the profiles are not `runtime_enabled`. The current package is only for integration wiring, catalog validation, adapter compatibility checks, and research replay.
 
 ## Risks before live trading
 
@@ -61,3 +61,5 @@ Do not set `STRATEGY_PROFILE=hk_blue_chip_leader_rotation` or `STRATEGY_PROFILE=
 ## Non-snapshot market-history candidate
 
 `hk_index_mean_reversion` uses direct `market_history` rather than snapshot artifacts. Platforms must supply overlapping daily close history for `02800` and `03033`; no snapshot CSV or manifest is required. See `docs/research/hk_index_mean_reversion.md` for the backtest and current non-promotion decision.
+
+`hk_etf_regime_rotation` also uses direct `market_history`. Platforms must supply overlapping daily close history for `02800`, `02822`, `02840`, `03033`, `03110`, and `03188`; no snapshot CSV or manifest is required. See `docs/research/hk_etf_regime_rotation.md` for the backtest and current non-promotion decision.

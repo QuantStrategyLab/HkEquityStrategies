@@ -3,10 +3,12 @@ from __future__ import annotations
 from quant_platform_kit.strategy_contracts import StrategyManifest
 
 from hk_equity_strategies.strategies import blue_chip_leader_rotation as blue_chip_strategy
+from hk_equity_strategies.strategies import hk_etf_regime_rotation as etf_rotation_strategy
 from hk_equity_strategies.strategies import hk_index_mean_reversion as index_mr_strategy
 
 HK_BLUE_CHIP_LEADER_ROTATION_PROFILE = blue_chip_strategy.PROFILE_NAME
 HK_INDEX_MEAN_REVERSION_PROFILE = index_mr_strategy.PROFILE_NAME
+HK_ETF_REGIME_ROTATION_PROFILE = etf_rotation_strategy.PROFILE_NAME
 
 
 def _manifest(
@@ -83,9 +85,33 @@ hk_index_mean_reversion_manifest = _manifest(
     },
 )
 
+hk_etf_regime_rotation_manifest = _manifest(
+    profile=HK_ETF_REGIME_ROTATION_PROFILE,
+    display_name="HK ETF Regime Rotation",
+    description=(
+        "Monthly low-turnover HK-listed ETF regime rotation research candidate "
+        "using daily market history."
+    ),
+    aliases=("hk_etf_rotation", "hk_regime_rotation"),
+    required_inputs=frozenset({"market_history"}),
+    default_config={
+        "universe_symbols": etf_rotation_strategy.DEFAULT_UNIVERSE_SYMBOLS,
+        "momentum_window_days": etf_rotation_strategy.DEFAULT_MOMENTUM_WINDOW_DAYS,
+        "trend_window_days": etf_rotation_strategy.DEFAULT_TREND_WINDOW_DAYS,
+        "volatility_window_days": etf_rotation_strategy.DEFAULT_VOLATILITY_WINDOW_DAYS,
+        "top_n": etf_rotation_strategy.DEFAULT_TOP_N,
+        "min_momentum": etf_rotation_strategy.DEFAULT_MIN_MOMENTUM,
+        "rebalance_frequency": etf_rotation_strategy.DEFAULT_REBALANCE_FREQUENCY,
+        "weighting_mode": etf_rotation_strategy.DEFAULT_WEIGHTING_MODE,
+        "min_history_days": etf_rotation_strategy.DEFAULT_MIN_HISTORY_DAYS,
+        "execution_cash_reserve_ratio": etf_rotation_strategy.DEFAULT_EXECUTION_CASH_RESERVE_RATIO,
+    },
+)
+
 MANIFESTS = {
     hk_blue_chip_leader_rotation_manifest.profile: hk_blue_chip_leader_rotation_manifest,
     hk_index_mean_reversion_manifest.profile: hk_index_mean_reversion_manifest,
+    hk_etf_regime_rotation_manifest.profile: hk_etf_regime_rotation_manifest,
 }
 
 MANIFEST_ALIASES = {
@@ -103,8 +129,10 @@ def get_strategy_manifest(profile: str) -> StrategyManifest:
 __all__ = [
     "HK_BLUE_CHIP_LEADER_ROTATION_PROFILE",
     "HK_INDEX_MEAN_REVERSION_PROFILE",
+    "HK_ETF_REGIME_ROTATION_PROFILE",
     "MANIFESTS",
     "get_strategy_manifest",
     "hk_blue_chip_leader_rotation_manifest",
     "hk_index_mean_reversion_manifest",
+    "hk_etf_regime_rotation_manifest",
 ]
