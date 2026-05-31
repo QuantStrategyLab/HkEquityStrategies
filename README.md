@@ -82,6 +82,12 @@ python scripts/print_hk_runtime_readiness.py --profile hk_listed_global_etf_rota
 
 The output is a dry-run checklist, not a deployment action. It covers HK market defaults, managed symbols, direct `market_history` requirements, LongBridge weight-to-value conversion, order preview, integer-share / lot-size checks, HKD cash lines, and the Cloud Run rollout guard.
 
+Run the local smoke before broker-specific verification. It uses synthetic market history and does not connect to IBKR, LongBridge, Google Cloud, or any live account:
+
+```bash
+python scripts/smoke_hk_listed_global_etf_rotation_dry_run.py --json
+```
+
 ## Local validation
 
 ```bash
