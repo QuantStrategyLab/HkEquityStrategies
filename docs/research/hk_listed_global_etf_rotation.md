@@ -4,7 +4,7 @@
 
 This note evaluates a Hong Kong-listed version of a global ETF rotation strategy. The goal is not to trade US ETFs directly, but to use ETFs listed and tradable on HKEX while still getting exposure to overseas / cross-asset regimes.
 
-This research is now implemented as disabled profile `hk_listed_global_etf_rotation`. It remains a `research_candidate`, not `runtime_enabled`, because broker feed/tradability, spreads, lot sizes, derivative ETF suitability, and currency-line selection still need platform dry-run validation.
+This research is implemented as `hk_listed_global_etf_rotation` and is now marked `runtime_enabled` at the strategy-package level. That means platform runtimes may allow the profile, but production Cloud Run should not switch to it until HK account permissions, market overrides, dry-run order conversion, spreads, lot sizes, derivative ETF suitability, and currency-line selection are explicitly approved.
 
 ## ETF universe tested
 
@@ -138,24 +138,24 @@ Interpretation:
 - Adding HK-listed Nasdaq 100 and crude-oil ETF exposure plus a 16% volatility target improves the full-sample annualized return from 13.55% to 18.84%.
 - Full-sample max drawdown improves from -21.56% to -20.51%, keeping the research target under 30%.
 - Train period turns positive at 3.69% annualized, while OOS annualized return remains strong at 35.62%.
-- The result is still not live-ready because ETF tradability, fees, spread, lot-size, derivative ETF treatment, and currency-line handling are not yet validated on both platforms.
+- The result is suitable for runtime enablement, but production deployment still requires ETF tradability, fees, spread, lot-size, derivative ETF treatment, and currency-line handling checks on the target platform/account.
 
 ## Decision
 
-Add as disabled `research_candidate` profile `hk_listed_global_etf_rotation`.
+Promote `hk_listed_global_etf_rotation` to `runtime_enabled`.
 
-Recommended status: eligible but disabled; do not mark `runtime_enabled` yet.
+Recommended status: runtime-enabled in code, not deployed to production Cloud Run until an explicit rollout changes platform runtime configuration.
 
 Reasons:
 
 1. The selected volatility-targeted version keeps full-sample and train max drawdown below 30%.
 2. It improves full-sample annualized return versus the existing HK ETF regime rotation while keeping turnover low.
 3. Several important global exposures are still either too new (`03195`) or need data cleaning (`03010`).
-4. Broker tradability, ETF spread, lot size, derivative ETF suitability, currency line selection, and stamp-duty exemption must be checked per symbol before any platform dry run.
+4. Broker tradability, ETF spread, lot size, derivative ETF suitability, currency line selection, and stamp-duty exemption must be checked per symbol before any production rollout.
 
-Next low-risk step if we want to promote it later:
+Next low-risk step before production rollout:
 
 1. Clean and validate `03010` corporate-action / adjusted-price history.
 2. Re-run after `03195` has a longer S&P 500 sample.
 3. Add ETF-level liquidity and spread filters instead of treating all ETFs equally.
-4. Keep `hk_listed_global_etf_rotation` disabled until both IBKR and LongBridge dry-run checks confirm symbol feed, sizing, and order conversion behavior.
+4. Keep production Cloud Run on the existing configured profile until both IBKR and LongBridge dry-run checks confirm symbol feed, sizing, and order conversion behavior.

@@ -2,18 +2,18 @@
 
 ## Supported platforms
 
-`hk_blue_chip_leader_rotation`, `hk_index_mean_reversion`, and `hk_etf_regime_rotation` declare future support for:
+`hk_blue_chip_leader_rotation`, `hk_index_mean_reversion`, `hk_etf_regime_rotation`, and `hk_listed_global_etf_rotation` declare support for:
 
 - `ibkr` (`InteractiveBrokersPlatform`)
 - `longbridge` (`LongBridgePlatform`)
 
-The strategy package does not import platform code. Platforms load it through the same catalog/runtime-adapter contract used by `UsEquityStrategies`. `hk_blue_chip_leader_rotation` is `architecture_scaffold`; `hk_index_mean_reversion` and `hk_etf_regime_rotation` are `research_candidate`. Platforms should show all of them as eligible-but-disabled until a profile is promoted to `runtime_enabled`.
+The strategy package does not import platform code. Platforms load it through the same catalog/runtime-adapter contract used by `UsEquityStrategies`. `hk_blue_chip_leader_rotation` is `architecture_scaffold`; `hk_index_mean_reversion` and `hk_etf_regime_rotation` are `research_candidate`; `hk_listed_global_etf_rotation` is `runtime_enabled`. Platforms may allow `hk_listed_global_etf_rotation`, but production Cloud Run remains unchanged until an explicit rollout changes `RUNTIME_TARGET_JSON` / `STRATEGY_PROFILE`.
 
 ## Required platform mode
 
 ### InteractiveBrokersPlatform
 
-Future runtime variables after the profile is promoted:
+Runtime variables required for HK deployment:
 
 ```bash
 IBKR_MARKET=HK
@@ -28,7 +28,7 @@ IBKR_FEATURE_SNAPSHOT_MANIFEST_PATH=<published/hk_blue_chip_leader_rotation_feat
 
 ### LongBridgePlatform
 
-Future runtime variables after the profile is promoted:
+Runtime variables required for HK deployment:
 
 ```bash
 ACCOUNT_REGION=HK
@@ -48,9 +48,9 @@ LONGBRIDGE_FEATURE_SNAPSHOT_MANIFEST_PATH=<published/hk_blue_chip_leader_rotatio
 - `HkEquitySnapshotPipelines` owns raw data normalization and snapshot artifact publication.
 - Platform repositories own broker connection, market symbols, order sizing, notification delivery, and runtime reports.
 
-## Do not enable yet
+## Production rollout guard
 
-Do not set `STRATEGY_PROFILE=hk_blue_chip_leader_rotation`, `STRATEGY_PROFILE=hk_index_mean_reversion`, or `STRATEGY_PROFILE=hk_etf_regime_rotation` in Cloud Run while the profiles are not `runtime_enabled`. The current package is only for integration wiring, catalog validation, adapter compatibility checks, and research replay.
+Do not set `STRATEGY_PROFILE=hk_blue_chip_leader_rotation`, `STRATEGY_PROFILE=hk_index_mean_reversion`, or `STRATEGY_PROFILE=hk_etf_regime_rotation` in Cloud Run while the profiles are not `runtime_enabled`. `hk_listed_global_etf_rotation` is runtime-enabled at the strategy-package level, but production Cloud Run should still remain on the existing configured profile until HK account permissions, HK market overrides, and broker dry-run checks are explicitly approved.
 
 ## Risks before live trading
 
@@ -63,3 +63,5 @@ Do not set `STRATEGY_PROFILE=hk_blue_chip_leader_rotation`, `STRATEGY_PROFILE=hk
 `hk_index_mean_reversion` uses direct `market_history` rather than snapshot artifacts. Platforms must supply overlapping daily close history for `02800` and `03033`; no snapshot CSV or manifest is required. See `docs/research/hk_index_mean_reversion.md` for the backtest and current non-promotion decision.
 
 `hk_etf_regime_rotation` also uses direct `market_history`. Platforms must supply overlapping daily close history for `02800`, `02822`, `02840`, `03033`, `03110`, and `03188`; no snapshot CSV or manifest is required. See `docs/research/hk_etf_regime_rotation.md` for the backtest and current non-promotion decision.
+
+`hk_listed_global_etf_rotation` uses direct `market_history` for `02800`, `02822`, `03188`, `03033`, `02834`, `02840`, `03175`, and `03110`; no snapshot CSV or manifest is required. It is the first runtime-enabled HK non-snapshot profile, but production deployment still requires an explicit platform rollout.

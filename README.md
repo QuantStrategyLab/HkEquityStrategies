@@ -8,9 +8,9 @@ Hong Kong equity strategy package for QuantStrategyLab platform runtimes.
 
 This repository owns strategy catalog metadata, runtime entrypoints, and runtime adapter contracts for `hk_equity` strategies. It does not own broker credentials, Cloud Run deployment, or snapshot publication.
 
-The first profile scaffold is `hk_blue_chip_leader_rotation`. This repo also contains direct `market_history` research candidates: `hk_index_mean_reversion`, `hk_etf_regime_rotation`, and `hk_listed_global_etf_rotation`. All profiles are **not `runtime_enabled` yet** and should not be used for live or scheduled trading.
+The first profile scaffold is `hk_blue_chip_leader_rotation`. This repo also contains direct `market_history` profiles: `hk_index_mean_reversion`, `hk_etf_regime_rotation`, and `hk_listed_global_etf_rotation`. `hk_listed_global_etf_rotation` is `runtime_enabled` after the volatility-targeted backtest kept full-sample drawdown below 30%; the other HK profiles remain disabled.
 
-It is intended to run later on:
+Runtime-compatible platforms:
 
 - `InteractiveBrokersPlatform` with `IBKR_MARKET=HK` / `SEHK` / `HKD`.
 - `LongBridgePlatform` with `ACCOUNT_REGION=HK` or `LONGBRIDGE_MARKET=HK`.
@@ -37,7 +37,7 @@ The package follows the same boundary as `UsEquityStrategies`: strategies return
 | `hk_blue_chip_leader_rotation` | `hk_equity` | `feature_snapshot` | `weight` | `ibkr`, `longbridge` | `architecture_scaffold` |
 | `hk_index_mean_reversion` | `hk_equity` | `market_history` | `weight` | `ibkr`, `longbridge` | `research_candidate` |
 | `hk_etf_regime_rotation` | `hk_equity` | `market_history` | `weight` | `ibkr`, `longbridge` | `research_candidate` |
-| `hk_listed_global_etf_rotation` | `hk_equity` | `market_history` | `weight` | `ibkr`, `longbridge` | `research_candidate` |
+| `hk_listed_global_etf_rotation` | `hk_equity` | `market_history` | `weight` | `ibkr`, `longbridge` | `runtime_enabled` |
 
 ## Snapshot contract
 
@@ -61,7 +61,7 @@ Draft optional but recommended columns: `as_of`, `snapshot_date`, `market_cap_hk
 
 ## Runtime enablement policy
 
-`get_runtime_enabled_profiles()` intentionally returns an empty set until a real HK strategy and validated feed are ready. Platform repositories may list the profiles as eligible by capability, but should keep them disabled and reject `STRATEGY_PROFILE=hk_blue_chip_leader_rotation`, `STRATEGY_PROFILE=hk_index_mean_reversion`, `STRATEGY_PROFILE=hk_etf_regime_rotation`, or `STRATEGY_PROFILE=hk_listed_global_etf_rotation` in production.
+`get_runtime_enabled_profiles()` returns only profiles that are eligible for platform rollout. `hk_listed_global_etf_rotation` is currently runtime-enabled, while `hk_blue_chip_leader_rotation`, `hk_index_mean_reversion`, and `hk_etf_regime_rotation` remain disabled. Platform repositories still own the production rollout decision: do not change production Cloud Run `RUNTIME_TARGET_JSON` / `STRATEGY_PROFILE` to a HK profile unless the deployment account, HK market overrides, dry-run checks, and operator approval are in place.
 
 ## Local validation
 
@@ -73,4 +73,4 @@ python -m pytest -q
 
 - `docs/research/hk_index_mean_reversion.md` records the HSI / Hang Seng TECH ETF mean-reversion backtest. Current conclusion: keep as `research_candidate`; do not enable live trading yet.
 - `docs/research/hk_etf_regime_rotation.md` records the HK-listed ETF regime rotation backtest. Current conclusion: promising but still keep as `research_candidate` because the 2021-2023 train period was negative.
-- `docs/research/hk_listed_global_etf_rotation.md` records the HK-listed global ETF rotation backtest. Current conclusion: implemented as disabled `research_candidate` because the volatility-targeted version kept full-sample drawdown under 30%, but broker dry-run validation is still required.
+- `docs/research/hk_listed_global_etf_rotation.md` records the HK-listed global ETF rotation backtest. Current conclusion: mark `runtime_enabled` because the volatility-targeted version kept full-sample drawdown under 30%; production Cloud Run remains unchanged until an explicit rollout.

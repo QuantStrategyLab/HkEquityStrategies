@@ -4,7 +4,7 @@
 
 Research date: 2026-06-01
 
-This note summarizes strategy directions that look more suitable for Hong Kong equities after reviewing market structure, official data sources, and academic evidence. It is a research backlog only. Do not mark any strategy here as `runtime_enabled` without a dedicated backtest, platform feed validation, and paper-trading period.
+This note summarizes strategy directions that look more suitable for Hong Kong equities after reviewing market structure, official data sources, and academic evidence. It is a research backlog. Do not mark any new strategy here as `runtime_enabled` without a dedicated backtest, platform feed validation, and paper-trading period; `hk_listed_global_etf_rotation` is the first exception promoted after a dedicated backtest kept drawdown below 30%.
 
 ## Market constraints that matter
 
@@ -45,7 +45,7 @@ Possible signals:
 
 Why first: it uses the same `market_history` input style as `hk_index_mean_reversion`, is easier to backtest cleanly, and avoids single-name borrow and fundamental data issues.
 
-Follow-up research added on 2026-06-01: `docs/research/hk_listed_global_etf_rotation.md` tests a HKEX-listed global ETF universe using `02834` Nasdaq 100, `02840` gold, `03175` crude-oil futures ETF, local HK/China ETFs, and `03110` high-dividend ETF. The selected monthly top-2 version adds a 16% volatility target and improved full-sample annualized return to 18.84% with -20.51% max drawdown, so it is implemented as disabled `research_candidate` `hk_listed_global_etf_rotation`. `03010` Asia ex-Japan still needs data cleaning and `03195` S&P 500 has too short a sample for this baseline.
+Follow-up research added on 2026-06-01: `docs/research/hk_listed_global_etf_rotation.md` tests a HKEX-listed global ETF universe using `02834` Nasdaq 100, `02840` gold, `03175` crude-oil futures ETF, local HK/China ETFs, and `03110` high-dividend ETF. The selected monthly top-2 version adds a 16% volatility target and improved full-sample annualized return to 18.84% with -20.51% max drawdown, so it is implemented as `runtime_enabled` `hk_listed_global_etf_rotation`. `03010` Asia ex-Japan still needs data cleaning and `03195` S&P 500 has too short a sample for this baseline. Production Cloud Run remains unchanged until an explicit rollout.
 
 ### 2. Low-volatility dividend quality rotation
 
