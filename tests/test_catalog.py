@@ -9,6 +9,7 @@ from hk_equity_strategies.catalog import (
     get_compatible_platforms,
     get_profile_aliases,
     get_strategy_definition,
+    get_runtime_enabled_profiles,
     get_strategy_metadata,
     resolve_canonical_profile,
 )
@@ -22,7 +23,8 @@ def test_catalog_declares_hk_snapshot_profile_for_ibkr_and_longbridge():
     assert definition.required_inputs == frozenset({"feature_snapshot"})
     assert definition.target_mode == "weight"
     assert get_compatible_platforms(HK_BLUE_CHIP_LEADER_ROTATION_PROFILE) == frozenset({"ibkr", "longbridge"})
-    assert get_strategy_metadata(HK_BLUE_CHIP_LEADER_ROTATION_PROFILE).status == "runtime_enabled"
+    assert get_strategy_metadata(HK_BLUE_CHIP_LEADER_ROTATION_PROFILE).status == "architecture_scaffold"
+    assert HK_BLUE_CHIP_LEADER_ROTATION_PROFILE not in get_runtime_enabled_profiles()
     assert get_profile_aliases()["hk_blue_chip_snapshot"] == HK_BLUE_CHIP_LEADER_ROTATION_PROFILE
 
     component_map = get_strategy_component_map(definition)

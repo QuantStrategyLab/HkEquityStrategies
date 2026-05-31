@@ -97,13 +97,13 @@ STRATEGY_METADATA: dict[str, StrategyMetadata] = {
     HK_BLUE_CHIP_LEADER_ROTATION_PROFILE: StrategyMetadata(
         canonical_profile=HK_BLUE_CHIP_LEADER_ROTATION_PROFILE,
         display_name="HK Blue Chip Leader Rotation",
-        description="Monthly Hong Kong blue-chip leader rotation with XHKG execution window and 2800.HK defensive sleeve.",
+        description="Architecture scaffold for a future Hong Kong blue-chip snapshot strategy; not runtime-enabled yet.",
         aliases=("hk_blue_chip_snapshot", "hk_leader_rotation"),
         cadence="monthly snapshot",
         asset_scope="hk_blue_chip_stocks",
         benchmark="02800",
         role="hk_snapshot_leader_rotation",
-        status="runtime_enabled",
+        status="architecture_scaffold",
     ),
 }
 

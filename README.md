@@ -6,7 +6,9 @@ Hong Kong equity strategy package for QuantStrategyLab platform runtimes.
 
 This repository owns strategy catalog metadata, runtime entrypoints, and runtime adapter contracts for `hk_equity` strategies. It does not own broker credentials, Cloud Run deployment, or snapshot publication.
 
-The first profile is `hk_blue_chip_leader_rotation`, a monthly feature-snapshot strategy that can run on:
+The first profile scaffold is `hk_blue_chip_leader_rotation`. It declares the catalog, entrypoint, runtime adapter, and snapshot contract shape, but it is **not `runtime_enabled` yet** and should not be used for live or scheduled trading.
+
+It is intended to run later on:
 
 - `InteractiveBrokersPlatform` with `IBKR_MARKET=HK` / `SEHK` / `HKD`.
 - `LongBridgePlatform` with `ACCOUNT_REGION=HK` or `LONGBRIDGE_MARKET=HK`.
@@ -26,13 +28,13 @@ The package follows the same boundary as `UsEquityStrategies`: strategies return
 
 ## Runtime profile
 
-| Profile | Domain | Inputs | Target mode | Platforms |
-| --- | --- | --- | --- | --- |
-| `hk_blue_chip_leader_rotation` | `hk_equity` | `feature_snapshot` | `weight` | `ibkr`, `longbridge` |
+| Profile | Domain | Inputs | Target mode | Platforms | Status |
+| --- | --- | --- | --- | --- | --- |
+| `hk_blue_chip_leader_rotation` | `hk_equity` | `feature_snapshot` | `weight` | `ibkr`, `longbridge` | `architecture_scaffold` |
 
 ## Snapshot contract
 
-Required feature columns:
+Draft required feature columns:
 
 - `symbol`
 - `sector`
@@ -48,7 +50,11 @@ Required feature columns:
 - `vol_63`
 - `maxdd_126`
 
-Optional but recommended columns: `as_of`, `snapshot_date`, `market_cap_hkd`, `lot_size`, `eligible`.
+Draft optional but recommended columns: `as_of`, `snapshot_date`, `market_cap_hkd`, `lot_size`, `eligible`.
+
+## Runtime enablement policy
+
+`get_runtime_enabled_profiles()` intentionally returns an empty set until a real HK strategy and validated snapshot feed are ready. Platform repositories may list the profile as eligible by capability, but should keep it disabled and reject `STRATEGY_PROFILE=hk_blue_chip_leader_rotation` in production.
 
 ## Local validation
 

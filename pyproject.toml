@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hk-equity-strategies"
-version = "0.1.0"
+version = "0.1.1"
 description = "Hong Kong equity snapshot-backed strategies for QuantStrategyLab platform runtimes"
 readme = "README.md"
 requires-python = ">=3.11"

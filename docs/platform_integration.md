@@ -2,18 +2,18 @@
 
 ## Supported platforms
 
-`hk_blue_chip_leader_rotation` declares support for:
+`hk_blue_chip_leader_rotation` declares future support for:
 
 - `ibkr` (`InteractiveBrokersPlatform`)
 - `longbridge` (`LongBridgePlatform`)
 
-The strategy package does not import platform code. Platforms load it through the same catalog/runtime-adapter contract used by `UsEquityStrategies`.
+The strategy package does not import platform code. Platforms load it through the same catalog/runtime-adapter contract used by `UsEquityStrategies`. The profile status is `architecture_scaffold`, so platforms should show it as eligible-but-disabled until it is promoted to `runtime_enabled`.
 
 ## Required platform mode
 
 ### InteractiveBrokersPlatform
 
-Recommended runtime variables:
+Future runtime variables after the profile is promoted:
 
 ```bash
 IBKR_MARKET=HK
@@ -28,7 +28,7 @@ IBKR_FEATURE_SNAPSHOT_MANIFEST_PATH=<published/hk_blue_chip_leader_rotation_feat
 
 ### LongBridgePlatform
 
-Recommended runtime variables:
+Future runtime variables after the profile is promoted:
 
 ```bash
 ACCOUNT_REGION=HK
@@ -47,6 +47,10 @@ LONGBRIDGE_FEATURE_SNAPSHOT_MANIFEST_PATH=<published/hk_blue_chip_leader_rotatio
 - `HkEquityStrategies` owns strategy metadata, feature requirements, entrypoint evaluation, and runtime adapter declarations.
 - `HkEquitySnapshotPipelines` owns raw data normalization and snapshot artifact publication.
 - Platform repositories own broker connection, market symbols, order sizing, notification delivery, and runtime reports.
+
+## Do not enable yet
+
+Do not set `STRATEGY_PROFILE=hk_blue_chip_leader_rotation` in Cloud Run while the status is `architecture_scaffold`. The current package is only for integration wiring, catalog validation, and adapter compatibility checks.
 
 ## Risks before live trading
 
