@@ -67,7 +67,7 @@ def test_catalog_declares_hk_etf_regime_rotation_research_candidate():
 
 
 
-def test_catalog_declares_hk_listed_global_etf_rotation_research_candidate():
+def test_catalog_declares_hk_listed_global_etf_rotation_runtime_enabled():
     catalog = get_strategy_definitions()
     definition = catalog[HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE]
 
@@ -75,8 +75,8 @@ def test_catalog_declares_hk_listed_global_etf_rotation_research_candidate():
     assert definition.required_inputs == frozenset({"market_history"})
     assert definition.target_mode == "weight"
     assert get_compatible_platforms(HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE) == frozenset({"ibkr", "longbridge"})
-    assert get_strategy_metadata(HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE).status == "research_candidate"
-    assert HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE not in get_runtime_enabled_profiles()
+    assert get_strategy_metadata(HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE).status == "runtime_enabled"
+    assert HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE in get_runtime_enabled_profiles()
     assert get_profile_aliases()["hk_global_etf_rotation"] == HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE
 
     component_map = get_strategy_component_map(definition)

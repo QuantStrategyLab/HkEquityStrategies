@@ -215,7 +215,7 @@ STRATEGY_METADATA: dict[str, StrategyMetadata] = {
         canonical_profile=HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE,
         display_name="HK-listed Global ETF Rotation",
         description=(
-            "Research candidate for volatility-targeted rotation across HK-listed local, global equity, "
+            "Runtime-enabled volatility-targeted rotation across HK-listed local, global equity, "
             "gold, and crude-oil ETFs using daily market history."
         ),
         aliases=("hk_global_etf_rotation", "hk_listed_global_rotation"),
@@ -223,7 +223,7 @@ STRATEGY_METADATA: dict[str, StrategyMetadata] = {
         asset_scope="hk_listed_global_etfs",
         benchmark="02800",
         role="hk_non_snapshot_global_etf_rotation",
-        status="research_candidate",
+        status="runtime_enabled",
     ),
 }
 
