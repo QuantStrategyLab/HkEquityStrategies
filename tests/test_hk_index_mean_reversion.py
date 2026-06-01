@@ -66,6 +66,16 @@ def test_compute_latest_signal_treats_flat_ratio_as_neutral():
     assert signal["anchor_weight"] == pytest.approx(0.50)
 
 
+def test_compute_latest_signal_uses_defensive_anchor_when_hsi_is_below_trend():
+    signal = compute_latest_signal(_history(anchor_last=18.0, ratio_tail=0.70), min_history_days=260)
+
+    assert signal["broad_risk_off"] is True
+    assert signal["signal_state"] == "defensive_satellite_oversold"
+    assert signal["anchor_weight"] == pytest.approx(0.35)
+    assert signal["satellite_weight"] == pytest.approx(0.0)
+    assert signal["cash_weight"] == pytest.approx(0.65)
+
+
 def test_build_target_weights_keeps_small_satellite_underweight():
     weights, metadata = build_target_weights(_history(ratio_tail=1.30), min_history_days=260)
 

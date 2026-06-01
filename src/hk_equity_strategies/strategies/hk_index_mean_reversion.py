@@ -21,7 +21,7 @@ DEFAULT_NEUTRAL_SATELLITE_WEIGHT = 0.50
 DEFAULT_OVERSOLD_SATELLITE_WEIGHT = 0.65
 DEFAULT_RICH_SATELLITE_WEIGHT = 0.05
 DEFAULT_TREND_WINDOW_DAYS = 200
-DEFAULT_DEFENSIVE_GROSS_EXPOSURE = 0.25
+DEFAULT_DEFENSIVE_GROSS_EXPOSURE = 0.35
 DEFAULT_DEFENSIVE_SATELLITE_WEIGHT = 0.0
 DEFAULT_MIN_HISTORY_DAYS = 260
 DEFAULT_REBALANCE_FREQUENCY = "weekly"
@@ -177,7 +177,7 @@ def compute_latest_signal(
     satellite_ma = float(close["satellite"].rolling(int(trend_window_days)).mean().iloc[-1])
     anchor_trend_positive = latest_anchor >= anchor_ma
     satellite_trend_positive = latest_satellite >= satellite_ma
-    broad_risk_off = not (anchor_trend_positive or satellite_trend_positive)
+    broad_risk_off = not anchor_trend_positive
 
     satellite_weight = float(neutral_satellite_weight)
     signal_state = "neutral"
