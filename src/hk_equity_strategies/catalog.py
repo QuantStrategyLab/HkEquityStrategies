@@ -26,6 +26,7 @@ HK_RESEARCH_BACKTEST_ONLY_PROFILES = frozenset(
     {
         "hk_index_mean_reversion",
         "hk_etf_regime_rotation",
+        "hk_high_dividend_low_vol_trend",
     }
 )
 
