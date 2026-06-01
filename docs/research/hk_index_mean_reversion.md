@@ -11,14 +11,14 @@
 
 ## Scope
 
-This research evaluates a first non-snapshot `hk_equity` profile candidate: `hk_index_mean_reversion`.
+This research evaluates a first non-snapshot `hk_equity` research/backtest candidate: `hk_index_mean_reversion`.
 
 The strategy is a long-only relative mean-reversion sleeve between:
 
 - `02800` / `2800.HK`: Tracker Fund of Hong Kong, used as the HSI anchor.
 - `03033` / `3033.HK`: CSOP Hang Seng TECH Index ETF, used as the Hang Seng TECH satellite.
 
-The profile is intentionally marked `research_candidate`, not `runtime_enabled`. The backtest does not justify production trading yet.
+This remains research/backtest-only and is not registered as a runtime catalog profile. The backtest does not justify production trading yet.
 
 ## Data and methodology
 

@@ -22,7 +22,7 @@ The strategy rotates across a small HK-listed ETF universe:
 - `03110` / `3110.HK`: Global X Hang Seng High Dividend Yield ETF.
 - `03188` / `3188.HK`: ChinaAMC CSI 300 Index ETF.
 
-The profile is marked `research_candidate`, not `runtime_enabled`. The results are more promising than `hk_index_mean_reversion`, but the train period is still negative.
+This remains research/backtest-only and is not registered as a runtime catalog profile. The results are more promising than `hk_index_mean_reversion`, but the train period is still negative.
 
 ## Data and methodology
 
@@ -105,7 +105,7 @@ Other diagnostics:
 
 ## Decision
 
-Keep this profile as `research_candidate`.
+Keep this strategy as research/backtest-only; do not register it as a runtime catalog profile.
 
 Reasons to continue research:
 
@@ -125,4 +125,4 @@ Promotion requirements before live trading:
 1. Validate platform `market_history` feed for all six ETFs on both IBKR and LongBridge.
 2. Re-run with broker-realistic fees, spread/slippage, lot sizes, trading suspensions, and dividend treatment.
 3. Add paper-trading evidence across at least one additional regime.
-4. Keep `status=research_candidate` until the platform dry run confirms symbol tradability and order sizing.
+4. Keep it out of the runtime catalog until the platform dry run confirms symbol tradability and order sizing.
