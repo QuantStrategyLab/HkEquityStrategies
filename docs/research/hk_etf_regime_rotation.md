@@ -22,7 +22,7 @@ The strategy rotates across a small HK-listed ETF universe:
 - `03110` / `3110.HK`: Global X Hang Seng High Dividend Yield ETF.
 - `03188` / `3188.HK`: ChinaAMC CSI 300 Index ETF.
 
-This remains research/backtest-only and is not registered as a runtime catalog profile. The results are more promising than `hk_index_mean_reversion`, but the train period is still negative.
+This remains research/backtest-only and is not registered as a runtime catalog profile. The results are more promising than `hk_index_mean_reversion`, but the default six-ETF train period is still negative.
 
 ## Data and methodology
 
@@ -103,6 +103,16 @@ Other diagnostics:
 | Average daily turnover | 1.46% |
 | Latest target weights on 2026-05-29 | `03110`: 53.02%, `03188`: 46.98% |
 
+Robustness variants from the same script:
+
+| Variant | Full annualized return | Full max drawdown | Train annualized return | OOS annualized return | Notes |
+| --- | ---: | ---: | ---: | ---: | --- |
+| Default six-ETF version | 13.55% | -21.56% | -7.24% | 38.18% | Selected low-turnover baseline, but train period is negative. |
+| No-gold, same parameters | 8.66% | -17.23% | -6.26% | 25.42% | Still profitable, but materially worse than the version with `02840`. |
+| Top-1 with gold | 13.38% | -15.59% | -1.04% | 29.40% | Lower drawdown than default, but weaker recent one-year performance. |
+| 126-day momentum | 16.26% | -15.30% | -2.69% | 38.19% | Better full-sample drawdown/return, but train period remains negative. |
+| High-dividend / gold pair | 17.89% | -10.70% | 2.99% | 34.43% | Strongest risk-adjusted variant; implemented separately as `hk_high_dividend_low_vol_trend` for continued research. |
+
 ## Decision
 
 Keep this strategy as research/backtest-only; do not register it as a runtime catalog profile.
@@ -112,11 +122,13 @@ Reasons to continue research:
 - Full-sample return and drawdown are materially better than `02800`, `03033`, and a static equal-weight ETF basket.
 - Turnover is low enough for HK's higher cost structure.
 - The implementation uses the same direct `market_history` contract as `hk_index_mean_reversion`, so platform integration risk is contained.
+- Variant checks show the idea does not depend only on one exact parameter set, but gold exposure remains important.
 
 Reasons not to promote yet:
 
-- Train period `2021-09-01` to `2023-12-29` was negative.
+- Default train period `2021-09-01` to `2023-12-29` was negative.
 - The strong out-of-sample result is heavily influenced by the 2024-2026 regime.
+- The strongest high-dividend / gold variant has only two ETFs and should be evaluated as its own simpler candidate instead of being promoted through this broader profile.
 - ETF-specific fee, stamp-duty exemption, spread, lot size, and platform tradability must be validated per symbol.
 - Cash handling must be validated with both IBKR and LongBridge if no ETF passes the filter.
 

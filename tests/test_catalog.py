@@ -46,6 +46,7 @@ def test_profile_groups_keep_runtime_research_and_snapshot_scaffolds_separate():
         {
             "hk_index_mean_reversion",
             "hk_etf_regime_rotation",
+            "hk_high_dividend_low_vol_trend",
         }
     )
     assert get_runtime_enabled_profiles() == frozenset({HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE})
@@ -58,6 +59,7 @@ def test_profile_groups_keep_runtime_research_and_snapshot_scaffolds_separate():
         "hk_blue_chip_leader_rotation",
         "hk_index_mean_reversion",
         "hk_etf_regime_rotation",
+        "hk_high_dividend_low_vol_trend",
         "hk_blue_chip_snapshot",
         "hk_index_reversion",
         "hk_etf_rotation",

@@ -10,16 +10,11 @@ from typing import Any
 
 import pandas as pd
 
-from hk_equity_strategies.strategies import hk_etf_regime_rotation as strategy
-
+from hk_equity_strategies.strategies import hk_high_dividend_low_vol_trend as strategy
 
 YAHOO_SYMBOLS = {
-    "02800": "2800.HK",
-    "02822": "2822.HK",
     "02840": "2840.HK",
-    "03033": "3033.HK",
     "03110": "3110.HK",
-    "03188": "3188.HK",
 }
 
 
@@ -71,21 +66,17 @@ def _metrics(returns: pd.Series) -> dict[str, float | int]:
         }
     equity = (1.0 + returns).cumprod()
     years = len(returns) / 252.0
-    annual_return = float(equity.iloc[-1] ** (1 / years) - 1) if years > 0 else 0.0
     drawdown = equity / equity.cummax() - 1.0
-    annual_vol = float(returns.std(ddof=0) * math.sqrt(252))
     return {
         "days": int(len(returns)),
-        "annual_return": annual_return,
+        "annual_return": float(equity.iloc[-1] ** (1 / years) - 1) if years > 0 else 0.0,
         "max_drawdown": float(drawdown.min()),
-        "annual_volatility": annual_vol,
+        "annual_volatility": float(returns.std(ddof=0) * math.sqrt(252)),
         "total_return": float(equity.iloc[-1] - 1.0),
     }
 
 
-def _target_weights(close: pd.DataFrame, **strategy_kwargs: Any) -> pd.DataFrame:
-    universe_symbols = tuple(strategy_kwargs.get("universe_symbols") or strategy.DEFAULT_UNIVERSE_SYMBOLS)
-    min_history_days = int(strategy_kwargs.get("min_history_days") or strategy.DEFAULT_MIN_HISTORY_DAYS)
+def _target_weights(close: pd.DataFrame) -> pd.DataFrame:
     month_end_dates = close.resample("ME").last().index
     rows: list[dict[str, Any]] = []
     for target_date in month_end_dates:
@@ -94,15 +85,15 @@ def _target_weights(close: pd.DataFrame, **strategy_kwargs: Any) -> pd.DataFrame
             continue
         as_of = pd.Timestamp(close.index[position])
         partial_history = _market_history_until(close, as_of)
-        if partial_history["date"].nunique() < min_history_days:
+        if partial_history["date"].nunique() < strategy.DEFAULT_MIN_HISTORY_DAYS:
             weights: dict[str, float] = {}
             metadata = {"signal_state": "warmup", "selected_symbols": (), "cash_weight": 1.0}
         else:
-            weights, metadata = strategy.build_target_weights(partial_history, **strategy_kwargs)
+            weights, metadata = strategy.build_target_weights(partial_history)
         rows.append(
             {
                 "date": as_of,
-                **{symbol: float(weights.get(symbol, 0.0)) for symbol in universe_symbols},
+                **{symbol: float(weights.get(symbol, 0.0)) for symbol in strategy.DEFAULT_UNIVERSE_SYMBOLS},
                 "signal_state": metadata["signal_state"],
                 "selected_symbols": ",".join(metadata["selected_symbols"]),
                 "cash_weight": float(metadata["cash_weight"]),
@@ -110,17 +101,12 @@ def _target_weights(close: pd.DataFrame, **strategy_kwargs: Any) -> pd.DataFrame
         )
     targets = pd.DataFrame(rows).set_index("date")
     targets = targets.reindex(close.index, method="ffill").fillna(0.0)
-    return targets[list(universe_symbols)].shift(1).fillna(0.0)
+    return targets[list(strategy.DEFAULT_UNIVERSE_SYMBOLS)].shift(1).fillna(0.0)
 
 
-def _strategy_returns(
-    close: pd.DataFrame,
-    *,
-    cost_bps: float,
-    **strategy_kwargs: Any,
-) -> tuple[pd.Series, pd.DataFrame]:
-    targets = _target_weights(close, **strategy_kwargs)
-    returns = close.loc[:, targets.columns].pct_change().fillna(0.0)
+def _strategy_returns(close: pd.DataFrame, *, cost_bps: float) -> tuple[pd.Series, pd.DataFrame]:
+    returns = close.pct_change().fillna(0.0)
+    targets = _target_weights(close)
     turnover = targets.diff().abs().sum(axis=1).fillna(0.0)
     net = (targets * returns).sum(axis=1) - turnover * float(cost_bps) / 10_000.0
     return net, targets
@@ -129,7 +115,7 @@ def _strategy_returns(
 def _slice(series: pd.Series, start: str | None, end: str | None) -> pd.Series:
     output = series
     if start:
-        output = output.loc[pd.Timestamp(start):]
+        output = output.loc[pd.Timestamp(start) :]
     if end:
         output = output.loc[: pd.Timestamp(end)]
     return output
@@ -138,31 +124,15 @@ def _slice(series: pd.Series, start: str | None, end: str | None) -> pd.Series:
 def run(config: BacktestConfig) -> dict[str, Any]:
     close = _download_close(config)
     strategy_returns, targets = _strategy_returns(close, cost_bps=config.cost_bps)
-    strategy_returns = strategy_returns.loc[pd.Timestamp(config.analysis_start):]
+    strategy_returns = strategy_returns.loc[pd.Timestamp(config.analysis_start) :]
     targets = targets.loc[strategy_returns.index]
     close = close.loc[strategy_returns.index]
     benchmark_returns = {
         "strategy": strategy_returns,
-        "hsi_etf_02800": close["02800"].pct_change().fillna(0.0),
-        "hstech_etf_03033": close["03033"].pct_change().fillna(0.0),
-        "gold_etf_02840": close["02840"].pct_change().fillna(0.0),
-        "high_dividend_etf_03110": close["03110"].pct_change().fillna(0.0),
-        "static_equal_weight": close.pct_change().fillna(0.0).mean(axis=1),
+        "gold_etf_02840": close[strategy.GOLD_ETF_SYMBOL].pct_change().fillna(0.0),
+        "high_dividend_etf_03110": close[strategy.HIGH_DIVIDEND_ETF_SYMBOL].pct_change().fillna(0.0),
+        "static_50_50": close.pct_change().fillna(0.0).mean(axis=1),
     }
-    variant_configs: dict[str, dict[str, Any]] = {
-        "no_gold_same_params": {
-            "universe_symbols": tuple(symbol for symbol in strategy.DEFAULT_UNIVERSE_SYMBOLS if symbol != "02840"),
-        },
-        "top1_with_gold": {"top_n": 1},
-        "shorter_momentum_126d": {"momentum_window_days": 126, "min_history_days": 201},
-        "high_dividend_gold_pair": {
-            "universe_symbols": ("02840", "03110"),
-            "momentum_window_days": 63,
-            "trend_window_days": 100,
-            "min_history_days": 126,
-        },
-    }
-    variant_payload: dict[str, dict[str, Any]] = {}
     periods = {
         "full": (None, None),
         "train_2021_2023": (config.analysis_start, config.train_end),
@@ -176,19 +146,6 @@ def run(config: BacktestConfig) -> dict[str, Any]:
         "2025": ("2025-01-01", "2025-12-31"),
         "2026_ytd": ("2026-01-01", "2026-05-29"),
     }
-    for name, kwargs in variant_configs.items():
-        variant_returns, variant_targets = _strategy_returns(close, cost_bps=config.cost_bps, **kwargs)
-        variant_returns = variant_returns.loc[pd.Timestamp(config.analysis_start):]
-        variant_targets = variant_targets.loc[variant_returns.index]
-        variant_payload[name] = {
-            "config": kwargs,
-            "data": {
-                "last_weights": variant_targets.tail(1).to_dict("records")[0],
-                "average_gross_exposure": float(variant_targets.sum(axis=1).mean()),
-                "average_daily_turnover": float(variant_targets.diff().abs().sum(axis=1).mean()),
-            },
-            "metrics": {period: _metrics(_slice(variant_returns, start, end)) for period, (start, end) in periods.items()},
-        }
     return {
         "config": asdict(config),
         "yahoo_symbols": YAHOO_SYMBOLS,
@@ -214,12 +171,11 @@ def run(config: BacktestConfig) -> dict[str, Any]:
             name: {period: _metrics(_slice(series, start, end)) for period, (start, end) in periods.items()}
             for name, series in benchmark_returns.items()
         },
-        "variant_metrics": variant_payload,
     }
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Backtest HK ETF regime rotation research candidate.")
+    parser = argparse.ArgumentParser(description="Backtest HK high-dividend low-volatility trend research candidate.")
     parser.add_argument("--json-output", type=Path)
     args = parser.parse_args()
     payload = run(BacktestConfig())

@@ -13,7 +13,7 @@
 
 港股非 snapshot 策略和港股 snapshot 策略保持分开：
 
-- `HkEquityStrategies`：只暴露可进入平台 runtime catalog 的非 snapshot 港股策略。当前只有 `hk_listed_global_etf_rotation` 标记为 `runtime_enabled`；`hk_index_mean_reversion`、`hk_etf_regime_rotation` 只保留为研究回测，不注册为 runtime profile。
+- `HkEquityStrategies`：只暴露可进入平台 runtime catalog 的非 snapshot 港股策略。当前只有 `hk_listed_global_etf_rotation` 标记为 `runtime_enabled`；`hk_index_mean_reversion`、`hk_etf_regime_rotation`、`hk_high_dividend_low_vol_trend` 只保留为研究回测，不注册为 runtime profile。
 - `HkEquitySnapshotPipelines`：snapshot-backed 策略的数据管线、artifact contract、策略 helper 和发布流程。当前 `hk_blue_chip_leader_rotation` 只是 snapshot 架构占位，不进入平台 live enable。
 
 可兼容的运行平台：
@@ -42,7 +42,7 @@ InteractiveBrokersPlatform / LongBridgePlatform
 | --- | --- | --- | --- | --- | --- |
 | `hk_listed_global_etf_rotation` | `hk_equity` | `market_history` | `weight` | `ibkr`, `longbridge` | `runtime_enabled` |
 
-研究回测-only 候选不注册为 runtime profile：`hk_index_mean_reversion`、`hk_etf_regime_rotation`。平台侧只应允许 `get_runtime_enabled_profiles()` 返回的 profile。
+研究回测-only 候选不注册为 runtime profile：`hk_index_mean_reversion`、`hk_etf_regime_rotation`、`hk_high_dividend_low_vol_trend`。平台侧只应允许 `get_runtime_enabled_profiles()` 返回的 profile。
 
 ### Snapshot-backed 港股策略 profile
 
@@ -93,6 +93,7 @@ python -m pytest -q
 
 - `docs/research/hk_index_mean_reversion.md` 记录恒生指数 / 恒生科技 ETF 均值回归回测。当前结论：保留为研究回测-only，暂不注册 runtime profile。
 - `docs/research/hk_etf_regime_rotation.md` 记录港股上市 ETF regime rotation 回测。当前结论：结果有潜力，但 2021-2023 训练期为负，仍保持研究回测-only。
+- `docs/research/hk_high_dividend_low_vol_trend.md` 记录高股息 / 黄金双 ETF 趋势轮动回测。当前结论：风险收益比最好，但样本短且受 2024-2026 regime 影响，仍保持研究回测-only。
 - `docs/research/hk_listed_global_etf_rotation.md` 记录港股上市全球 ETF 轮动回测。当前结论：波动率目标版本全样本最大回撤低于 30%，已标记为 `runtime_enabled`，可由平台 Cloud Run 环境启用。
 
 ## English
@@ -105,7 +106,7 @@ This repository owns strategy catalog metadata, runtime entrypoints, and runtime
 
 HK non-snapshot strategies and HK snapshot strategies stay separated:
 
-- `HkEquityStrategies`: only platform runtime catalog entries for non-snapshot HK strategies. `hk_listed_global_etf_rotation` is currently the only `runtime_enabled` profile; `hk_index_mean_reversion` and `hk_etf_regime_rotation` remain research/backtest-only and are not runtime profiles.
+- `HkEquityStrategies`: only platform runtime catalog entries for non-snapshot HK strategies. `hk_listed_global_etf_rotation` is currently the only `runtime_enabled` profile; `hk_index_mean_reversion`, `hk_etf_regime_rotation`, and `hk_high_dividend_low_vol_trend` remain research/backtest-only and are not runtime profiles.
 - `HkEquitySnapshotPipelines`: snapshot-backed data pipelines, artifact contracts, strategy helpers, and publication flows. `hk_blue_chip_leader_rotation` remains a snapshot architecture scaffold and must not be live-enabled by platform repositories.
 
 Runtime-compatible platforms:
@@ -134,7 +135,7 @@ The package follows the same boundary as `UsEquityStrategies`: strategies return
 | --- | --- | --- | --- | --- | --- |
 | `hk_listed_global_etf_rotation` | `hk_equity` | `market_history` | `weight` | `ibkr`, `longbridge` | `runtime_enabled` |
 
-Research/backtest-only candidates are not registered as runtime profiles: `hk_index_mean_reversion`, `hk_etf_regime_rotation`. Platform runtimes should only allow profiles returned by `get_runtime_enabled_profiles()`.
+Research/backtest-only candidates are not registered as runtime profiles: `hk_index_mean_reversion`, `hk_etf_regime_rotation`, `hk_high_dividend_low_vol_trend`. Platform runtimes should only allow profiles returned by `get_runtime_enabled_profiles()`.
 
 ## Snapshot-backed HK strategy profile
 
@@ -201,4 +202,5 @@ python -m pytest -q
 
 - `docs/research/hk_index_mean_reversion.md` records the HSI / Hang Seng TECH ETF mean-reversion backtest. Current conclusion: keep as research/backtest-only; do not register as a runtime profile yet.
 - `docs/research/hk_etf_regime_rotation.md` records the HK-listed ETF regime rotation backtest. Current conclusion: promising but still keep as research/backtest-only because the 2021-2023 train period was negative.
+- `docs/research/hk_high_dividend_low_vol_trend.md` records the high-dividend / gold two-ETF trend rotation backtest. Current conclusion: strongest risk-adjusted research candidate so far, but keep as research/backtest-only because the sample is short and regime-dependent.
 - `docs/research/hk_listed_global_etf_rotation.md` records the HK-listed global ETF rotation backtest. Current conclusion: mark `runtime_enabled` because the volatility-targeted version kept full-sample drawdown under 30%; platform Cloud Run environments can select it through runtime configuration.

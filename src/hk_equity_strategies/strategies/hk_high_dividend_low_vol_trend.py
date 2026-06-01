@@ -1,0 +1,187 @@
+from __future__ import annotations
+
+import math
+from collections.abc import Sequence
+from typing import Any
+
+import pandas as pd
+
+from hk_equity_strategies.strategies.hk_etf_regime_rotation import build_close_matrix, normalize_symbol
+
+HK_EQUITY_DOMAIN = "hk_equity"
+SIGNAL_SOURCE = "daily_market_history"
+STATUS_ICON = "🇭🇰"
+PROFILE_NAME = "hk_high_dividend_low_vol_trend"
+
+GOLD_ETF_SYMBOL = "02840"
+HIGH_DIVIDEND_ETF_SYMBOL = "03110"
+DEFAULT_UNIVERSE_SYMBOLS = (GOLD_ETF_SYMBOL, HIGH_DIVIDEND_ETF_SYMBOL)
+DEFAULT_MOMENTUM_WINDOW_DAYS = 63
+DEFAULT_TREND_WINDOW_DAYS = 100
+DEFAULT_VOLATILITY_WINDOW_DAYS = 63
+DEFAULT_TOP_N = 2
+DEFAULT_MIN_MOMENTUM = 0.0
+DEFAULT_REBALANCE_FREQUENCY = "monthly"
+DEFAULT_WEIGHTING_MODE = "inverse_volatility"
+DEFAULT_MIN_HISTORY_DAYS = 126
+DEFAULT_EXECUTION_CASH_RESERVE_RATIO = 0.02
+
+
+def normalize_universe_symbols(symbols: Sequence[Any] | None = None) -> tuple[str, ...]:
+    raw_symbols = symbols or DEFAULT_UNIVERSE_SYMBOLS
+    normalized: list[str] = []
+    for value in raw_symbols:
+        symbol = normalize_symbol(value)
+        if symbol and symbol not in normalized:
+            normalized.append(symbol)
+    if not normalized:
+        raise ValueError("universe_symbols must contain at least one valid symbol")
+    return tuple(normalized)
+
+
+def _finite_float(value: Any, *, default: float = float("nan")) -> float:
+    try:
+        output = float(value)
+    except (TypeError, ValueError):
+        return default
+    return output if math.isfinite(output) else default
+
+
+def compute_latest_signal(
+    market_history: Any,
+    *,
+    universe_symbols: Sequence[Any] | None = None,
+    momentum_window_days: int = DEFAULT_MOMENTUM_WINDOW_DAYS,
+    trend_window_days: int = DEFAULT_TREND_WINDOW_DAYS,
+    volatility_window_days: int = DEFAULT_VOLATILITY_WINDOW_DAYS,
+    top_n: int = DEFAULT_TOP_N,
+    min_momentum: float = DEFAULT_MIN_MOMENTUM,
+    weighting_mode: str = DEFAULT_WEIGHTING_MODE,
+    min_history_days: int = DEFAULT_MIN_HISTORY_DAYS,
+) -> dict[str, object]:
+    if momentum_window_days <= 1:
+        raise ValueError("momentum_window_days must be greater than 1")
+    if trend_window_days <= 1:
+        raise ValueError("trend_window_days must be greater than 1")
+    if volatility_window_days <= 1:
+        raise ValueError("volatility_window_days must be greater than 1")
+    if top_n < 1:
+        raise ValueError("top_n must be at least 1")
+    if min_history_days <= max(momentum_window_days, trend_window_days, volatility_window_days):
+        raise ValueError("min_history_days must be greater than all lookback windows")
+
+    symbols = normalize_universe_symbols(universe_symbols)
+    close = build_close_matrix(market_history, universe_symbols=symbols)
+    if len(close) < int(min_history_days):
+        raise ValueError(f"market_history requires at least {int(min_history_days)} overlapping trading days")
+
+    returns = close.pct_change().fillna(0.0)
+    momentum = close.pct_change(int(momentum_window_days))
+    trend = close / close.rolling(int(trend_window_days)).mean() - 1.0
+    volatility = returns.rolling(int(volatility_window_days)).std(ddof=0) * math.sqrt(252)
+    score = momentum / volatility.replace(0.0, pd.NA)
+
+    latest_rows: list[dict[str, object]] = []
+    for symbol in symbols:
+        symbol_momentum = _finite_float(momentum[symbol].iloc[-1])
+        symbol_trend = _finite_float(trend[symbol].iloc[-1])
+        symbol_volatility = _finite_float(volatility[symbol].iloc[-1])
+        symbol_score = _finite_float(score[symbol].iloc[-1], default=float("-inf"))
+        eligible = (
+            math.isfinite(symbol_momentum)
+            and math.isfinite(symbol_trend)
+            and math.isfinite(symbol_volatility)
+            and symbol_momentum > float(min_momentum)
+            and symbol_trend > 0.0
+            and symbol_volatility > 0.0
+        )
+        latest_rows.append(
+            {
+                "symbol": symbol,
+                "momentum": symbol_momentum,
+                "trend": symbol_trend,
+                "volatility": symbol_volatility,
+                "score": symbol_score,
+                "eligible": eligible,
+            }
+        )
+
+    ranked = sorted(
+        (row for row in latest_rows if row["eligible"]),
+        key=lambda row: float(row["score"]),
+        reverse=True,
+    )[: min(int(top_n), len(symbols))]
+
+    weights: dict[str, float] = {}
+    normalized_weighting_mode = str(weighting_mode or "").strip().lower().replace("-", "_")
+    if ranked:
+        if normalized_weighting_mode in {"inverse_volatility", "inverse_vol"}:
+            inverse_vols = [1.0 / max(float(row["volatility"]), 1e-12) for row in ranked]
+            total_inverse_vol = sum(inverse_vols)
+            weights = {
+                str(row["symbol"]): float(inverse_vol / total_inverse_vol)
+                for row, inverse_vol in zip(ranked, inverse_vols)
+            }
+        elif normalized_weighting_mode == "equal":
+            weights = {str(row["symbol"]): 1.0 / len(ranked) for row in ranked}
+        else:
+            raise ValueError("weighting_mode must be 'inverse_volatility' or 'equal'")
+
+    as_of = pd.Timestamp(close.index[-1]).date().isoformat()
+    cash_weight = max(0.0, 1.0 - sum(weights.values()))
+    return {
+        "as_of": as_of,
+        "universe_symbols": symbols,
+        "selected_symbols": tuple(weights),
+        "ranking": tuple(latest_rows),
+        "signal_state": "risk_on" if weights else "cash",
+        "cash_weight": cash_weight,
+        "gross_exposure": sum(weights.values()),
+        "history_days": int(len(close)),
+        "momentum_window_days": int(momentum_window_days),
+        "trend_window_days": int(trend_window_days),
+        "volatility_window_days": int(volatility_window_days),
+        "top_n": int(top_n),
+        "min_momentum": float(min_momentum),
+        "weighting_mode": normalized_weighting_mode,
+        "weights": weights,
+    }
+
+
+def build_target_weights(market_history: Any, **kwargs: Any) -> tuple[dict[str, float], dict[str, object]]:
+    signal = compute_latest_signal(market_history, **kwargs)
+    return dict(signal["weights"]), signal
+
+
+def extract_managed_symbols(*_args: Any, **kwargs: Any) -> tuple[str, ...]:
+    return normalize_universe_symbols(kwargs.get("universe_symbols"))
+
+
+def compute_signals(market_history: Any, _current_holdings: Any = None, **kwargs: Any):
+    kwargs.pop("translator", None)
+    kwargs.pop("signal_text_fn", None)
+    kwargs.pop("execution_cash_reserve_ratio", None)
+    kwargs.pop("rebalance_frequency", None)
+    weights, metadata = build_target_weights(market_history, **kwargs)
+    selected = ",".join(weights) if weights else "cash"
+    signal_desc = (
+        f"hk high dividend low vol trend state={metadata['signal_state']} selected={selected} "
+        f"gross={metadata['gross_exposure']:.0%} cash={metadata['cash_weight']:.0%}"
+    )
+    status_desc = (
+        f"state={metadata['signal_state']} | selected={selected} | "
+        f"momentum={metadata['momentum_window_days']}d | trend={metadata['trend_window_days']}d"
+    )
+    return (
+        weights,
+        signal_desc,
+        bool(not weights),
+        status_desc,
+        {
+            **metadata,
+            "managed_symbols": extract_managed_symbols(**kwargs),
+            "status_icon": STATUS_ICON,
+            "signal_source": SIGNAL_SOURCE,
+            "actionable": True,
+        },
+    )

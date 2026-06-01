@@ -42,6 +42,7 @@ def test_global_etf_rotation_runtime_requirements_are_direct_inputs():
         "hk_blue_chip_leader_rotation",
         "hk_index_mean_reversion",
         "hk_etf_regime_rotation",
+        "hk_high_dividend_low_vol_trend",
     ],
 )
 def test_research_and_snapshot_scaffold_profiles_have_no_runtime_adapter(profile: str):
