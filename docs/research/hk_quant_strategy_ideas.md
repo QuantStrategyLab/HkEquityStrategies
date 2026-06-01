@@ -29,7 +29,7 @@ This note summarizes strategy directions that look more suitable for Hong Kong e
 
 | Priority | Candidate profile | Main inputs | Why it fits HK | Main risk | Suggested status |
 | ---: | --- | --- | --- | --- | --- |
-| 1 | `hk_etf_regime_rotation` | `market_history` | Low turnover, liquid ETF universe, avoids single-name borrow and disclosure problems | ETF choice and stamp-duty exemption must be checked per symbol | implemented as `research_candidate` |
+| 1 | `hk_etf_regime_rotation` | `market_history` | Low turnover, liquid ETF universe, avoids single-name borrow and disclosure problems | ETF choice and stamp-duty exemption must be checked per symbol | kept as research/backtest-only |
 | 2 | `hk_low_vol_dividend_quality` | `factor_snapshot` | Matches HK's high dividend / low volatility style, slower rebalance can absorb costs | Needs reliable fundamentals, dividend history, and corporate action handling | `architecture_scaffold` first |
 | 3 | `hk_southbound_flow_momentum` | `flow_snapshot` + `market_history` | Southbound flows are large and observable; can capture mainland demand pressure | Data ingestion and crowding; flow may be noisy around holidays/policy events | `research_candidate` after data collector |
 | 4 | `hk_index_rebalance_event` | `event_calendar` + `market_history` | Official quarterly index review schedule creates repeatable events | Capacity and slippage near rebalance; event sample size is small | `research_candidate` after event DB |
@@ -99,7 +99,7 @@ Do not start with true long-short arbitrage unless A-share access, borrow, and s
 
 Do not build all of these now. The clean sequence is:
 
-1. Keep `hk_etf_regime_rotation` as a disabled `research_candidate` and re-run after platform feed validation.
+1. Keep `hk_etf_regime_rotation` as research/backtest-only and re-run after platform feed validation.
 2. Add a `flow_snapshot` pipeline before attempting Southbound flow strategies.
 3. Extend snapshot schema for dividend/quality only after confirming a reliable fundamentals source.
 4. Keep every new profile disabled unless it passes out-of-sample and paper-trading checks.
