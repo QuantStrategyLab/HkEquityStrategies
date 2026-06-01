@@ -64,7 +64,7 @@ The snapshot-backed artifact contract now lives in `HkEquitySnapshotPipelines/do
 - `get_snapshot_backed_profiles()`：本仓库内 snapshot-backed runtime profile；当前为空，snapshot scaffold 在 `HkEquitySnapshotPipelines`。
 - `get_research_backtest_only_profiles()`：只保留研究回测、不应 live enable 的港股策略。
 
-平台仓库仍负责最终生产 rollout 决策：除非部署账号、港股市场覆盖参数、dry-run 检查和人工审批都已完成，不要把生产 Cloud Run 的 `RUNTIME_TARGET_JSON` / `STRATEGY_PROFILE` 改成港股 profile。
+平台仓库负责最终运行环境选择：`hk_listed_global_etf_rotation` 已经可以通过 Cloud Run 的 `RUNTIME_TARGET_JSON` / `STRATEGY_PROFILE` 启用；dry-run、paper/live 和账户范围由平台环境变量控制。
 
 ### 港股运行准备检查
 
@@ -75,7 +75,7 @@ python scripts/print_hk_runtime_readiness.py --profile hk_listed_global_etf_rota
 python scripts/print_hk_runtime_readiness.py --profile hk_listed_global_etf_rotation --platform longbridge --json
 ```
 
-输出只是 dry-run 检查清单，不会触发部署。检查内容包括港股市场默认值、managed symbols、direct `market_history` 要求、LongBridge weight-to-value 转换、订单预览、整数股 / lot-size 检查、HKD 现金口径和 Cloud Run rollout 防护。
+输出只是运行准备检查清单，不会直接修改 Cloud Run。检查内容包括港股市场默认值、managed symbols、direct `market_history` 要求、LongBridge weight-to-value 转换、订单预览、整数股 / lot-size 检查、HKD 现金口径和 Cloud Run 环境复核项。
 
 券商专项验证前，先运行本地 smoke。它使用合成行情，不会连接 IBKR、LongBridge、Google Cloud 或任何真实账户：
 
@@ -93,7 +93,7 @@ python -m pytest -q
 
 - `docs/research/hk_index_mean_reversion.md` 记录恒生指数 / 恒生科技 ETF 均值回归回测。当前结论：保留为研究回测-only，暂不注册 runtime profile。
 - `docs/research/hk_etf_regime_rotation.md` 记录港股上市 ETF regime rotation 回测。当前结论：结果有潜力，但 2021-2023 训练期为负，仍保持研究回测-only。
-- `docs/research/hk_listed_global_etf_rotation.md` 记录港股上市全球 ETF 轮动回测。当前结论：波动率目标版本全样本最大回撤低于 30%，标记为 `runtime_enabled`；生产 Cloud Run 仍保持不变，直到明确 rollout。
+- `docs/research/hk_listed_global_etf_rotation.md` 记录港股上市全球 ETF 轮动回测。当前结论：波动率目标版本全样本最大回撤低于 30%，已标记为 `runtime_enabled`，可由平台 Cloud Run 环境启用。
 
 ## English
 
@@ -172,7 +172,7 @@ Grouping helpers:
 - `get_snapshot_backed_profiles()`: snapshot-backed runtime profiles inside this repository; currently empty because snapshot scaffolds live in `HkEquitySnapshotPipelines`.
 - `get_research_backtest_only_profiles()`: HK strategies that remain research/backtest-only and must not be live-enabled.
 
-Platform repositories still own the production rollout decision: do not change production Cloud Run `RUNTIME_TARGET_JSON` / `STRATEGY_PROFILE` to a HK profile unless the deployment account, HK market overrides, dry-run checks, and operator approval are in place.
+Platform repositories own the runtime environment selection: `hk_listed_global_etf_rotation` can be enabled through Cloud Run `RUNTIME_TARGET_JSON` / `STRATEGY_PROFILE`, while dry-run, paper/live mode, and account scope remain controlled by platform environment variables.
 
 ## HK runtime readiness
 
@@ -183,7 +183,7 @@ python scripts/print_hk_runtime_readiness.py --profile hk_listed_global_etf_rota
 python scripts/print_hk_runtime_readiness.py --profile hk_listed_global_etf_rotation --platform longbridge --json
 ```
 
-The output is a dry-run checklist, not a deployment action. It covers HK market defaults, managed symbols, direct `market_history` requirements, LongBridge weight-to-value conversion, order preview, integer-share / lot-size checks, HKD cash lines, and the Cloud Run rollout guard.
+The output is a runtime-readiness checklist, not a direct Cloud Run mutation. It covers HK market defaults, managed symbols, direct `market_history` requirements, LongBridge weight-to-value conversion, order preview, integer-share / lot-size checks, HKD cash lines, and Cloud Run environment review items.
 
 Run the local smoke before broker-specific verification. It uses synthetic market history and does not connect to IBKR, LongBridge, Google Cloud, or any live account:
 
@@ -201,4 +201,4 @@ python -m pytest -q
 
 - `docs/research/hk_index_mean_reversion.md` records the HSI / Hang Seng TECH ETF mean-reversion backtest. Current conclusion: keep as research/backtest-only; do not register as a runtime profile yet.
 - `docs/research/hk_etf_regime_rotation.md` records the HK-listed ETF regime rotation backtest. Current conclusion: promising but still keep as research/backtest-only because the 2021-2023 train period was negative.
-- `docs/research/hk_listed_global_etf_rotation.md` records the HK-listed global ETF rotation backtest. Current conclusion: mark `runtime_enabled` because the volatility-targeted version kept full-sample drawdown under 30%; production Cloud Run remains unchanged until an explicit rollout.
+- `docs/research/hk_listed_global_etf_rotation.md` records the HK-listed global ETF rotation backtest. Current conclusion: mark `runtime_enabled` because the volatility-targeted version kept full-sample drawdown under 30%; platform Cloud Run environments can select it through runtime configuration.

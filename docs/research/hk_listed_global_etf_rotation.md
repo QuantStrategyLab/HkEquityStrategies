@@ -13,7 +13,7 @@
 
 This note evaluates a Hong Kong-listed version of a global ETF rotation strategy. The goal is not to trade US ETFs directly, but to use ETFs listed and tradable on HKEX while still getting exposure to overseas / cross-asset regimes.
 
-This research is implemented as `hk_listed_global_etf_rotation` and is now marked `runtime_enabled` at the strategy-package level. That means platform runtimes may allow the profile, but production Cloud Run should not switch to it until HK account permissions, market overrides, dry-run order conversion, spreads, lot sizes, derivative ETF suitability, and currency-line selection are explicitly approved.
+This research is implemented as `hk_listed_global_etf_rotation` and is now marked `runtime_enabled` at the strategy-package level. Platform runtimes may select the profile through Cloud Run `RUNTIME_TARGET_JSON` / `STRATEGY_PROFILE`; dry-run versus live execution is controlled by platform environment variables and broker/account permissions.
 
 ## ETF universe tested
 
@@ -153,7 +153,7 @@ Interpretation:
 
 Promote `hk_listed_global_etf_rotation` to `runtime_enabled`.
 
-Recommended status: runtime-enabled in code, not deployed to production Cloud Run until an explicit rollout changes platform runtime configuration.
+Recommended status: runtime-enabled in code and deployable through platform Cloud Run runtime configuration.
 
 Reasons:
 
@@ -167,4 +167,4 @@ Next low-risk step before production rollout:
 1. Clean and validate `03010` corporate-action / adjusted-price history.
 2. Re-run after `03195` has a longer S&P 500 sample.
 3. Add ETF-level liquidity and spread filters instead of treating all ETFs equally.
-4. Keep production Cloud Run on the existing configured profile until both IBKR and LongBridge dry-run checks confirm symbol feed, sizing, and order conversion behavior.
+4. After Cloud Run deployment, monitor both IBKR and LongBridge dry-run/live reports for symbol feed, sizing, and order conversion behavior before increasing account exposure.

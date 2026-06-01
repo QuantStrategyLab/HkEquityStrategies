@@ -53,7 +53,7 @@ Possible signals:
 
 Why first: it uses the same `market_history` input style as `hk_index_mean_reversion`, is easier to backtest cleanly, and avoids single-name borrow and fundamental data issues.
 
-Follow-up research added on 2026-06-01: `docs/research/hk_listed_global_etf_rotation.md` tests a HKEX-listed global ETF universe using `02834` Nasdaq 100, `02840` gold, `03175` crude-oil futures ETF, local HK/China ETFs, and `03110` high-dividend ETF. The selected monthly top-2 version adds a 16% volatility target and improved full-sample annualized return to 18.84% with -20.51% max drawdown, so it is implemented as `runtime_enabled` `hk_listed_global_etf_rotation`. `03010` Asia ex-Japan still needs data cleaning and `03195` S&P 500 has too short a sample for this baseline. Production Cloud Run remains unchanged until an explicit rollout.
+Follow-up research added on 2026-06-01: `docs/research/hk_listed_global_etf_rotation.md` tests a HKEX-listed global ETF universe using `02834` Nasdaq 100, `02840` gold, `03175` crude-oil futures ETF, local HK/China ETFs, and `03110` high-dividend ETF. The selected monthly top-2 version adds a 16% volatility target and improved full-sample annualized return to 18.84% with -20.51% max drawdown, so it is implemented as `runtime_enabled` `hk_listed_global_etf_rotation`. `03010` Asia ex-Japan still needs data cleaning and `03195` S&P 500 has too short a sample for this baseline. Platform Cloud Run deployments can select this profile through runtime configuration.
 
 ### 2. Low-volatility dividend quality rotation
 

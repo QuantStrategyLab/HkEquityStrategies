@@ -92,9 +92,9 @@ The plan is intentionally `dry_run_only=true` by default and does not deploy Clo
 - `HkEquitySnapshotPipelines` owns snapshot-backed artifact contracts, raw data normalization, snapshot publication, and research/backtest-only work that is not platform-selectable.
 - Platform repositories own broker connection, market symbols, order sizing, notification delivery, and runtime reports.
 
-## Production rollout guard
+## Runtime profile boundary
 
-Do not set `STRATEGY_PROFILE=hk_blue_chip_leader_rotation`, `STRATEGY_PROFILE=hk_index_mean_reversion`, or `STRATEGY_PROFILE=hk_etf_regime_rotation` in Cloud Run while the profiles are not `runtime_enabled`. Platform status and switch-plan tooling should not expose these profiles as selectable runtime targets. `hk_listed_global_etf_rotation` is runtime-enabled at the strategy-package level, but production Cloud Run should still remain on the existing configured profile until HK account permissions, HK market overrides, and broker dry-run checks are explicitly approved.
+Do not set `STRATEGY_PROFILE=hk_blue_chip_leader_rotation`, `STRATEGY_PROFILE=hk_index_mean_reversion`, or `STRATEGY_PROFILE=hk_etf_regime_rotation` in Cloud Run while the profiles are not `runtime_enabled`. Platform status and switch-plan tooling should not expose these profiles as selectable runtime targets. `hk_listed_global_etf_rotation` is runtime-enabled at the strategy-package level and can be selected by Cloud Run through `RUNTIME_TARGET_JSON` / `STRATEGY_PROFILE`; dry-run versus live execution remains a platform runtime setting.
 
 ## Risks before live trading
 
@@ -108,4 +108,4 @@ Do not set `STRATEGY_PROFILE=hk_blue_chip_leader_rotation`, `STRATEGY_PROFILE=hk
 
 `hk_etf_regime_rotation` also uses direct `market_history`. Platforms must supply overlapping daily close history for `02800`, `02822`, `02840`, `03033`, `03110`, and `03188`; no snapshot CSV or manifest is required. See `docs/research/hk_etf_regime_rotation.md` for the backtest and current non-promotion decision.
 
-`hk_listed_global_etf_rotation` uses direct `market_history` for `02800`, `02822`, `03188`, `03033`, `02834`, `02840`, `03175`, and `03110`; no snapshot CSV or manifest is required. It is the first runtime-enabled HK non-snapshot profile, but production deployment still requires an explicit platform rollout.
+`hk_listed_global_etf_rotation` uses direct `market_history` for `02800`, `02822`, `03188`, `03033`, `02834`, `02840`, `03175`, and `03110`; no snapshot CSV or manifest is required. It is the first runtime-enabled HK non-snapshot profile and can be selected by a platform Cloud Run deployment.
