@@ -108,10 +108,11 @@ Robustness variants from the same script:
 | Variant | Full annualized return | Full max drawdown | Train annualized return | OOS annualized return | Notes |
 | --- | ---: | ---: | ---: | ---: | --- |
 | Default six-ETF version | 13.55% | -21.56% | -7.24% | 38.18% | Selected low-turnover baseline, but train period is negative. |
-| No-gold, same parameters | 8.66% | -17.23% | -6.26% | 25.42% | Still profitable, but materially worse than the version with `02840`. |
-| Top-1 with gold | 13.38% | -15.59% | -1.04% | 29.40% | Lower drawdown than default, but weaker recent one-year performance. |
-| 126-day momentum | 16.26% | -15.30% | -2.69% | 38.19% | Better full-sample drawdown/return, but train period remains negative. |
-| High-dividend / gold pair | 17.89% | -10.70% | 2.99% | 34.43% | Strongest risk-adjusted variant; implemented separately as `hk_high_dividend_low_vol_trend` for continued research. |
+| No-gold, same parameters | 6.59% | -24.69% | -9.85% | 25.42% | Still profitable, but materially worse than the version with `02840`. |
+| Top-1 with gold | 11.04% | -17.51% | -5.16% | 29.40% | Lower drawdown than default, but train period remains negative. |
+| 126-day momentum | 13.53% | -19.87% | -7.27% | 38.19% | Similar full-sample return, but train period remains negative. |
+| High-dividend / gold pair | 17.94% | -11.28% | 3.07% | 34.43% | Strongest risk-adjusted raw variant; implemented separately as `hk_high_dividend_low_vol_trend`. |
+| High-dividend / gold pair, 12% vol target | 17.16% | -8.06% | 3.18% | 32.54% | Lower drawdown; promoted separately as the live-enabled `hk_high_dividend_low_vol_trend` profile. |
 
 ## Decision
 
@@ -128,7 +129,8 @@ Reasons not to promote yet:
 
 - Default train period `2021-09-01` to `2023-12-29` was negative.
 - The strong out-of-sample result is heavily influenced by the 2024-2026 regime.
-- The strongest high-dividend / gold variant has only two ETFs and should be evaluated as its own simpler candidate instead of being promoted through this broader profile.
+- The conservative optimization sweep did not find a broad six-ETF variant with positive train-period return under the current constraints.
+- The strongest high-dividend / gold variant has only two ETFs and is promoted through its own simpler profile instead of this broader profile.
 - ETF-specific fee, stamp-duty exemption, spread, lot size, and platform tradability must be validated per symbol.
 - Cash handling must be validated with both IBKR and LongBridge if no ETF passes the filter.
 

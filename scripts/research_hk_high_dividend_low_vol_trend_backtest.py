@@ -156,6 +156,8 @@ def run(config: BacktestConfig) -> dict[str, Any]:
             "volatility_window_days": strategy.DEFAULT_VOLATILITY_WINDOW_DAYS,
             "top_n": strategy.DEFAULT_TOP_N,
             "weighting_mode": strategy.DEFAULT_WEIGHTING_MODE,
+            "target_annual_volatility": strategy.DEFAULT_TARGET_ANNUAL_VOLATILITY,
+            "max_gross_exposure": strategy.DEFAULT_MAX_GROSS_EXPOSURE,
             "rebalance_frequency": strategy.DEFAULT_REBALANCE_FREQUENCY,
             "cost_bps": config.cost_bps,
         },

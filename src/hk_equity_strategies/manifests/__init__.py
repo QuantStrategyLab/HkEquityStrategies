@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from quant_platform_kit.strategy_contracts import StrategyManifest
 
+from hk_equity_strategies.strategies import hk_high_dividend_low_vol_trend as high_dividend_strategy
 from hk_equity_strategies.strategies import hk_listed_global_etf_rotation as global_etf_strategy
 
 HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE = global_etf_strategy.PROFILE_NAME
+HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE = high_dividend_strategy.PROFILE_NAME
 
 
 def _manifest(
@@ -52,8 +54,34 @@ hk_listed_global_etf_rotation_manifest = _manifest(
     },
 )
 
+hk_high_dividend_low_vol_trend_manifest = _manifest(
+    profile=HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE,
+    display_name="HK High Dividend Low-Volatility Trend",
+    description=(
+        "Monthly trend rotation between HK-listed high-dividend and gold ETFs "
+        "with a 12% annual volatility target."
+    ),
+    aliases=("hk_high_dividend_trend", "hk_hd_gold_trend", "hk_high_dividend_low_vol"),
+    required_inputs=frozenset({"market_history"}),
+    default_config={
+        "universe_symbols": high_dividend_strategy.DEFAULT_UNIVERSE_SYMBOLS,
+        "momentum_window_days": high_dividend_strategy.DEFAULT_MOMENTUM_WINDOW_DAYS,
+        "trend_window_days": high_dividend_strategy.DEFAULT_TREND_WINDOW_DAYS,
+        "volatility_window_days": high_dividend_strategy.DEFAULT_VOLATILITY_WINDOW_DAYS,
+        "top_n": high_dividend_strategy.DEFAULT_TOP_N,
+        "min_momentum": high_dividend_strategy.DEFAULT_MIN_MOMENTUM,
+        "rebalance_frequency": high_dividend_strategy.DEFAULT_REBALANCE_FREQUENCY,
+        "weighting_mode": high_dividend_strategy.DEFAULT_WEIGHTING_MODE,
+        "target_annual_volatility": high_dividend_strategy.DEFAULT_TARGET_ANNUAL_VOLATILITY,
+        "max_gross_exposure": high_dividend_strategy.DEFAULT_MAX_GROSS_EXPOSURE,
+        "min_history_days": high_dividend_strategy.DEFAULT_MIN_HISTORY_DAYS,
+        "execution_cash_reserve_ratio": high_dividend_strategy.DEFAULT_EXECUTION_CASH_RESERVE_RATIO,
+    },
+)
+
 MANIFESTS = {
     hk_listed_global_etf_rotation_manifest.profile: hk_listed_global_etf_rotation_manifest,
+    hk_high_dividend_low_vol_trend_manifest.profile: hk_high_dividend_low_vol_trend_manifest,
 }
 
 MANIFEST_ALIASES = {
@@ -69,8 +97,10 @@ def get_strategy_manifest(profile: str) -> StrategyManifest:
 
 
 __all__ = [
+    "HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE",
     "HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE",
     "MANIFESTS",
     "get_strategy_manifest",
+    "hk_high_dividend_low_vol_trend_manifest",
     "hk_listed_global_etf_rotation_manifest",
 ]

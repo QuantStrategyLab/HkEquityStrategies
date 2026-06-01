@@ -6,7 +6,11 @@ from typing import Any
 
 import pandas as pd
 
-from hk_equity_strategies.strategies.hk_etf_regime_rotation import build_close_matrix, normalize_symbol
+from hk_equity_strategies.strategies.hk_etf_regime_rotation import (
+    apply_portfolio_volatility_target,
+    build_close_matrix,
+    normalize_symbol,
+)
 
 HK_EQUITY_DOMAIN = "hk_equity"
 SIGNAL_SOURCE = "daily_market_history"
@@ -23,6 +27,8 @@ DEFAULT_TOP_N = 2
 DEFAULT_MIN_MOMENTUM = 0.0
 DEFAULT_REBALANCE_FREQUENCY = "monthly"
 DEFAULT_WEIGHTING_MODE = "inverse_volatility"
+DEFAULT_TARGET_ANNUAL_VOLATILITY = 0.12
+DEFAULT_MAX_GROSS_EXPOSURE = 1.0
 DEFAULT_MIN_HISTORY_DAYS = 126
 DEFAULT_EXECUTION_CASH_RESERVE_RATIO = 0.02
 
@@ -57,6 +63,8 @@ def compute_latest_signal(
     top_n: int = DEFAULT_TOP_N,
     min_momentum: float = DEFAULT_MIN_MOMENTUM,
     weighting_mode: str = DEFAULT_WEIGHTING_MODE,
+    target_annual_volatility: float | None = DEFAULT_TARGET_ANNUAL_VOLATILITY,
+    max_gross_exposure: float = DEFAULT_MAX_GROSS_EXPOSURE,
     min_history_days: int = DEFAULT_MIN_HISTORY_DAYS,
 ) -> dict[str, object]:
     if momentum_window_days <= 1:
@@ -69,6 +77,10 @@ def compute_latest_signal(
         raise ValueError("top_n must be at least 1")
     if min_history_days <= max(momentum_window_days, trend_window_days, volatility_window_days):
         raise ValueError("min_history_days must be greater than all lookback windows")
+    if target_annual_volatility is not None and float(target_annual_volatility) <= 0.0:
+        raise ValueError("target_annual_volatility must be positive when set")
+    if float(max_gross_exposure) <= 0.0:
+        raise ValueError("max_gross_exposure must be positive")
 
     symbols = normalize_universe_symbols(universe_symbols)
     close = build_close_matrix(market_history, universe_symbols=symbols)
@@ -127,6 +139,16 @@ def compute_latest_signal(
         else:
             raise ValueError("weighting_mode must be 'inverse_volatility' or 'equal'")
 
+    realized_portfolio_volatility = 0.0
+    if weights:
+        weights, realized_portfolio_volatility = apply_portfolio_volatility_target(
+            returns,
+            weights,
+            volatility_window_days=int(volatility_window_days),
+            target_annual_volatility=target_annual_volatility,
+            max_gross_exposure=float(max_gross_exposure),
+        )
+
     as_of = pd.Timestamp(close.index[-1]).date().isoformat()
     cash_weight = max(0.0, 1.0 - sum(weights.values()))
     return {
@@ -144,6 +166,11 @@ def compute_latest_signal(
         "top_n": int(top_n),
         "min_momentum": float(min_momentum),
         "weighting_mode": normalized_weighting_mode,
+        "target_annual_volatility": (
+            None if target_annual_volatility is None else float(target_annual_volatility)
+        ),
+        "max_gross_exposure": float(max_gross_exposure),
+        "realized_portfolio_volatility": float(realized_portfolio_volatility),
         "weights": weights,
     }
 
@@ -164,18 +191,22 @@ def compute_signals(market_history: Any, _current_holdings: Any = None, **kwargs
     kwargs.pop("rebalance_frequency", None)
     weights, metadata = build_target_weights(market_history, **kwargs)
     selected = ",".join(weights) if weights else "cash"
+    target_vol = metadata.get("target_annual_volatility")
+    target_vol_text = "none" if target_vol is None else f"{float(target_vol):.0%}"
     signal_desc = (
         f"hk high dividend low vol trend state={metadata['signal_state']} selected={selected} "
-        f"gross={metadata['gross_exposure']:.0%} cash={metadata['cash_weight']:.0%}"
+        f"gross={metadata['gross_exposure']:.0%} cash={metadata['cash_weight']:.0%} "
+        f"target_vol={target_vol_text}"
     )
     status_desc = (
         f"state={metadata['signal_state']} | selected={selected} | "
-        f"momentum={metadata['momentum_window_days']}d | trend={metadata['trend_window_days']}d"
+        f"momentum={metadata['momentum_window_days']}d | trend={metadata['trend_window_days']}d | "
+        f"target_vol={target_vol_text}"
     )
     return (
         weights,
         signal_desc,
-        bool(not weights),
+        bool(metadata["cash_weight"] > 1e-12),
         status_desc,
         {
             **metadata,
