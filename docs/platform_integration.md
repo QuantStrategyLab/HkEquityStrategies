@@ -13,16 +13,16 @@
 
 The HK strategy surface is split by input style:
 
-- Runtime non-snapshot/direct `market_history`: `hk_listed_global_etf_rotation`.
-- Research/backtest-only: `hk_index_mean_reversion`, `hk_etf_regime_rotation`, `hk_high_dividend_low_vol_trend`; they are not runtime catalog profiles.
+- Runtime non-snapshot/direct `market_history`: `hk_listed_global_etf_rotation`, `hk_high_dividend_low_vol_trend`.
+- Research/backtest-only: `hk_index_mean_reversion`, `hk_etf_regime_rotation`; they are not runtime catalog profiles.
 - Snapshot-backed scaffold: `hk_blue_chip_leader_rotation`; its artifact contract, strategy helper, and publication flow live in `HkEquitySnapshotPipelines`.
 
-The runtime catalog profile declares structural support for:
+The runtime catalog profiles declare structural support for:
 
 - `ibkr` (`InteractiveBrokersPlatform`)
 - `longbridge` (`LongBridgePlatform`)
 
-The strategy package does not import platform code. Platforms load it through the same catalog/runtime-adapter contract used by `UsEquityStrategies`. `hk_listed_global_etf_rotation` is the only HK runtime catalog profile. `hk_blue_chip_leader_rotation` is a snapshot scaffold in `HkEquitySnapshotPipelines`; `hk_index_mean_reversion`, `hk_etf_regime_rotation`, and `hk_high_dividend_low_vol_trend` are research/backtest-only candidates. Platform repositories should expose only runtime-enabled HK profiles as selectable runtime targets. Research and snapshot-scaffold profiles remain in docs/backtests until they are explicitly promoted.
+The strategy package does not import platform code. Platforms load it through the same catalog/runtime-adapter contract used by `UsEquityStrategies`. `hk_listed_global_etf_rotation` and `hk_high_dividend_low_vol_trend` are HK runtime catalog profiles. `hk_blue_chip_leader_rotation` is a snapshot scaffold in `HkEquitySnapshotPipelines`; `hk_index_mean_reversion` and `hk_etf_regime_rotation` are research/backtest-only candidates. Platform repositories should expose only runtime-enabled HK profiles as selectable runtime targets. Research and snapshot-scaffold profiles remain in docs/backtests until they are explicitly promoted.
 
 ## Required platform mode
 
@@ -94,7 +94,7 @@ The plan is intentionally `dry_run_only=true` by default and does not deploy Clo
 
 ## Runtime profile boundary
 
-Do not set `STRATEGY_PROFILE=hk_blue_chip_leader_rotation`, `STRATEGY_PROFILE=hk_index_mean_reversion`, `STRATEGY_PROFILE=hk_etf_regime_rotation`, or `STRATEGY_PROFILE=hk_high_dividend_low_vol_trend` in Cloud Run while the profiles are not `runtime_enabled`. Platform status and switch-plan tooling should not expose these profiles as selectable runtime targets. `hk_listed_global_etf_rotation` is runtime-enabled at the strategy-package level and can be selected by Cloud Run through `RUNTIME_TARGET_JSON` / `STRATEGY_PROFILE`; dry-run versus live execution remains a platform runtime setting.
+Do not set `STRATEGY_PROFILE=hk_blue_chip_leader_rotation`, `STRATEGY_PROFILE=hk_index_mean_reversion`, or `STRATEGY_PROFILE=hk_etf_regime_rotation` in Cloud Run while the profiles are not `runtime_enabled`. Platform status and switch-plan tooling should not expose these profiles as selectable runtime targets. `hk_listed_global_etf_rotation` and `hk_high_dividend_low_vol_trend` are runtime-enabled at the strategy-package level and can be selected by Cloud Run through `RUNTIME_TARGET_JSON` / `STRATEGY_PROFILE`; dry-run versus live execution remains a platform runtime setting.
 
 ## Risks before live trading
 
@@ -108,6 +108,6 @@ Do not set `STRATEGY_PROFILE=hk_blue_chip_leader_rotation`, `STRATEGY_PROFILE=hk
 
 `hk_etf_regime_rotation` also uses direct `market_history`. Platforms must supply overlapping daily close history for `02800`, `02822`, `02840`, `03033`, `03110`, and `03188`; no snapshot CSV or manifest is required. See `docs/research/hk_etf_regime_rotation.md` for the backtest and current non-promotion decision.
 
-`hk_high_dividend_low_vol_trend` uses direct `market_history` for `02840` and `03110`; no snapshot CSV or manifest is required. It is research/backtest-only and should not be exposed by platform switch-plan tooling until explicitly promoted after feed, fee, spread, lot-size, and paper-trading validation.
+`hk_high_dividend_low_vol_trend` uses direct `market_history` for `02840` and `03110`; no snapshot CSV or manifest is required. It is runtime-enabled with a 12% annual volatility target and can be selected by a platform Cloud Run deployment after platform feed, fee, spread, lot-size, and dry-run checks.
 
 `hk_listed_global_etf_rotation` uses direct `market_history` for `02800`, `02822`, `03188`, `03033`, `02834`, `02840`, `03175`, and `03110`; no snapshot CSV or manifest is required. It is the first runtime-enabled HK non-snapshot profile and can be selected by a platform Cloud Run deployment.

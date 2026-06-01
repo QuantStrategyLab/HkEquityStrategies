@@ -6,14 +6,14 @@
 ## 中文摘要
 
 - 用途：本文档围绕 `HK Quant Strategy Ideas Backlog`，用于理解 `HkEquityStrategies` 的配置、运行、部署、研究或验收边界。
-- 主要覆盖：`Market constraints that matter`、`Recommended research candidates`、`Candidate sketches`、`1. ETF regime rotation`、`2. Low-volatility dividend quality rotation`。
+- 主要覆盖：`Market constraints that matter`、`Recommended research candidates`、`Candidate sketches`、`1. ETF regime rotation`、`2. High-dividend / gold low-volatility trend rotation`。
 - 阅读顺序：先确认边界、输入输出和权限要求，再执行文档里的命令、CI、dry-run、发布或切换步骤。
 - 风险提示：涉及实盘、密钥、权限、Cloud Run、交易所或券商 API 的变更，必须先在测试环境或 dry-run 验证；不要只凭示例直接修改生产。
 - 英文正文保留更完整的命令、字段名和配置键；如果摘要和正文不一致，以正文中的实际命令和配置为准。
 Research date: 2026-06-01
 Last updated: 2026-06-02
 
-This note summarizes strategy directions that look more suitable for Hong Kong equities after reviewing market structure, official data sources, and academic evidence. It is a research backlog. Do not mark any new strategy here as `runtime_enabled` without a dedicated backtest, platform feed validation, and paper-trading period; `hk_listed_global_etf_rotation` is the first exception promoted after a dedicated backtest kept drawdown below 30%.
+This note summarizes strategy directions that look more suitable for Hong Kong equities after reviewing market structure, official data sources, and academic evidence. It is a research backlog. Do not mark any new strategy here as `runtime_enabled` without a dedicated backtest, platform feed validation, and paper-trading period; `hk_listed_global_etf_rotation` and `hk_high_dividend_low_vol_trend` are the current exceptions promoted after dedicated backtests kept drawdown below 30%.
 
 ## Market constraints that matter
 
@@ -31,7 +31,7 @@ This note summarizes strategy directions that look more suitable for Hong Kong e
 | Priority | Candidate profile | Main inputs | Why it fits HK | Main risk | Suggested status |
 | ---: | --- | --- | --- | --- | --- |
 | 1 | `hk_etf_regime_rotation` | `market_history` | Low turnover, liquid ETF universe, avoids single-name borrow and disclosure problems | ETF choice and stamp-duty exemption must be checked per symbol | kept as research/backtest-only |
-| 2 | `hk_high_dividend_low_vol_trend` | `market_history` | Simple high-dividend / gold defensive ETF pair, low drawdown in current backtest | Short sample and gold-regime dependence | kept as research/backtest-only |
+| 2 | `hk_high_dividend_low_vol_trend` | `market_history` | Simple high-dividend / gold defensive ETF pair, low drawdown in current backtest | Short sample and gold-regime dependence | `runtime_enabled` |
 | 3 | `hk_low_vol_dividend_quality` | `factor_snapshot` | Matches HK's high dividend / low volatility style, slower rebalance can absorb costs | Needs reliable fundamentals, dividend history, and corporate action handling | `architecture_scaffold` first |
 | 4 | `hk_southbound_flow_momentum` | `flow_snapshot` + `market_history` | Southbound flows are large and observable; can capture mainland demand pressure | Data ingestion and crowding; flow may be noisy around holidays/policy events | `research_candidate` after data collector |
 | 5 | `hk_index_rebalance_event` | `event_calendar` + `market_history` | Official quarterly index review schedule creates repeatable events | Capacity and slippage near rebalance; event sample size is small | `research_candidate` after event DB |
@@ -57,7 +57,7 @@ Why first: it uses the same `market_history` input style as `hk_index_mean_rever
 
 Follow-up research added on 2026-06-01: `docs/research/hk_listed_global_etf_rotation.md` tests a HKEX-listed global ETF universe using `02834` Nasdaq 100, `02840` gold, `03175` crude-oil futures ETF, local HK/China ETFs, and `03110` high-dividend ETF. The selected monthly top-2 version adds a 16% volatility target and improved full-sample annualized return to 18.84% with -20.51% max drawdown, so it is implemented as `runtime_enabled` `hk_listed_global_etf_rotation`. `03010` Asia ex-Japan still needs data cleaning and `03195` S&P 500 has too short a sample for this baseline. Platform Cloud Run deployments can select this profile through runtime configuration.
 
-Follow-up robustness work added on 2026-06-02: `docs/research/hk_etf_regime_rotation.md` now compares no-gold, top-1, 126-day momentum, and high-dividend / gold variants. The high-dividend / gold pair had the best risk-adjusted result among the tested variants, so it was implemented separately as research-only `hk_high_dividend_low_vol_trend`; it is not runtime-enabled because the sample is short and regime-dependent.
+Follow-up robustness work added on 2026-06-02: `docs/research/hk_etf_regime_rotation.md` now compares no-gold, top-1, 126-day momentum, and high-dividend / gold variants. The high-dividend / gold pair had the best risk-adjusted result among the tested variants, so it was implemented separately as `hk_high_dividend_low_vol_trend`; the 12% volatility-targeted version is runtime-enabled because it kept full-sample drawdown below 10% while preserving positive train-period return.
 
 ### 2. High-dividend / gold low-volatility trend rotation
 
@@ -68,7 +68,7 @@ Simple direct `market_history` candidate using `03110` high-dividend ETF and `02
 - inverse-volatility weights across up to two eligible ETFs;
 - cash if neither ETF has positive trend/momentum.
 
-Current research result in `docs/research/hk_high_dividend_low_vol_trend.md`: full-sample annualized return 17.94%, max drawdown -11.28%, and train-period annualized return 3.07%. Keep it research-only until broker-level data/feed, fee, spread, lot-size, dividend treatment, and paper-trading evidence are available.
+Current runtime-enabled result in `docs/research/hk_high_dividend_low_vol_trend.md`: full-sample annualized return 17.16%, max drawdown -8.06%, and train-period annualized return 3.18%. Keep platform deployment in dry-run or paper mode until broker-level data/feed, fee, spread, lot-size, dividend treatment, and order preview evidence are available.
 
 ### 3. Low-volatility dividend quality rotation
 
@@ -114,7 +114,7 @@ Do not start with true long-short arbitrage unless A-share access, borrow, and s
 
 Do not build all of these now. The clean sequence is:
 
-1. Keep `hk_etf_regime_rotation` and `hk_high_dividend_low_vol_trend` as research/backtest-only and re-run after platform feed validation.
+1. Keep `hk_etf_regime_rotation` as research/backtest-only; use the separately promoted `hk_high_dividend_low_vol_trend` for the simpler high-dividend / gold live-enabled profile.
 2. Add a `flow_snapshot` pipeline before attempting Southbound flow strategies.
 3. Extend snapshot schema for dividend/quality only after confirming a reliable fundamentals source.
 4. Keep every new profile disabled unless it passes out-of-sample and paper-trading checks.

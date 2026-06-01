@@ -5,7 +5,10 @@ import subprocess
 import sys
 from pathlib import Path
 
-from hk_equity_strategies.catalog import HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE
+from hk_equity_strategies.catalog import (
+    HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE,
+    HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE,
+)
 from hk_equity_strategies.runtime_readiness import build_hk_runtime_readiness
 
 SCRIPT_PATH = Path(__file__).resolve().parents[1] / "scripts" / "print_hk_runtime_readiness.py"
@@ -66,6 +69,22 @@ def test_longbridge_global_etf_readiness_requires_portfolio_snapshot_conversion(
         "portfolio_input_name": "portfolio_snapshot",
     }
     assert "portfolio_snapshot" in plan["available_inputs"]
+
+
+def test_high_dividend_low_vol_trend_readiness_uses_two_managed_symbols():
+    plan = build_hk_runtime_readiness(
+        HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE,
+        platform_id="longbridge",
+    )
+
+    assert plan["runtime_enabled"] is True
+    assert plan["managed_symbols"] == ["02840", "03110"]
+    assert plan["target_conversion"] == {
+        "strategy_target_mode": "weight",
+        "platform_native_target_mode": "value",
+        "requires_portfolio_snapshot": True,
+        "portfolio_input_name": "portfolio_snapshot",
+    }
 
 
 def test_print_hk_runtime_readiness_json():

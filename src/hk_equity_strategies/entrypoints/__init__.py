@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from quant_platform_kit.strategy_contracts import CallableStrategyEntrypoint, StrategyContext, StrategyDecision
 
-from hk_equity_strategies.manifests import hk_listed_global_etf_rotation_manifest
+from hk_equity_strategies.manifests import (
+    hk_high_dividend_low_vol_trend_manifest,
+    hk_listed_global_etf_rotation_manifest,
+)
+from hk_equity_strategies.strategies import hk_high_dividend_low_vol_trend as high_dividend_strategy
 from hk_equity_strategies.strategies import hk_listed_global_etf_rotation as global_etf_strategy
 
 from ._common import get_current_holdings, merge_runtime_config, require_market_data, weights_to_positions
@@ -40,7 +44,41 @@ hk_listed_global_etf_rotation_entrypoint = CallableStrategyEntrypoint(
 )
 
 
+def evaluate_hk_high_dividend_low_vol_trend(ctx: StrategyContext) -> StrategyDecision:
+    config = merge_runtime_config(hk_high_dividend_low_vol_trend_manifest.default_config, ctx)
+    config.pop("execution_cash_reserve_ratio", None)
+    config.pop("rebalance_frequency", None)
+    weights, signal_desc, has_cash_residual, status_desc, metadata = high_dividend_strategy.compute_signals(
+        require_market_data(ctx, "market_history"),
+        get_current_holdings(ctx),
+        **config,
+    )
+    diagnostics = {
+        **metadata,
+        "signal_description": signal_desc,
+        "status_description": status_desc,
+        "signal_source": high_dividend_strategy.SIGNAL_SOURCE,
+        "actionable": True,
+    }
+    risk_flags: tuple[str, ...] = ()
+    if has_cash_residual:
+        risk_flags += ("cash_residual",)
+    return StrategyDecision(
+        positions=weights_to_positions(weights),
+        risk_flags=risk_flags,
+        diagnostics=diagnostics,
+    )
+
+
+hk_high_dividend_low_vol_trend_entrypoint = CallableStrategyEntrypoint(
+    manifest=hk_high_dividend_low_vol_trend_manifest,
+    _evaluate=evaluate_hk_high_dividend_low_vol_trend,
+)
+
+
 __all__ = [
+    "evaluate_hk_high_dividend_low_vol_trend",
     "evaluate_hk_listed_global_etf_rotation",
+    "hk_high_dividend_low_vol_trend_entrypoint",
     "hk_listed_global_etf_rotation_entrypoint",
 ]

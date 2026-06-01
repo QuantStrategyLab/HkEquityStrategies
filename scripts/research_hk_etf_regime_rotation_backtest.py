@@ -136,11 +136,11 @@ def _slice(series: pd.Series, start: str | None, end: str | None) -> pd.Series:
 
 
 def run(config: BacktestConfig) -> dict[str, Any]:
-    close = _download_close(config)
-    strategy_returns, targets = _strategy_returns(close, cost_bps=config.cost_bps)
+    raw_close = _download_close(config)
+    strategy_returns, targets = _strategy_returns(raw_close, cost_bps=config.cost_bps)
     strategy_returns = strategy_returns.loc[pd.Timestamp(config.analysis_start):]
     targets = targets.loc[strategy_returns.index]
-    close = close.loc[strategy_returns.index]
+    close = raw_close.loc[strategy_returns.index]
     benchmark_returns = {
         "strategy": strategy_returns,
         "hsi_etf_02800": close["02800"].pct_change().fillna(0.0),
@@ -161,6 +161,14 @@ def run(config: BacktestConfig) -> dict[str, Any]:
             "trend_window_days": 100,
             "min_history_days": 126,
         },
+        "high_dividend_gold_pair_vol_target_12": {
+            "universe_symbols": ("02840", "03110"),
+            "momentum_window_days": 63,
+            "trend_window_days": 100,
+            "min_history_days": 126,
+            "target_annual_volatility": 0.12,
+            "max_gross_exposure": 1.0,
+        },
     }
     variant_payload: dict[str, dict[str, Any]] = {}
     periods = {
@@ -177,7 +185,7 @@ def run(config: BacktestConfig) -> dict[str, Any]:
         "2026_ytd": ("2026-01-01", "2026-05-29"),
     }
     for name, kwargs in variant_configs.items():
-        variant_returns, variant_targets = _strategy_returns(close, cost_bps=config.cost_bps, **kwargs)
+        variant_returns, variant_targets = _strategy_returns(raw_close, cost_bps=config.cost_bps, **kwargs)
         variant_returns = variant_returns.loc[pd.Timestamp(config.analysis_start):]
         variant_targets = variant_targets.loc[variant_returns.index]
         variant_payload[name] = {

@@ -40,6 +40,19 @@ def test_compute_latest_signal_selects_high_dividend_and_gold_when_trending():
     assert set(signal["selected_symbols"]) == {GOLD_ETF_SYMBOL, HIGH_DIVIDEND_ETF_SYMBOL}
     assert signal["cash_weight"] == pytest.approx(0.0)
     assert sum(signal["weights"].values()) == pytest.approx(1.0)
+    assert signal["target_annual_volatility"] == pytest.approx(0.12)
+
+
+def test_compute_latest_signal_applies_volatility_target_when_realized_volatility_is_high():
+    signal = compute_latest_signal(
+        _history(),
+        min_history_days=126,
+        target_annual_volatility=0.01,
+    )
+
+    assert signal["signal_state"] == "risk_on"
+    assert 0.0 < sum(signal["weights"].values()) < 1.0
+    assert signal["cash_weight"] > 0.0
 
 
 def test_build_target_weights_moves_to_cash_when_no_symbol_is_eligible():

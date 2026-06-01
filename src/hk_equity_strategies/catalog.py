@@ -15,27 +15,35 @@ from quant_platform_kit.common.strategies import (
     normalize_profile_name as qpk_normalize_profile_name,
 )
 
+from hk_equity_strategies.strategies import hk_high_dividend_low_vol_trend as high_dividend_strategy
 from hk_equity_strategies.strategies import hk_listed_global_etf_rotation as global_etf_strategy
 
 HK_EQUITY_DOMAIN = global_etf_strategy.HK_EQUITY_DOMAIN
 HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE = global_etf_strategy.PROFILE_NAME
+HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE = high_dividend_strategy.PROFILE_NAME
 
-HK_DIRECT_MARKET_HISTORY_PROFILES = frozenset({HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE})
+HK_DIRECT_MARKET_HISTORY_PROFILES = frozenset(
+    {
+        HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE,
+        HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE,
+    }
+)
 HK_SNAPSHOT_BACKED_PROFILES = frozenset()
 HK_RESEARCH_BACKTEST_ONLY_PROFILES = frozenset(
     {
         "hk_index_mean_reversion",
         "hk_etf_regime_rotation",
-        "hk_high_dividend_low_vol_trend",
     }
 )
 
 STRATEGY_PLATFORM_COMPATIBILITY: dict[str, frozenset[str]] = {
     HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE: frozenset({"ibkr", "longbridge"}),
+    HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE: frozenset({"ibkr", "longbridge"}),
 }
 
 STRATEGY_REQUIRED_INPUTS: dict[str, frozenset[str]] = {
     HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE: frozenset({"market_history"}),
+    HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE: frozenset({"market_history"}),
 }
 
 STRATEGY_DEFAULT_CONFIG: dict[str, dict[str, object]] = {
@@ -53,14 +61,30 @@ STRATEGY_DEFAULT_CONFIG: dict[str, dict[str, object]] = {
         "min_history_days": global_etf_strategy.DEFAULT_MIN_HISTORY_DAYS,
         "execution_cash_reserve_ratio": global_etf_strategy.DEFAULT_EXECUTION_CASH_RESERVE_RATIO,
     },
+    HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE: {
+        "universe_symbols": high_dividend_strategy.DEFAULT_UNIVERSE_SYMBOLS,
+        "momentum_window_days": high_dividend_strategy.DEFAULT_MOMENTUM_WINDOW_DAYS,
+        "trend_window_days": high_dividend_strategy.DEFAULT_TREND_WINDOW_DAYS,
+        "volatility_window_days": high_dividend_strategy.DEFAULT_VOLATILITY_WINDOW_DAYS,
+        "top_n": high_dividend_strategy.DEFAULT_TOP_N,
+        "min_momentum": high_dividend_strategy.DEFAULT_MIN_MOMENTUM,
+        "rebalance_frequency": high_dividend_strategy.DEFAULT_REBALANCE_FREQUENCY,
+        "weighting_mode": high_dividend_strategy.DEFAULT_WEIGHTING_MODE,
+        "target_annual_volatility": high_dividend_strategy.DEFAULT_TARGET_ANNUAL_VOLATILITY,
+        "max_gross_exposure": high_dividend_strategy.DEFAULT_MAX_GROSS_EXPOSURE,
+        "min_history_days": high_dividend_strategy.DEFAULT_MIN_HISTORY_DAYS,
+        "execution_cash_reserve_ratio": high_dividend_strategy.DEFAULT_EXECUTION_CASH_RESERVE_RATIO,
+    },
 }
 
 STRATEGY_ENTRYPOINT_ATTRIBUTES: dict[str, str] = {
     HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE: "hk_listed_global_etf_rotation_entrypoint",
+    HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE: "hk_high_dividend_low_vol_trend_entrypoint",
 }
 
 STRATEGY_TARGET_MODES: dict[str, str] = {
     HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE: "weight",
+    HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE: "weight",
 }
 
 
@@ -98,6 +122,11 @@ STRATEGY_DEFINITIONS: dict[str, StrategyDefinition] = {
         component_name="signal_logic",
         module_path="hk_equity_strategies.strategies.hk_listed_global_etf_rotation",
     ),
+    HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE: _build_strategy_definition(
+        HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE,
+        component_name="signal_logic",
+        module_path="hk_equity_strategies.strategies.hk_high_dividend_low_vol_trend",
+    ),
 }
 
 STRATEGY_METADATA: dict[str, StrategyMetadata] = {
@@ -113,6 +142,20 @@ STRATEGY_METADATA: dict[str, StrategyMetadata] = {
         asset_scope="hk_listed_global_etfs",
         benchmark="02800",
         role="hk_non_snapshot_global_etf_rotation",
+        status="runtime_enabled",
+    ),
+    HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE: StrategyMetadata(
+        canonical_profile=HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE,
+        display_name="HK High Dividend Low-Volatility Trend",
+        description=(
+            "Runtime-enabled monthly trend rotation between HK-listed high-dividend and gold ETFs "
+            "with a 12% annual volatility target."
+        ),
+        aliases=("hk_high_dividend_trend", "hk_hd_gold_trend", "hk_high_dividend_low_vol"),
+        cadence="monthly review",
+        asset_scope="hk_high_dividend_gold_etfs",
+        benchmark="03110",
+        role="hk_non_snapshot_high_dividend_low_vol_trend",
         status="runtime_enabled",
     ),
 }
