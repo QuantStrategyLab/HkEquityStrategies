@@ -65,6 +65,8 @@ def test_ibkr_global_etf_readiness_uses_hk_market_defaults():
     assert "runtime_etf_product_due_diligence_verified" in plan["required_live_evidence_fields"]
     assert "runtime_market_data_audit_verified" in plan["required_live_evidence_fields"]
     assert "runtime_market_history_source_provenance_verified" in plan["required_live_evidence_fields"]
+    assert "backtest_validation_policy_evidence" in plan["required_live_evidence_fields"]
+    assert "point_in_time_no_lookahead_and_no_overfit_controls" in plan["required_live_evidence_fields"]
     assert "fresh_section_evidence_generated_at" in plan["required_live_evidence_fields"]
     assert "execution_capacity_and_liquidity_limits_verified" in plan["required_live_evidence_fields"]
     assert "dry_run_order_preview_artifact_provenance_verified" in plan["required_live_evidence_fields"]

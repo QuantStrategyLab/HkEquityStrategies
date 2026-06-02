@@ -111,6 +111,8 @@ REQUIRED_LIVE_EVIDENCE_FIELDS: tuple[str, ...] = (
     "runtime_market_data_audit_verified",
     "runtime_market_history_source_provenance_verified",
     "survivorship_and_lookahead_bias_controls_verified",
+    "backtest_validation_policy_evidence",
+    "point_in_time_no_lookahead_and_no_overfit_controls",
     "max_drawdown_within_profile_threshold",
     "annualized_turnover_within_profile_threshold",
     "runtime_etf_product_due_diligence_verified",

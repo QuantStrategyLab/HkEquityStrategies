@@ -8,6 +8,11 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
+from hk_equity_strategies.backtest_validation_policy import (
+    MAX_ALLOWED_HK_STRATEGY_DRAWDOWN,
+    REQUIRED_BACKTEST_VALIDATION_BOOLEAN_FIELDS,
+    build_backtest_validation_policy,
+)
 from hk_equity_strategies.evidence_freshness_policy import (
     EVIDENCE_GENERATED_AT_FIELD,
     MAX_ALLOWED_EVIDENCE_AGE_DAYS_BY_SECTION,
@@ -279,7 +284,7 @@ def _validate_strategy_backtest(
     elif annual_return <= min_return:
         errors.append(f"{section_name}.annual_return must be greater than {min_return:.2%}")
 
-    max_drawdown_limit = float(thresholds["max_allowed_backtest_drawdown"])
+    max_drawdown_limit = min(float(thresholds["max_allowed_backtest_drawdown"]), MAX_ALLOWED_HK_STRATEGY_DRAWDOWN)
     max_drawdown = _drawdown_abs(section.get("max_drawdown"))
     if max_drawdown is None:
         errors.append(f"{section_name}.max_drawdown is required")
@@ -296,7 +301,7 @@ def _validate_strategy_backtest(
         errors,
         section_name,
         section,
-        ("survivorship_bias_controls", "lookahead_bias_controls", "benchmark_period_aligned"),
+        REQUIRED_BACKTEST_VALIDATION_BOOLEAN_FIELDS,
     )
     benchmark_symbol = str(section.get("benchmark_symbol", "")).strip()
     required_benchmark_symbol = str(get_strategy_metadata(profile).benchmark or "").strip()
@@ -520,6 +525,7 @@ def build_runtime_live_enablement_evidence_template(profile: str, *, platform: s
         "rollout_risk_policy": build_rollout_risk_policy(),
         "runtime_etf_product_policy": build_runtime_etf_product_policy(),
         "runtime_market_data_policy": build_runtime_market_data_policy(),
+        "backtest_validation_policy": build_backtest_validation_policy(),
         "notification_audit_policy": build_notification_audit_policy(RUNTIME_DRY_RUN_NOTIFICATION_EVENT_TYPE),
         "validation_as_of": "<YYYY-MM-DD>",
         "required_live_evidence_fields": list(REQUIRED_LIVE_EVIDENCE_FIELDS),
@@ -534,6 +540,15 @@ def build_runtime_live_enablement_evidence_template(profile: str, *, platform: s
             "survivorship_bias_controls": False,
             "lookahead_bias_controls": False,
             "benchmark_period_aligned": False,
+            "point_in_time_inputs_only": False,
+            "signal_timestamp_before_trade_timestamp": False,
+            "reporting_date_asof_lag_enforced": False,
+            "no_future_constituent_universe": False,
+            "train_validation_test_or_walk_forward_split_documented": False,
+            "parameter_grid_pre_registered_and_small": False,
+            "no_full_sample_parameter_selection": False,
+            "multiple_period_robustness_checked": False,
+            "transaction_cost_slippage_lot_size_and_suspension_model_included": False,
             "benchmark_symbol": benchmark_symbol,
             "benchmark_annual_return": None,
             "strategy_excess_return": None,
@@ -748,6 +763,7 @@ def validate_runtime_live_enablement_evidence(
         "rollout_risk_policy": build_rollout_risk_policy(),
         "runtime_etf_product_policy": build_runtime_etf_product_policy(),
         "runtime_market_data_policy": build_runtime_market_data_policy(),
+        "backtest_validation_policy": build_backtest_validation_policy(),
         "notification_audit_policy": build_notification_audit_policy(RUNTIME_DRY_RUN_NOTIFICATION_EVENT_TYPE),
         "required_sections": list(REQUIRED_SECTIONS),
         "required_live_evidence_fields": list(REQUIRED_LIVE_EVIDENCE_FIELDS),

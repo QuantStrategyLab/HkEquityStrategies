@@ -5,6 +5,10 @@ import json
 from dataclasses import dataclass
 from typing import Any
 
+from hk_equity_strategies.backtest_validation_policy import (
+    BACKTEST_VALIDATION_POLICY_VERSION,
+    build_backtest_validation_policy,
+)
 from hk_equity_strategies.catalog import (
     HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE,
     HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE,
@@ -90,6 +94,8 @@ COMMON_PLATFORM_EVIDENCE_REQUIREMENTS: tuple[str, ...] = (
     "etf_connect_eligibility_and_southbound_flow_review_verified",
     "runtime_market_data_audit_verified",
     "runtime_market_history_source_provenance_verified",
+    "backtest_validation_policy_evidence",
+    "point_in_time_no_lookahead_and_no_overfit_controls",
     "dry_run_order_preview_artifact_provenance_verified",
     "execution_capacity_and_liquidity_limits_verified",
     "fresh_section_evidence_generated_at",
@@ -584,6 +590,7 @@ class LiveEnablementRow:
             "evidence_commands": list(self.evidence_commands),
             "required_evidence": list(self.required_evidence),
             "research_evidence_urls": list(self.research_evidence_urls),
+            "backtest_validation_policy": build_backtest_validation_policy(),
             "evidence_uri_policy": EVIDENCE_URI_POLICY,
             "evidence_freshness_policy": EVIDENCE_FRESHNESS_POLICY,
             "execution_capacity_policy": build_execution_capacity_policy(self.profile),
@@ -719,6 +726,7 @@ def build_live_enablement_matrix() -> dict[str, Any]:
         "runtime_live_gate": RUNTIME_LIVE_GATE,
         "snapshot_scaffold_gate": SNAPSHOT_SCAFFOLD_GATE,
         "research_only_gate": RESEARCH_ONLY_GATE,
+        "backtest_validation_policy": build_backtest_validation_policy(),
         "evidence_uri_policy": EVIDENCE_URI_POLICY,
         "evidence_freshness_policy": EVIDENCE_FRESHNESS_POLICY,
         "execution_capacity_policy": build_execution_capacity_policy(""),
@@ -761,6 +769,7 @@ if __name__ == "__main__":
 
 __all__ = [
     "FIRST_SNAPSHOT_CANDIDATES",
+    "BACKTEST_VALIDATION_POLICY_VERSION",
     "EVIDENCE_FRESHNESS_POLICY",
     "EVIDENCE_URI_POLICY",
     "HSI_MOMENTUM_METHODOLOGY_URL",

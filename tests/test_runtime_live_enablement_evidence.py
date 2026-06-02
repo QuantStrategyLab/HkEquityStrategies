@@ -31,6 +31,15 @@ def _evidence(**overrides):
             "survivorship_bias_controls": True,
             "lookahead_bias_controls": True,
             "benchmark_period_aligned": True,
+            "point_in_time_inputs_only": True,
+            "signal_timestamp_before_trade_timestamp": True,
+            "reporting_date_asof_lag_enforced": True,
+            "no_future_constituent_universe": True,
+            "train_validation_test_or_walk_forward_split_documented": True,
+            "parameter_grid_pre_registered_and_small": True,
+            "no_full_sample_parameter_selection": True,
+            "multiple_period_robustness_checked": True,
+            "transaction_cost_slippage_lot_size_and_suspension_model_included": True,
             "benchmark_symbol": "03110",
             "benchmark_annual_return": 0.08,
             "strategy_excess_return": 0.0916,
@@ -305,6 +314,8 @@ def test_build_runtime_live_enablement_evidence_template_is_not_preapproved():
     assert "official_product_document_uri" in template["runtime_etf_product_policy"]["required_uri_fields"]
     assert template["runtime_market_data_policy"]["required"] is True
     assert "market_history_source_uri" in template["runtime_market_data_policy"]["required_uri_fields"]
+    assert template["backtest_validation_policy"]["policy_version"] == "hk_backtest_validation_policy.v1"
+    assert "no_full_sample_parameter_selection" in template["backtest_validation_policy"]["required_boolean_fields"]
     assert template["notification_audit_policy"]["schema_version"] == "hk_live_enablement_notification.v1"
     assert template["notification_audit_policy"]["expected_event_type"] == "hk_runtime_live_enablement_dry_run"
     assert template["dry_run_order_preview_policy"]["required"] is True
@@ -313,6 +324,9 @@ def test_build_runtime_live_enablement_evidence_template_is_not_preapproved():
     assert template["strategy_backtest"]["annual_return"] is None
     assert template["strategy_backtest"]["benchmark_symbol"] == "03110"
     assert template["strategy_backtest"]["strategy_excess_return"] is None
+    assert template["strategy_backtest"]["point_in_time_inputs_only"] is False
+    assert template["strategy_backtest"]["no_full_sample_parameter_selection"] is False
+    assert template["strategy_backtest"]["transaction_cost_slippage_lot_size_and_suspension_model_included"] is False
     assert template["platform_dry_run_order_preview"]["liquidity_cap_verified"] is False
     assert template["platform_dry_run_order_preview"]["notification_locale_zh_hans"] is False
     assert template["platform_dry_run_order_preview"]["notification_delivery_log_uri"] == ""
@@ -379,6 +393,22 @@ def test_validate_runtime_live_enablement_evidence_rejects_missing_bias_control(
 
     assert result["live_enablement_allowed"] is False
     assert any("strategy_backtest.survivorship_bias_controls" in error for error in result["errors"])
+
+
+def test_validate_runtime_live_enablement_evidence_rejects_overfit_or_lookahead_backtest_controls():
+    payload = _evidence(
+        strategy_backtest={
+            **_evidence()["strategy_backtest"],
+            "point_in_time_inputs_only": False,
+            "no_full_sample_parameter_selection": False,
+        }
+    )
+
+    result = validate_runtime_live_enablement_evidence(payload)
+
+    assert result["live_enablement_allowed"] is False
+    assert any("strategy_backtest.point_in_time_inputs_only" in error for error in result["errors"])
+    assert any("strategy_backtest.no_full_sample_parameter_selection" in error for error in result["errors"])
 
 
 def test_validate_runtime_live_enablement_evidence_requires_market_data_audit_fields():

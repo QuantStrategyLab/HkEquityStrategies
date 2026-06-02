@@ -41,6 +41,14 @@ def test_live_enablement_matrix_keeps_selectable_surface_to_runtime_profiles():
     assert matrix["evidence_uri_policy"]["allowed_schemes"] == ["gs://", "https://", "s3://"]
     assert "token=" in matrix["evidence_uri_policy"]["rejected_query_markers"]
     assert matrix["evidence_freshness_policy"]["required_field"] == "evidence_generated_at"
+    assert matrix["backtest_validation_policy"]["policy_version"] == "hk_backtest_validation_policy.v1"
+    assert matrix["backtest_validation_policy"]["max_allowed_drawdown"] == 0.30
+    assert "max_drawdown_at_or_below_30_percent" in (
+        matrix["backtest_validation_policy"]["required_risk_constraints"]
+    )
+    assert "no_full_sample_parameter_selection" in (
+        matrix["backtest_validation_policy"]["required_boolean_fields"]
+    )
     assert matrix["execution_capacity_policy"]["max_single_order_adv_fraction"] == 0.025
     assert matrix["rollout_risk_policy"]["max_initial_capital_fraction"] == 0.25
     assert matrix["runtime_etf_product_policy"]["policy_version"] == "hk_runtime_etf_product_due_diligence.v2"
@@ -70,6 +78,10 @@ def test_runtime_rows_include_thresholds_evidence_commands_and_sources():
     assert any("max_allowed_backtest_drawdown=0.12" in item for item in row["required_evidence"])
     assert any("validate_hk_runtime_live_enablement.py" in command for command in row["evidence_commands"])
     assert row["evidence_uri_policy"]["required"] is True
+    assert row["backtest_validation_policy"]["max_allowed_drawdown"] == 0.30
+    assert "transaction_cost_slippage_lot_size_and_suspension_model_included" in (
+        row["backtest_validation_policy"]["required_boolean_fields"]
+    )
     assert "signature=" in row["evidence_uri_policy"]["rejected_query_markers"]
     assert row["evidence_freshness_policy"]["required"] is True
     assert row["execution_capacity_policy"]["min_median_daily_turnover_hkd"] == 10_000_000
