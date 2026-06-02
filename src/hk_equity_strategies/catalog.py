@@ -29,6 +29,23 @@ HK_DIRECT_MARKET_HISTORY_PROFILES = frozenset(
     }
 )
 HK_SNAPSHOT_BACKED_PROFILES = frozenset()
+HK_EXTERNAL_SNAPSHOT_SCAFFOLD_PROFILES = frozenset(
+    {
+        "hk_ah_premium_relative_value",
+        "hk_blue_chip_leader_rotation",
+        "hk_central_soe_value_quality_select",
+        "hk_composite_factor_quality_value_momentum",
+        "hk_factor_mix_qvlm_risk_parity",
+        "hk_free_cash_flow_quality",
+        "hk_index_rebalance_event",
+        "hk_liquid_momentum_quality",
+        "hk_low_vol_dividend_quality",
+        "hk_quality_growth_low_volatility",
+        "hk_residual_momentum_quality",
+        "hk_shareholder_yield_quality",
+        "hk_southbound_flow_momentum",
+    }
+)
 HK_RESEARCH_BACKTEST_ONLY_PROFILES = frozenset(
     {
         "hk_index_mean_reversion",
@@ -234,6 +251,10 @@ def get_direct_market_history_profiles() -> frozenset[str]:
 
 def get_snapshot_backed_profiles() -> frozenset[str]:
     return HK_SNAPSHOT_BACKED_PROFILES
+
+
+def get_external_snapshot_scaffold_profiles() -> frozenset[str]:
+    return HK_EXTERNAL_SNAPSHOT_SCAFFOLD_PROFILES
 
 
 def get_research_backtest_only_profiles() -> frozenset[str]:

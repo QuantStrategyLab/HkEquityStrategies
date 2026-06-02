@@ -43,6 +43,14 @@ Official listing references used to confirm the HK-listed instruments include HK
 
 Reference pages:
 
+- Tracker Fund of Hong Kong `02800`: https://www.trahk.com.hk/en-hk/trahk-fund/
+- CSOP FTSE China A50 ETF `02822`: https://www.csopasset.com/en/products/china_A50_etf.php
+- ChinaAMC CSI 300 Index ETF `03188`: https://www.chinaamc.com.hk/product/chinaamc-csi-300-index-etf-3188-hk-83188-hk/
+- CSOP Hang Seng TECH Index ETF `03033`: https://csop.onlineminisite.com/thematicetf/en/3033.php
+- BlackRock iShares NASDAQ 100 ETF `02834`: https://www.blackrock.com/hk/en/products/282238/ishares-nasdaq-100-etf?switchLocale=Y
+- Samsung S&P GSCI Crude Oil ER Futures ETF `03175`: https://www.samsungetfhk.com/en/product/3175/
+- Global X Hang Seng High Dividend Yield ETF `03110`: https://www.globalxetfs.com.hk/funds/hang-seng-high-dividend-yield-etf/
+- SPDR Gold Shares `02840`: https://www.ssga.com/hk/en/institutional/etfs/funds/spdr-gold-shares-2840
 - HKEX IFP, iShares Nasdaq 100 ETF: https://ifp.hkex.com.hk/fund/BHG161
 - HKEX IFP, Samsung S&P GSCI Crude Oil ER Futures ETF: https://ifp.hkex.com.hk/fund/BGT085
 - HKEX IFP, Global X Hang Seng High Dividend Yield ETF: https://ifp.hkex.com.hk/fund/BAR386
@@ -160,11 +168,37 @@ Reasons:
 1. The selected volatility-targeted version keeps full-sample and train max drawdown below 30%.
 2. It improves full-sample annualized return versus the existing HK ETF regime rotation while keeping turnover low.
 3. Several important global exposures are still either too new (`03195`) or need data cleaning (`03010`).
-4. Broker tradability, ETF spread, lot size, derivative ETF suitability, currency line selection, and stamp-duty exemption must be checked per symbol before any production rollout.
+4. Broker tradability, ETF spread, lot size, derivative ETF suitability, currency line selection, stamp-duty exemption, official product documents, underlying index/reference-asset sources, NAV/iNAV, tracking error/difference, market-maker/liquidity-provider evidence, distribution policy, and creation/redemption currency must be checked per symbol before any production rollout.
 
 Next low-risk step before production rollout:
 
 1. Clean and validate `03010` corporate-action / adjusted-price history.
 2. Re-run after `03195` has a longer S&P 500 sample.
 3. Add ETF-level liquidity and spread filters instead of treating all ETFs equally.
-4. After Cloud Run deployment, monitor both IBKR and LongBridge dry-run/live reports for symbol feed, sizing, and order conversion behavior before increasing account exposure.
+4. Archive stable per-symbol ETF product-due-diligence evidence URIs for official documents, underlying index/reference asset, NAV/iNAV, market-maker/liquidity provider, Stock Connect ETF eligibility / sell-only status, Southbound ETF turnover/fund-flow trend, distribution/tax/fee treatment, and broker permission before dry-run removal.
+5. After Cloud Run deployment, monitor both IBKR and LongBridge dry-run/live reports for symbol feed, sizing, and order conversion behavior before increasing account exposure.
+
+## Product due-diligence additions
+
+The broader global ETF profile is runtime-enabled, but dry-run removal must now
+prove product-level evidence for each sleeve:
+
+- `02800`: TraHK prospectus/factsheet, Hang Seng Index concentration, NAV /
+  tracking-difference, dual-counter handling, and HKSAR-government
+  non-guarantee disclosures.
+- `02822` and `03188`: A-share underlying index, RQFII / Stock Connect access,
+  ETF Connect eligibility or sell-only status, Southbound ETF turnover/fund-flow
+  trend, broker Southbound ETF buy-route availability, RMB base-currency and
+  HKD/USD counters, A-share trading-hour and price-band gaps, cross-market
+  holidays, FX, cross-boundary settlement, and premium/discount risk.
+- `03033`: Hang Seng TECH concentration, platform-regulation drawdown risk,
+  NAV/iNAV, technology-sector liquidity, and index-methodology freshness.
+- `02834`: Nasdaq trading-hour gap, US-market FX, premium/discount,
+  capital-distribution risk, multi-counter currency, and creation/redemption
+  currency handling.
+- `03175`: futures-based complex-product status, WTI futures roll schedule,
+  margin, curve / contango / backwardation risk, non-correlation with spot oil,
+  and explicit operator suitability review. If any of these fail, remove the
+  ETF via universe override and rerun the backtest/readiness pack.
+- `02840` and `03110`: reuse the high-dividend/gold product checks from
+  `hk_high_dividend_low_vol_trend`.

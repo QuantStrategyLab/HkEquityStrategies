@@ -11,6 +11,7 @@ from hk_equity_strategies.catalog import (
     HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE,
     get_compatible_platforms,
     get_direct_market_history_profiles,
+    get_external_snapshot_scaffold_profiles,
     get_profile_aliases,
     get_research_backtest_only_profiles,
     get_runtime_enabled_profiles,
@@ -65,6 +66,23 @@ def test_profile_groups_keep_runtime_research_and_snapshot_scaffolds_separate():
         }
     )
     assert get_snapshot_backed_profiles() == frozenset()
+    assert get_external_snapshot_scaffold_profiles() == frozenset(
+        {
+            "hk_ah_premium_relative_value",
+            "hk_blue_chip_leader_rotation",
+            "hk_central_soe_value_quality_select",
+            "hk_composite_factor_quality_value_momentum",
+            "hk_factor_mix_qvlm_risk_parity",
+            "hk_free_cash_flow_quality",
+            "hk_index_rebalance_event",
+            "hk_liquid_momentum_quality",
+            "hk_low_vol_dividend_quality",
+            "hk_quality_growth_low_volatility",
+            "hk_residual_momentum_quality",
+            "hk_shareholder_yield_quality",
+            "hk_southbound_flow_momentum",
+        }
+    )
     assert get_research_backtest_only_profiles() == frozenset(
         {
             "hk_index_mean_reversion",
@@ -78,13 +96,26 @@ def test_profile_groups_keep_runtime_research_and_snapshot_scaffolds_separate():
         }
     )
     assert get_research_backtest_only_profiles().isdisjoint(get_runtime_enabled_profiles())
+    assert get_external_snapshot_scaffold_profiles().isdisjoint(get_runtime_enabled_profiles())
 
 
 @pytest.mark.parametrize(
     "profile",
     [
+        "hk_ah_premium_relative_value",
         "hk_blue_chip_leader_rotation",
+        "hk_central_soe_value_quality_select",
+        "hk_composite_factor_quality_value_momentum",
+        "hk_factor_mix_qvlm_risk_parity",
+        "hk_free_cash_flow_quality",
+        "hk_index_rebalance_event",
         "hk_index_mean_reversion",
+        "hk_liquid_momentum_quality",
+        "hk_low_vol_dividend_quality",
+        "hk_quality_growth_low_volatility",
+        "hk_residual_momentum_quality",
+        "hk_shareholder_yield_quality",
+        "hk_southbound_flow_momentum",
         "hk_etf_regime_rotation",
         "hk_blue_chip_snapshot",
         "hk_index_reversion",
