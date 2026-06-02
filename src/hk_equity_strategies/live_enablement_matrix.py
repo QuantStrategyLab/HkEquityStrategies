@@ -98,6 +98,7 @@ SNAPSHOT_FUTURE_RESEARCH_CANDIDATES: tuple[str, ...] = (
     "hk_margin_financing_collateral_forced_selling_risk_overlay",
     "hk_liquid_largecap_weekly_reversal_cost_aware_overlay",
     "hk_us_adr_hk_secondary_listing_lead_lag_overlay",
+    "hk_smart_beta_factor_regime_rotation_overlay",
 )
 
 SNAPSHOT_FUTURE_RESEARCH_PRE_SCAFFOLD_GATES: tuple[str, ...] = (
@@ -139,6 +140,7 @@ SNAPSHOT_FUTURE_RESEARCH_PRE_SCAFFOLD_GATES: tuple[str, ...] = (
     "margin_financing_collateral_haircut_pledge_forced_selling_and_liquidity_ablation_history",
     "weekly_reversal_extreme_return_cost_slippage_vcm_cas_and_momentum_ablation_history",
     "adr_hk_secondary_listing_lead_lag_fx_conversion_and_execution_ablation_history",
+    "smart_beta_factor_regime_rotation_market_cycle_sentiment_and_factor_ablation_history",
     "survivorship_safe_walk_forward_backtest_vs_02800_and_candidate_benchmark",
     "artifact_provenance_dry_run_order_preview_bilingual_notifications_and_rollout_controls",
     "operator_approval_reference",

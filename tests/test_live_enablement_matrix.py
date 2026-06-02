@@ -373,6 +373,7 @@ def test_snapshot_future_research_policy_blocks_non_scaffolded_ideas():
         "hk_margin_financing_collateral_forced_selling_risk_overlay",
         "hk_liquid_largecap_weekly_reversal_cost_aware_overlay",
         "hk_us_adr_hk_secondary_listing_lead_lag_overlay",
+        "hk_smart_beta_factor_regime_rotation_overlay",
     ]
     assert "new_snapshot_profile_name_and_contract_version" in policy["required_pre_scaffold_gates"]
     assert "point_in_time_consensus_estimate_and_revision_history" in policy["required_pre_scaffold_gates"]
@@ -487,6 +488,10 @@ def test_snapshot_future_research_policy_blocks_non_scaffolded_ideas():
     )
     assert (
         "adr_hk_secondary_listing_lead_lag_fx_conversion_and_execution_ablation_history"
+        in policy["required_pre_scaffold_gates"]
+    )
+    assert (
+        "smart_beta_factor_regime_rotation_market_cycle_sentiment_and_factor_ablation_history"
         in policy["required_pre_scaffold_gates"]
     )
     assert "mutating_existing_snapshot_contract_in_place" in policy["required_reject_criteria"]
