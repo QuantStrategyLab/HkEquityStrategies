@@ -86,6 +86,7 @@ SNAPSHOT_FUTURE_RESEARCH_CANDIDATES: tuple[str, ...] = (
     "hk_accrual_quality_earnings_persistence_overlay",
     "hk_fscore_gross_profitability_quality_overlay",
     "hk_shareholding_concentration_free_float_risk_overlay",
+    "hk_amihud_liquidity_risk_capacity_overlay",
 )
 
 SNAPSHOT_FUTURE_RESEARCH_PRE_SCAFFOLD_GATES: tuple[str, ...] = (
@@ -115,6 +116,7 @@ SNAPSHOT_FUTURE_RESEARCH_PRE_SCAFFOLD_GATES: tuple[str, ...] = (
     "accrual_quality_earnings_persistence_reporting_date_restatement_sector_exception_and_liquidity_history",
     "fscore_gross_profitability_reporting_date_restatement_sector_exception_and_liquidity_history",
     "shareholding_concentration_ccass_free_float_ramp_dump_red_flag_and_liquidity_history",
+    "amihud_liquidity_risk_market_wide_shock_capacity_and_execution_history",
     "survivorship_safe_walk_forward_backtest_vs_02800_and_candidate_benchmark",
     "artifact_provenance_dry_run_order_preview_bilingual_notifications_and_rollout_controls",
     "operator_approval_reference",

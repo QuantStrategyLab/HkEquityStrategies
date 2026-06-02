@@ -361,6 +361,7 @@ def test_snapshot_future_research_policy_blocks_non_scaffolded_ideas():
         "hk_accrual_quality_earnings_persistence_overlay",
         "hk_fscore_gross_profitability_quality_overlay",
         "hk_shareholding_concentration_free_float_risk_overlay",
+        "hk_amihud_liquidity_risk_capacity_overlay",
     ]
     assert "new_snapshot_profile_name_and_contract_version" in policy["required_pre_scaffold_gates"]
     assert "point_in_time_consensus_estimate_and_revision_history" in policy["required_pre_scaffold_gates"]
@@ -427,6 +428,10 @@ def test_snapshot_future_research_policy_blocks_non_scaffolded_ideas():
     )
     assert (
         "shareholding_concentration_ccass_free_float_ramp_dump_red_flag_and_liquidity_history"
+        in policy["required_pre_scaffold_gates"]
+    )
+    assert (
+        "amihud_liquidity_risk_market_wide_shock_capacity_and_execution_history"
         in policy["required_pre_scaffold_gates"]
     )
     assert "mutating_existing_snapshot_contract_in_place" in policy["required_reject_criteria"]
