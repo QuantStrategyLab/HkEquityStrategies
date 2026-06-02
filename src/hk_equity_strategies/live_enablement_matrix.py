@@ -73,6 +73,7 @@ SNAPSHOT_FUTURE_RESEARCH_CANDIDATES: tuple[str, ...] = (
     "hk_lottery_stock_risk_exclusion_overlay",
     "hk_equity_financing_dilution_risk_overlay",
     "hk_connected_transaction_governance_risk_overlay",
+    "hk_takeover_privatization_event_spread_overlay",
 )
 
 SNAPSHOT_FUTURE_RESEARCH_PRE_SCAFFOLD_GATES: tuple[str, ...] = (
@@ -89,6 +90,7 @@ SNAPSHOT_FUTURE_RESEARCH_PRE_SCAFFOLD_GATES: tuple[str, ...] = (
     "lottery_feature_ivol_iskew_max_price_and_regime_history",
     "equity_financing_rights_open_offer_placement_convertible_dilution_event_history",
     "connected_transaction_related_party_tunneling_propping_and_governance_event_history",
+    "takeover_privatization_possible_offer_firm_intention_offer_period_and_completion_risk_history",
     "survivorship_safe_walk_forward_backtest_vs_02800_and_candidate_benchmark",
     "artifact_provenance_dry_run_order_preview_bilingual_notifications_and_rollout_controls",
     "operator_approval_reference",
