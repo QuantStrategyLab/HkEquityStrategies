@@ -287,6 +287,7 @@ Do not build all of these now. The clean sequence is:
 
 - Use walk-forward splits and keep a final untouched out-of-sample period.
 - Treat max drawdown <= 30% as a hard HK live-enable limit; if a profile has a stricter threshold, use the stricter threshold, and require every rolling/OOS fold to stay <= 30%.
+- Require `annual_return_to_max_drawdown_ratio >= 0.50` for live enablement, and recompute it from reported annual return / max drawdown so high-volatility strategies cannot pass with weak returns simply because drawdown is below the hard cap.
 - Use realistic HK fees: stamp duty exemption should be determined per symbol; do not assume ETF or stock costs are the same.
 - Include lot-size rounding, slippage, holidays, suspended securities, and corporate actions.
 - Stress fee/slippage/spread assumptions and reject candidates whose excess return turns non-positive under conservative cost stress.

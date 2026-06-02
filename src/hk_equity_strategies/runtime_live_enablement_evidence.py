@@ -10,6 +10,7 @@ from urllib.parse import urlparse
 
 from hk_equity_strategies.backtest_validation_policy import (
     MAX_ALLOWED_HK_STRATEGY_DRAWDOWN,
+    MIN_RETURN_TO_DRAWDOWN_RATIO,
     REQUIRED_BACKTEST_VALIDATION_BOOLEAN_FIELDS,
     build_backtest_validation_policy,
 )
@@ -299,6 +300,25 @@ def _validate_strategy_backtest(
             f"{section_name}.rolling_oos_fold_max_drawdown exceeds {max_drawdown_limit:.0%}: "
             f"got {rolling_oos_fold_max_drawdown:.2%}"
         )
+    min_return_to_drawdown_ratio = max(
+        float(thresholds.get("min_required_return_to_drawdown_ratio", MIN_RETURN_TO_DRAWDOWN_RATIO)),
+        MIN_RETURN_TO_DRAWDOWN_RATIO,
+    )
+    annual_return_to_max_drawdown_ratio = _number(section.get("annual_return_to_max_drawdown_ratio"))
+    if annual_return_to_max_drawdown_ratio is None:
+        errors.append(f"{section_name}.annual_return_to_max_drawdown_ratio is required")
+    elif annual_return_to_max_drawdown_ratio < min_return_to_drawdown_ratio:
+        errors.append(
+            f"{section_name}.annual_return_to_max_drawdown_ratio must be >= "
+            f"{min_return_to_drawdown_ratio:.2f}: got {annual_return_to_max_drawdown_ratio:.2f}"
+        )
+    if annual_return is not None and max_drawdown not in (None, 0.0):
+        computed_return_to_max_drawdown_ratio = annual_return / max_drawdown
+        if computed_return_to_max_drawdown_ratio < min_return_to_drawdown_ratio:
+            errors.append(
+                f"{section_name}.computed_annual_return_to_max_drawdown_ratio must be >= "
+                f"{min_return_to_drawdown_ratio:.2f}: got {computed_return_to_max_drawdown_ratio:.2f}"
+            )
 
     max_turnover = float(thresholds["max_allowed_annualized_turnover"])
     annualized_turnover = _number(section.get("annualized_turnover"))
@@ -546,6 +566,7 @@ def build_runtime_live_enablement_evidence_template(profile: str, *, platform: s
             "annual_return": None,
             "max_drawdown": None,
             "rolling_oos_fold_max_drawdown": None,
+            "annual_return_to_max_drawdown_ratio": None,
             "annualized_turnover": None,
             "survivorship_bias_controls": False,
             "lookahead_bias_controls": False,

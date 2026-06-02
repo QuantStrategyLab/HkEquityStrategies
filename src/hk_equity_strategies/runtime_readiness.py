@@ -135,12 +135,14 @@ MIN_REQUIRED_WALK_FORWARD_YEARS = 3.0
 PROFILE_LIVE_ENABLEMENT_THRESHOLDS: dict[str, dict[str, float]] = {
     HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE: {
         "max_allowed_backtest_drawdown": 0.30,
+        "min_required_return_to_drawdown_ratio": 0.50,
         "max_allowed_annualized_turnover": 1.50,
         "min_required_annual_return": 0.0,
         "min_required_walk_forward_years": MIN_REQUIRED_WALK_FORWARD_YEARS,
     },
     HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE: {
         "max_allowed_backtest_drawdown": 0.12,
+        "min_required_return_to_drawdown_ratio": 0.50,
         "max_allowed_annualized_turnover": 1.00,
         "min_required_annual_return": 0.0,
         "min_required_walk_forward_years": MIN_REQUIRED_WALK_FORWARD_YEARS,

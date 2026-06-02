@@ -57,6 +57,7 @@ def test_ibkr_global_etf_readiness_uses_hk_market_defaults():
     assert any("futures roll" in check for check in plan["etf_live_enablement_checks"])
     assert plan["live_enablement_thresholds"] == {
         "max_allowed_backtest_drawdown": 0.30,
+        "min_required_return_to_drawdown_ratio": 0.50,
         "max_allowed_annualized_turnover": 1.50,
         "min_required_annual_return": 0.0,
         "min_required_walk_forward_years": 3.0,
@@ -135,6 +136,7 @@ def test_high_dividend_low_vol_trend_readiness_uses_two_managed_symbols():
     assert any("preferred lower-drawdown" in check for check in plan["profile_live_optimization_checks"])
     assert plan["live_enablement_thresholds"] == {
         "max_allowed_backtest_drawdown": 0.12,
+        "min_required_return_to_drawdown_ratio": 0.50,
         "max_allowed_annualized_turnover": 1.00,
         "min_required_annual_return": 0.0,
         "min_required_walk_forward_years": 3.0,

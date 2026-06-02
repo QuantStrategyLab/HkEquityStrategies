@@ -43,6 +43,7 @@ def test_live_enablement_matrix_keeps_selectable_surface_to_runtime_profiles():
     assert matrix["evidence_freshness_policy"]["required_field"] == "evidence_generated_at"
     assert matrix["backtest_validation_policy"]["policy_version"] == "hk_backtest_validation_policy.v1"
     assert matrix["backtest_validation_policy"]["max_allowed_drawdown"] == 0.30
+    assert matrix["backtest_validation_policy"]["min_return_to_drawdown_ratio"] == 0.50
     assert "max_drawdown_at_or_below_30_percent" in (
         matrix["backtest_validation_policy"]["required_risk_constraints"]
     )
@@ -64,9 +65,13 @@ def test_live_enablement_matrix_keeps_selectable_surface_to_runtime_profiles():
     assert "fee_slippage_spread_sensitivity_stays_profitable" in (
         matrix["backtest_validation_policy"]["required_risk_constraints"]
     )
+    assert "annual_return_to_max_drawdown_ratio_at_or_above_50_percent" in (
+        matrix["backtest_validation_policy"]["required_risk_constraints"]
+    )
     assert "cross_strategy_correlation_and_aggregate_drawdown_budget_limits" in (
         matrix["backtest_validation_policy"]["required_risk_constraints"]
     )
+    assert "annual_return_to_max_drawdown_ratio" in matrix["backtest_validation_policy"]["required_metrics"]
     assert "data_vendor_reconciliation_and_missingness_controls" in (
         matrix["backtest_validation_policy"]["required_boolean_fields"]
     )
@@ -75,6 +80,9 @@ def test_live_enablement_matrix_keeps_selectable_surface_to_runtime_profiles():
     )
     assert "rolling_or_oos_fold_drawdown_above_30_percent" in matrix["backtest_validation_policy"]["reject_criteria"]
     assert "fee_slippage_spread_stress_turns_excess_return_non_positive" in (
+        matrix["backtest_validation_policy"]["reject_criteria"]
+    )
+    assert "annual_return_to_max_drawdown_ratio_below_50_percent" in (
         matrix["backtest_validation_policy"]["reject_criteria"]
     )
     assert "per_fold_drawdown_parameter_stability_and_regime_stress_controls" in (
@@ -107,6 +115,7 @@ def test_runtime_rows_include_thresholds_evidence_commands_and_sources():
     assert row["benchmark"] == "03110"
     assert row["supported_platforms"] == ["ibkr", "longbridge"]
     assert any("max_allowed_backtest_drawdown=0.12" in item for item in row["required_evidence"])
+    assert any("min_required_return_to_drawdown_ratio=0.5" in item for item in row["required_evidence"])
     assert any("validate_hk_runtime_live_enablement.py" in command for command in row["evidence_commands"])
     assert row["evidence_uri_policy"]["required"] is True
     assert row["backtest_validation_policy"]["max_allowed_drawdown"] == 0.30

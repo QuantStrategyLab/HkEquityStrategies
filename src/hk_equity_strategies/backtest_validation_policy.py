@@ -4,6 +4,7 @@ from typing import Any
 
 BACKTEST_VALIDATION_POLICY_VERSION = "hk_backtest_validation_policy.v1"
 MAX_ALLOWED_HK_STRATEGY_DRAWDOWN = 0.30
+MIN_RETURN_TO_DRAWDOWN_RATIO = 0.50
 
 REQUIRED_BACKTEST_VALIDATION_BOOLEAN_FIELDS: tuple[str, ...] = (
     "survivorship_bias_controls",
@@ -42,6 +43,7 @@ REQUIRED_BACKTEST_RISK_CONSTRAINTS: tuple[str, ...] = (
     "suspension_stale_quote_vcm_cas_and_market_session_controls",
     "hk_fee_levy_stamp_duty_or_etf_exemption_slippage_model",
     "fee_slippage_spread_sensitivity_stays_profitable",
+    "annual_return_to_max_drawdown_ratio_at_or_above_50_percent",
     "worst_month_or_worst_rebalance_loss_within_profile_threshold",
     "time_underwater_and_drawdown_recovery_within_profile_threshold",
     "cross_strategy_correlation_and_aggregate_drawdown_budget_limits",
@@ -61,6 +63,7 @@ REQUIRED_BACKTEST_VALIDATION_METRICS: tuple[str, ...] = (
     "worst_month_or_worst_rebalance_loss",
     "max_time_underwater_days",
     "fee_slippage_stress_excess_return",
+    "annual_return_to_max_drawdown_ratio",
     "correlation_to_existing_live_hk_profiles",
     "parameter_sensitivity_summary",
     "capacity_at_target_aum",
@@ -78,6 +81,7 @@ BACKTEST_VALIDATION_REJECT_CRITERIA: tuple[str, ...] = (
     "rolling_or_oos_fold_drawdown_above_30_percent",
     "insufficient_parameter_sensitivity_or_holdout_stability",
     "fee_slippage_spread_stress_turns_excess_return_non_positive",
+    "annual_return_to_max_drawdown_ratio_below_50_percent",
     "time_underwater_or_worst_rebalance_loss_exceeds_profile_limit",
     "high_correlation_to_existing_live_profiles_without_aggregate_risk_budget",
     "hidden_leverage_or_short_exposure_without_borrow_margin_and_tick_rule_controls",
@@ -92,6 +96,7 @@ def build_backtest_validation_policy() -> dict[str, Any]:
         "scope": "all_hk_runtime_and_snapshot_scaffold_strategy_profiles",
         "live_enablement_allowed_without_policy_evidence": False,
         "max_allowed_drawdown": MAX_ALLOWED_HK_STRATEGY_DRAWDOWN,
+        "min_return_to_drawdown_ratio": MIN_RETURN_TO_DRAWDOWN_RATIO,
         "required_boolean_fields": list(REQUIRED_BACKTEST_VALIDATION_BOOLEAN_FIELDS),
         "required_risk_constraints": list(REQUIRED_BACKTEST_RISK_CONSTRAINTS),
         "required_metrics": list(REQUIRED_BACKTEST_VALIDATION_METRICS),
@@ -101,7 +106,7 @@ def build_backtest_validation_policy() -> dict[str, Any]:
             "and max drawdown must be <= 30% unless a stricter per-profile threshold applies. "
             "Evidence must prove point-in-time inputs, no look-ahead or survivorship bias, pre-registered and small "
             "parameter searches, per-fold drawdown <= 30%, net-of-cost returns, HK cost/slippage/lot-size/suspension "
-            "handling, corporate-action / stale-price handling, benchmark alignment, leverage/shorting feasibility, capacity, "
+            "handling, corporate-action / stale-price handling, benchmark alignment, annual-return-to-drawdown ratio, leverage/shorting feasibility, capacity, "
             "fee/slippage stress, tail loss and time-under-water recovery, cross-strategy correlation, aggregate risk budget, "
             "regime stress, and robustness across multiple periods."
         ),
@@ -112,6 +117,7 @@ __all__ = [
     "BACKTEST_VALIDATION_POLICY_VERSION",
     "BACKTEST_VALIDATION_REJECT_CRITERIA",
     "MAX_ALLOWED_HK_STRATEGY_DRAWDOWN",
+    "MIN_RETURN_TO_DRAWDOWN_RATIO",
     "REQUIRED_BACKTEST_RISK_CONSTRAINTS",
     "REQUIRED_BACKTEST_VALIDATION_BOOLEAN_FIELDS",
     "REQUIRED_BACKTEST_VALIDATION_METRICS",
