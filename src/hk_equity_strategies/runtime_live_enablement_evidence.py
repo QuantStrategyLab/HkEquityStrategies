@@ -27,9 +27,9 @@ from hk_equity_strategies.evidence_uri_policy import (
     build_evidence_uri_policy,
 )
 from hk_equity_strategies.execution_capacity_policy import (
-    REQUIRED_EXECUTION_CAPACITY_FIELDS,
     build_execution_capacity_policy,
     get_min_median_daily_turnover_hkd,
+    get_required_execution_capacity_fields,
 )
 from hk_equity_strategies.dry_run_order_preview_policy import (
     REQUIRED_DRY_RUN_ORDER_PREVIEW_BOOLEAN_FIELDS,
@@ -54,8 +54,8 @@ from hk_equity_strategies.catalog import (
 from hk_equity_strategies.runtime_adapters import SUPPORTED_RUNTIME_PLATFORMS
 from hk_equity_strategies.runtime_readiness import (
     PROFILE_LIVE_ENABLEMENT_THRESHOLDS,
-    REQUIRED_LIVE_EVIDENCE_FIELDS,
     build_hk_runtime_readiness,
+    get_required_live_evidence_fields,
 )
 from hk_equity_strategies.runtime_equity_product_policy import (
     REQUIRED_RUNTIME_EQUITY_PRODUCT_BOOLEAN_FIELDS,
@@ -524,7 +524,7 @@ def _validate_dry_run(errors: list[str], evidence: Mapping[str, Any], *, profile
             errors.append(f"{section_name}.{field} is required")
         elif value > threshold:
             errors.append(f"{section_name}.{field} exceeds {threshold:.2%}: got {value:.2%}")
-    _add_missing_bool_errors(errors, section_name, section, REQUIRED_EXECUTION_CAPACITY_FIELDS)
+    _add_missing_bool_errors(errors, section_name, section, get_required_execution_capacity_fields(profile))
     _validate_dry_run_order_preview_provenance(errors, section_name, section)
     _validate_notification_audit(
         errors,
@@ -661,7 +661,7 @@ def build_runtime_live_enablement_evidence_template(profile: str, *, platform: s
         "backtest_validation_policy": build_backtest_validation_policy(),
         "notification_audit_policy": build_notification_audit_policy(RUNTIME_DRY_RUN_NOTIFICATION_EVENT_TYPE),
         "validation_as_of": "<YYYY-MM-DD>",
-        "required_live_evidence_fields": list(REQUIRED_LIVE_EVIDENCE_FIELDS),
+        "required_live_evidence_fields": list(get_required_live_evidence_fields(canonical_profile)),
         "strategy_backtest": {
             "status": "pending",
             "out_of_sample": False,
@@ -775,12 +775,7 @@ def build_runtime_live_enablement_evidence_template(profile: str, *, platform: s
             "median_daily_turnover_hkd": None,
             "max_single_order_adv_fraction": None,
             "rebalance_adv_fraction": None,
-            "liquidity_cap_verified": False,
-            "board_lot_rounding_verified": False,
-            "odd_lot_avoidance_verified": False,
-            "market_session_routing_verified": False,
-            "vcm_price_band_controls_verified": False,
-            "etf_nav_or_spread_guard_verified": False,
+            **{field: False for field in get_required_execution_capacity_fields(canonical_profile)},
             EVIDENCE_GENERATED_AT_FIELD: "",
             "evidence_uri": "",
         },
@@ -944,7 +939,7 @@ def validate_runtime_live_enablement_evidence(
         "backtest_validation_policy": build_backtest_validation_policy(),
         "notification_audit_policy": build_notification_audit_policy(RUNTIME_DRY_RUN_NOTIFICATION_EVENT_TYPE),
         "required_sections": list(REQUIRED_SECTIONS),
-        "required_live_evidence_fields": list(REQUIRED_LIVE_EVIDENCE_FIELDS),
+        "required_live_evidence_fields": list(get_required_live_evidence_fields(profile)),
         "errors": errors,
         "warnings": warnings,
     }
@@ -980,7 +975,7 @@ def validate_runtime_live_enablement_evidence_file(
             "runtime_market_data_policy": build_runtime_market_data_policy(),
             "notification_audit_policy": build_notification_audit_policy(RUNTIME_DRY_RUN_NOTIFICATION_EVENT_TYPE),
             "required_sections": list(REQUIRED_SECTIONS),
-            "required_live_evidence_fields": list(REQUIRED_LIVE_EVIDENCE_FIELDS),
+            "required_live_evidence_fields": [],
             "errors": [*validation_as_of_errors, "evidence file must contain a JSON object"],
             "warnings": [],
         }

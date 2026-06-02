@@ -404,6 +404,7 @@ def _low_vol_dividend_evidence():
         {
             "orders_previewed": 11,
             "median_daily_turnover_hkd": 120_000_000,
+            "equity_spread_and_trading_status_guard_verified": True,
             "evidence_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality/order-preview.json",
             "raw_order_preview_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality/order-preview/raw.json",
             "quote_snapshot_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality/order-preview/quotes.json",
@@ -472,6 +473,10 @@ def test_build_low_vol_dividend_evidence_template_requires_snapshot_artifact_lin
     assert template["platform_dry_run_order_preview"]["fee_breakdown_uri"] == ""
     assert template["platform_dry_run_order_preview"]["order_preview_artifact_not_sample"] is False
     assert template["platform_dry_run_order_preview"]["fee_breakdown_reconciled_to_broker_preview"] is False
+    assert template["platform_dry_run_order_preview"]["equity_spread_and_trading_status_guard_verified"] is False
+    assert "etf_nav_or_spread_guard_verified" not in template["platform_dry_run_order_preview"]
+    assert "runtime_equity_product_due_diligence_verified" in template["required_live_evidence_fields"]
+    assert "runtime_etf_product_due_diligence_verified" not in template["required_live_evidence_fields"]
     assert template["runtime_switch_plan"]["staged_rollout_plan_ready"] is False
     assert template["runtime_switch_plan"]["initial_capital_fraction"] is None
     assert template["runtime_readiness"]["adjusted_price_history"] is False

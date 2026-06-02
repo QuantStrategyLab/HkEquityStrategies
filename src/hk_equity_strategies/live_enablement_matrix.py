@@ -35,7 +35,7 @@ from hk_equity_strategies.runtime_etf_product_policy import build_runtime_etf_pr
 from hk_equity_strategies.runtime_market_data_policy import build_runtime_market_data_policy
 from hk_equity_strategies.runtime_readiness import (
     PROFILE_LIVE_ENABLEMENT_THRESHOLDS,
-    REQUIRED_LIVE_EVIDENCE_FIELDS,
+    get_required_live_evidence_fields,
 )
 
 HK_STRATEGY_LIVE_ENABLEMENT_MATRIX_VERSION = "hk_equity_strategies.live_enablement_matrix.v1"
@@ -181,6 +181,20 @@ COMMON_PLATFORM_EVIDENCE_REQUIREMENTS: tuple[str, ...] = (
     "bilingual_notification_delivery_log_verified",
     "operator_approval_reference",
 )
+
+
+def _common_platform_evidence_requirements(profile: str) -> tuple[str, ...]:
+    if profile == HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE:
+        return tuple(
+            "runtime_equity_product_due_diligence_verified"
+            if item == "runtime_etf_product_due_diligence_verified"
+            else "hk_fees_levies_and_stamp_duty_verified"
+            if item == "hk_fees_levies_and_stamp_duty_or_etf_exemption_verified"
+            else item
+            for item in COMMON_PLATFORM_EVIDENCE_REQUIREMENTS
+            if item != "etf_connect_eligibility_and_southbound_flow_review_verified"
+        )
+    return COMMON_PLATFORM_EVIDENCE_REQUIREMENTS
 
 CURATED_LIVE_ENABLEMENT_STRATEGY_RANKING_VERSION = "hk_equity_strategies.curated_live_enablement_ranking.v1"
 
@@ -843,9 +857,9 @@ def _runtime_row(profile: str) -> LiveEnablementRow:
         benchmark=metadata.benchmark,
         evidence_commands=evidence_commands,
         required_evidence=_dedupe(
-            tuple(REQUIRED_LIVE_EVIDENCE_FIELDS)
+            tuple(get_required_live_evidence_fields(profile))
             + snapshot_evidence
-            + COMMON_PLATFORM_EVIDENCE_REQUIREMENTS
+            + _common_platform_evidence_requirements(profile)
             + threshold_evidence
         ),
         research_evidence_urls=RUNTIME_RESEARCH_EVIDENCE_URLS.get(

@@ -92,6 +92,16 @@ HK_ETF_LIVE_ENABLEMENT_CHECKS: tuple[str, ...] = (
     "Block order submission when quotes, NAV, lot size, market-maker liquidity, or trading status cannot be verified for the order date.",
 )
 
+HK_EQUITY_LIVE_ENABLEMENT_CHECKS: tuple[str, ...] = (
+    "Confirm every managed symbol is an HKEX-listed single-name equity and capture the equity universe audit record.",
+    "Confirm Stock Connect eligibility or a direct broker route for every managed symbol before operator approval.",
+    "Capture current board lot, trading currency, suspension/trading-status, and corporate-action source evidence per symbol.",
+    "Reconcile dividend yield and payout-ratio source lineage against point-in-time factor snapshot inputs.",
+    "Verify sector caps, single-name caps, spread/depth, ADV capacity, and forced cash residual behavior before order preview.",
+    "Confirm HK stamp duty, levies, broker commission, odd-lot handling, VCM, CAS, and market-session routing before dry-run removal.",
+    "Block order submission when quote freshness, trading status, corporate-action treatment, board lot, or broker permission cannot be verified for the order date.",
+)
+
 ORDER_CONVERSION_CHECKS: tuple[str, ...] = (
     "Map HK numeric symbols to broker-native symbols using the .HK suffix or SEHK exchange mapping.",
     "Convert target weights with the latest portfolio equity or broker positions when the platform needs value targets.",
@@ -135,6 +145,24 @@ REQUIRED_LIVE_EVIDENCE_FIELDS: tuple[str, ...] = (
     "bilingual_notification_delivery_log_verified",
     "operator_approval_reference",
 )
+
+
+def get_required_live_evidence_fields(profile: str) -> tuple[str, ...]:
+    fields = list(REQUIRED_LIVE_EVIDENCE_FIELDS)
+    if profile == HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE:
+        fields = [
+            "runtime_equity_product_due_diligence_verified"
+            if field == "runtime_etf_product_due_diligence_verified"
+            else field
+            for field in fields
+        ]
+        fields = [
+            "hk_fees_levies_and_stamp_duty_verified"
+            if field == "hk_fees_levies_and_stamp_duty_or_etf_exemption_verified"
+            else field
+            for field in fields
+        ]
+    return tuple(dict.fromkeys(fields))
 
 HK_DERIVATIVE_OR_COMPLEX_ETF_SYMBOLS = frozenset({"03175"})
 HK_DEFENSIVE_ETF_SYMBOLS = frozenset({"02840", "03110"})
@@ -269,6 +297,13 @@ def build_hk_runtime_readiness(
         prefix = "IBKR" if normalized_platform == "ibkr" else "LONGBRIDGE"
         dry_run_env[f"{prefix}_FEATURE_SNAPSHOT_PATH"] = "<required>"
         dry_run_env[f"{prefix}_FEATURE_SNAPSHOT_MANIFEST_PATH"] = "<required>"
+    is_single_name_snapshot_profile = canonical_profile == HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE
+    equity_live_enablement_checks = (
+        HK_EQUITY_LIVE_ENABLEMENT_CHECKS if is_single_name_snapshot_profile else ()
+    )
+    etf_live_enablement_checks = (
+        () if is_single_name_snapshot_profile else HK_ETF_LIVE_ENABLEMENT_CHECKS
+    )
 
     return {
         "platform": normalized_platform,
@@ -291,11 +326,13 @@ def build_hk_runtime_readiness(
         "platform_dry_run_env": dry_run_env,
         "runtime_requirements": runtime_requirements,
         "dry_run_checks": list(HK_DRY_RUN_CHECKS),
-        "etf_live_enablement_checks": list(HK_ETF_LIVE_ENABLEMENT_CHECKS),
+        "etf_live_enablement_checks": list(etf_live_enablement_checks),
+        "equity_live_enablement_checks": list(equity_live_enablement_checks),
+        "product_live_enablement_checks": list(equity_live_enablement_checks or etf_live_enablement_checks),
         "order_conversion_checks": list(ORDER_CONVERSION_CHECKS),
         "live_enablement_requirements": list(LIVE_ENABLEMENT_REQUIREMENTS),
         "live_enablement_thresholds": dict(PROFILE_LIVE_ENABLEMENT_THRESHOLDS[canonical_profile]),
-        "required_live_evidence_fields": list(REQUIRED_LIVE_EVIDENCE_FIELDS),
+        "required_live_evidence_fields": list(get_required_live_evidence_fields(canonical_profile)),
         "evidence_uri_policy": build_evidence_uri_policy(),
         "evidence_freshness_policy": build_evidence_freshness_policy(),
         "execution_capacity_policy": build_execution_capacity_policy(canonical_profile),
@@ -312,6 +349,7 @@ def build_hk_runtime_readiness(
 
 __all__ = [
     "HK_DRY_RUN_CHECKS",
+    "HK_EQUITY_LIVE_ENABLEMENT_CHECKS",
     "HK_ETF_LIVE_ENABLEMENT_CHECKS",
     "HK_MARKET_DEFAULTS",
     "LIVE_ENABLEMENT_REQUIREMENTS",
@@ -320,4 +358,5 @@ __all__ = [
     "PROFILE_LIVE_ENABLEMENT_THRESHOLDS",
     "REQUIRED_LIVE_EVIDENCE_FIELDS",
     "build_hk_runtime_readiness",
+    "get_required_live_evidence_fields",
 ]

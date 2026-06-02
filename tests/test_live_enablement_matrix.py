@@ -301,6 +301,13 @@ def test_low_vol_dividend_runtime_snapshot_row_includes_hshylv_live_enablement_s
     assert "feature_snapshot_artifact_pack_validation" in row["required_evidence"]
     assert "feature_snapshot_manifest_contract_version_matched" in row["required_evidence"]
     assert "feature_snapshot_point_in_time_lineage_verified" in row["required_evidence"]
+    assert "runtime_equity_product_due_diligence_verified" in row["required_evidence"]
+    assert "runtime_etf_product_due_diligence_verified" not in row["required_evidence"]
+    assert "etf_connect_eligibility_and_southbound_flow_review_verified" not in row["required_evidence"]
+    assert "hk_fees_levies_and_stamp_duty_verified" in row["required_evidence"]
+    assert "equity_spread_and_trading_status_guard_verified" in (
+        row["execution_capacity_policy"]["required_boolean_fields"]
+    )
     assert any("validate_hk_runtime_live_enablement.py" in command for command in row["evidence_commands"])
     assert any("forecast-dividend-yield-strategy" in url for url in row["research_evidence_urls"])
     assert any("hshylve.pdf" in url for url in row["research_evidence_urls"])

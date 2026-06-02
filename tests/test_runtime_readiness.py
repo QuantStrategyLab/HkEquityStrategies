@@ -197,6 +197,18 @@ def test_low_vol_dividend_quality_readiness_requires_snapshot_artifacts():
         "max_single_period_return_contribution": 0.60,
     }
     assert plan["execution_capacity_policy"]["min_median_daily_turnover_hkd"] == 30_000_000
+    assert plan["etf_live_enablement_checks"] == []
+    assert any("single-name equity" in check for check in plan["equity_live_enablement_checks"])
+    assert any("dividend yield and payout-ratio" in check for check in plan["product_live_enablement_checks"])
+    assert "runtime_equity_product_due_diligence_verified" in plan["required_live_evidence_fields"]
+    assert "runtime_etf_product_due_diligence_verified" not in plan["required_live_evidence_fields"]
+    assert "hk_fees_levies_and_stamp_duty_verified" in plan["required_live_evidence_fields"]
+    assert "hk_fees_levies_and_stamp_duty_or_etf_exemption_verified" not in plan["required_live_evidence_fields"]
+    assert "equity_spread_and_trading_status_guard_verified" in (
+        plan["execution_capacity_policy"]["required_boolean_fields"]
+    )
+    assert "etf_nav_or_spread_guard_verified" not in plan["execution_capacity_policy"]["required_boolean_fields"]
+    assert "single-name equity liquidity" in plan["execution_capacity_policy"]["description"]
     assert plan["runtime_equity_product_policy"]["policy_version"] == "hk_runtime_equity_product_due_diligence.v1"
     assert any("factor snapshot" in check for check in plan["profile_live_optimization_checks"])
     assert any("validated factor snapshot artifact" in note for note in plan["risk_notes"])
