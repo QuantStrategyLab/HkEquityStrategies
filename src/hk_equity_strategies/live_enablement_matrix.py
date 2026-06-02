@@ -90,6 +90,7 @@ SNAPSHOT_FUTURE_RESEARCH_CANDIDATES: tuple[str, ...] = (
     "hk_analyst_dispersion_coverage_risk_overlay",
     "hk_financial_distress_deleveraging_risk_overlay",
     "hk_downside_beta_tail_risk_volatility_overlay",
+    "hk_structured_product_warrant_cbbc_flow_risk_overlay",
 )
 
 SNAPSHOT_FUTURE_RESEARCH_PRE_SCAFFOLD_GATES: tuple[str, ...] = (
@@ -123,6 +124,7 @@ SNAPSHOT_FUTURE_RESEARCH_PRE_SCAFFOLD_GATES: tuple[str, ...] = (
     "analyst_forecast_dispersion_coverage_recommendation_target_price_and_vendor_history",
     "financial_distress_zscore_debt_maturity_interest_coverage_and_deleveraging_history",
     "downside_beta_semivariance_var_cvar_tail_risk_and_volatility_regime_history",
+    "derivative_warrant_cbbc_flow_mce_liquidity_provider_and_underlying_ablation_history",
     "survivorship_safe_walk_forward_backtest_vs_02800_and_candidate_benchmark",
     "artifact_provenance_dry_run_order_preview_bilingual_notifications_and_rollout_controls",
     "operator_approval_reference",
