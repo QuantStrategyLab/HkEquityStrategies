@@ -93,6 +93,7 @@ SNAPSHOT_FUTURE_RESEARCH_CANDIDATES: tuple[str, ...] = (
     "hk_structured_product_warrant_cbbc_flow_risk_overlay",
     "hk_index_derivatives_futures_options_sentiment_basis_overlay",
     "hk_vcm_cas_microstructure_shock_risk_overlay",
+    "hk_reit_dividend_spread_rate_sensitivity_overlay",
 )
 
 SNAPSHOT_FUTURE_RESEARCH_PRE_SCAFFOLD_GATES: tuple[str, ...] = (
@@ -129,6 +130,7 @@ SNAPSHOT_FUTURE_RESEARCH_PRE_SCAFFOLD_GATES: tuple[str, ...] = (
     "derivative_warrant_cbbc_flow_mce_liquidity_provider_and_underlying_ablation_history",
     "index_derivatives_futures_options_basis_put_call_open_interest_and_expiry_roll_history",
     "vcm_cas_microstructure_shock_cooling_off_auction_and_execution_ablation_history",
+    "reit_dividend_spread_distribution_nav_gearing_rate_sensitivity_and_ablation_history",
     "survivorship_safe_walk_forward_backtest_vs_02800_and_candidate_benchmark",
     "artifact_provenance_dry_run_order_preview_bilingual_notifications_and_rollout_controls",
     "operator_approval_reference",
