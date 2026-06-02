@@ -357,6 +357,7 @@ def test_snapshot_future_research_policy_blocks_non_scaffolded_ideas():
         "hk_macro_liquidity_inflation_rate_sensitivity_overlay",
         "hk_turn_of_month_lunar_new_year_calendar_overlay",
         "hk_etf_premium_discount_tracking_quality_overlay",
+        "hk_asset_growth_net_issuance_quality_overlay",
     ]
     assert "new_snapshot_profile_name_and_contract_version" in policy["required_pre_scaffold_gates"]
     assert "point_in_time_consensus_estimate_and_revision_history" in policy["required_pre_scaffold_gates"]
@@ -408,6 +409,9 @@ def test_snapshot_future_research_policy_blocks_non_scaffolded_ideas():
         policy["required_pre_scaffold_gates"]
     )
     assert "etf_premium_discount_tracking_nav_inav_liquidity_complex_product_and_permission_history" in (
+        policy["required_pre_scaffold_gates"]
+    )
+    assert "asset_growth_net_share_issuance_reporting_date_restatement_and_sector_exception_history" in (
         policy["required_pre_scaffold_gates"]
     )
     assert "mutating_existing_snapshot_contract_in_place" in policy["required_reject_criteria"]
