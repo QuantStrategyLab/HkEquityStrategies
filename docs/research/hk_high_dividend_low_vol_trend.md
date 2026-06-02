@@ -39,8 +39,10 @@ Reference pages:
 
 - Global X Hang Seng High Dividend Yield ETF `3110`: https://www.globalxetfs.com.hk/funds/hang-seng-high-dividend-yield-etf/
 - Hang Seng High Dividend Yield Index factsheet: https://www.hsi.com.hk/static/uploads/contents/en/dl_centre/factsheets/hshdyie.pdf
+- Hang Seng High Dividend Yield Index methodology: https://www.hsi.com.hk/static/uploads/contents/en/dl_centre/methodologies/IM_hshdyie.pdf
 - SPDR Gold Shares `2840`: https://www.ssga.com/hk/en/institutional/etfs/funds/spdr-gold-shares-2840
 - SPDR Gold Shares factsheet: https://www.ssga.com/library-content/products/factsheets/etfs/apac/factsheet-hk-en-2840.pdf
+- SPDR Gold Shares HK financial information / NAV source: https://www.spdrgoldshares.com/hong-kong/english/financial-information/
 
 ## Selected version
 
@@ -133,3 +135,19 @@ Requirements before real-money trading:
 2. Re-run with broker-realistic fees, spreads/slippage, lot sizes, trading suspensions, and dividend treatment.
 3. Add paper-trading evidence across at least one additional regime.
 4. Keep platform dry-run enabled until order preview confirms symbol tradability, currency, cash residual, and order sizing.
+
+## Product due-diligence additions
+
+The live-enable evidence pack must now prove product-level lineage, not just
+symbol tradability:
+
+- For `03110`, archive current Global X product documents, the Hang Seng High
+  Dividend Yield Index factsheet/methodology, NAV/iNAV evidence, distribution
+  policy, and concentration / yield-trap review.
+- For `02840`, archive current SSGA/SPDR product documents, NAV/iNAV and
+  tracking-difference evidence, multi-counter currency handling, USD
+  creation/redemption handling, and physical-gold single-asset / trust-storage
+  risk review.
+- For both ETFs, archive HKEX market-maker or liquidity-provider evidence,
+  stamp-duty / ETF tax treatment, Stock Connect ETF eligibility or sell-only status, Southbound ETF turnover/fund-flow trend, broker Southbound ETF buy-route availability, broker product permission, board lot, trading
+  currency, and product-document freshness before dry-run can be removed.
