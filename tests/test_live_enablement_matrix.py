@@ -366,6 +366,7 @@ def test_snapshot_future_research_policy_blocks_non_scaffolded_ideas():
         "hk_financial_distress_deleveraging_risk_overlay",
         "hk_downside_beta_tail_risk_volatility_overlay",
         "hk_structured_product_warrant_cbbc_flow_risk_overlay",
+        "hk_index_derivatives_futures_options_sentiment_basis_overlay",
     ]
     assert "new_snapshot_profile_name_and_contract_version" in policy["required_pre_scaffold_gates"]
     assert "point_in_time_consensus_estimate_and_revision_history" in policy["required_pre_scaffold_gates"]
@@ -452,6 +453,10 @@ def test_snapshot_future_research_policy_blocks_non_scaffolded_ideas():
     )
     assert (
         "derivative_warrant_cbbc_flow_mce_liquidity_provider_and_underlying_ablation_history"
+        in policy["required_pre_scaffold_gates"]
+    )
+    assert (
+        "index_derivatives_futures_options_basis_put_call_open_interest_and_expiry_roll_history"
         in policy["required_pre_scaffold_gates"]
     )
     assert "mutating_existing_snapshot_contract_in_place" in policy["required_reject_criteria"]
