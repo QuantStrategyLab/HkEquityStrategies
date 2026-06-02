@@ -292,6 +292,7 @@ def test_snapshot_future_research_policy_blocks_non_scaffolded_ideas():
         "hk_connected_transaction_governance_risk_overlay",
         "hk_takeover_privatization_event_spread_overlay",
         "hk_distribution_ex_date_entitlement_overlay",
+        "hk_ipo_lockup_overhang_event_overlay",
     ]
     assert "new_snapshot_profile_name_and_contract_version" in policy["required_pre_scaffold_gates"]
     assert "point_in_time_consensus_estimate_and_revision_history" in policy["required_pre_scaffold_gates"]
@@ -322,6 +323,9 @@ def test_snapshot_future_research_policy_blocks_non_scaffolded_ideas():
         policy["required_pre_scaffold_gates"]
     )
     assert "distribution_ex_date_entitlement_record_date_payment_price_adjustment_and_settlement_history" in (
+        policy["required_pre_scaffold_gates"]
+    )
+    assert "ipo_listing_cornerstone_pre_ipo_lockup_expiry_overhang_and_stabilization_history" in (
         policy["required_pre_scaffold_gates"]
     )
     assert "mutating_existing_snapshot_contract_in_place" in policy["required_reject_criteria"]
