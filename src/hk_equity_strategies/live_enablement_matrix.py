@@ -102,6 +102,20 @@ SNAPSHOT_FUTURE_RESEARCH_CANDIDATES: tuple[str, ...] = (
     "hk_esg_downside_risk_quality_overlay",
 )
 
+SNAPSHOT_FUTURE_RESEARCH_CURATED_CANDIDATES: tuple[str, ...] = (
+    "hk_earnings_revision_quality_overlay",
+    "hk_stock_connect_inclusion_event_flow",
+    "hk_share_repurchase_execution_signal_overlay",
+    "hk_etf_premium_discount_tracking_quality_overlay",
+    "hk_amihud_liquidity_risk_capacity_overlay",
+    "hk_downside_beta_tail_risk_volatility_overlay",
+    "hk_smart_beta_factor_regime_rotation_overlay",
+)
+
+SNAPSHOT_FUTURE_RESEARCH_DEPRIORITIZED_CANDIDATES: tuple[str, ...] = tuple(
+    profile for profile in SNAPSHOT_FUTURE_RESEARCH_CANDIDATES if profile not in SNAPSHOT_FUTURE_RESEARCH_CURATED_CANDIDATES
+)
+
 SNAPSHOT_FUTURE_RESEARCH_PRE_SCAFFOLD_GATES: tuple[str, ...] = (
     "new_snapshot_profile_name_and_contract_version",
     "candidate_specific_production_source_audit_policy",
@@ -167,6 +181,105 @@ COMMON_PLATFORM_EVIDENCE_REQUIREMENTS: tuple[str, ...] = (
     "staged_rollout_tripwires_and_rollback_ready",
     "bilingual_notification_delivery_log_verified",
     "operator_approval_reference",
+)
+
+CURATED_LIVE_ENABLEMENT_STRATEGY_RANKING_VERSION = "hk_equity_strategies.curated_live_enablement_ranking.v1"
+
+CURATED_LIVE_ENABLEMENT_STRATEGY_RANKING: tuple[dict[str, object], ...] = (
+    {
+        "rank": 1,
+        "profile": HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE,
+        "profile_type": "runtime_market_history",
+        "decision": "keep_runtime_enabled_preferred",
+        "annualized_return": 0.1716,
+        "max_drawdown": -0.0806,
+        "why": (
+            "Best current risk-adjusted HK runtime candidate: simple 03110/02840 universe, "
+            "12% volatility target, positive train period, and the lowest verified drawdown."
+        ),
+        "next_action": "Keep live-enable capable, but require broker dry-run evidence before real order submission.",
+    },
+    {
+        "rank": 2,
+        "profile": HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE,
+        "profile_type": "runtime_market_history",
+        "decision": "keep_runtime_enabled_secondary",
+        "annualized_return": 0.1884,
+        "max_drawdown": -0.2051,
+        "why": (
+            "Highest current annualized return among implemented HK strategies while staying below the 30% "
+            "drawdown limit; broader ETF universe improves diversification but adds product-complexity risk."
+        ),
+        "next_action": "Use dry-run/paper mode until every ETF sleeve has product, spread, lot-size, and platform checks.",
+    },
+    {
+        "rank": 3,
+        "profile": "hk_low_vol_dividend_quality",
+        "profile_type": "external_snapshot_scaffold",
+        "decision": "first_snapshot_candidate",
+        "annualized_return": None,
+        "max_drawdown": None,
+        "why": "Strongest single-name HK snapshot direction because low-volatility and dividend evidence is official and low-turnover.",
+        "next_action": "Prioritize production dividend/fundamentals source audit and same-universe walk-forward tests.",
+    },
+    {
+        "rank": 4,
+        "profile": "hk_shareholder_yield_quality",
+        "profile_type": "external_snapshot_scaffold",
+        "decision": "first_snapshot_candidate",
+        "annualized_return": None,
+        "max_drawdown": None,
+        "why": "Observable HKEX buyback disclosures plus dividend/share-count quality can complement low-vol dividend.",
+        "next_action": "Audit HKEX repurchase, treasury-share, dilution, blackout, and share-count reconciliation evidence.",
+    },
+    {
+        "rank": 5,
+        "profile": "hk_free_cash_flow_quality",
+        "profile_type": "external_snapshot_scaffold",
+        "decision": "first_snapshot_candidate",
+        "annualized_return": None,
+        "max_drawdown": None,
+        "why": "FCF yield is a robust quality/value extension, but only after point-in-time reporting-date evidence is audited.",
+        "next_action": "Build fundamentals lineage, EV/FCF formula audit, restatement controls, and sector exceptions.",
+    },
+    {
+        "rank": 6,
+        "profile": "hk_residual_momentum_quality",
+        "profile_type": "external_snapshot_scaffold",
+        "decision": "stage_after_quality_yield",
+        "annualized_return": None,
+        "max_drawdown": None,
+        "why": "Closest HK analogue to US-style momentum factor selection, but turnover and crash risk must be proven first.",
+        "next_action": "Run residual/liquid/composite momentum ablations after the first quality/yield profiles.",
+    },
+    {
+        "rank": 7,
+        "profile": "hk_factor_mix_qvlm_risk_parity",
+        "profile_type": "external_snapshot_scaffold",
+        "decision": "stage_after_single_factor_ablation",
+        "annualized_return": None,
+        "max_drawdown": None,
+        "why": "Diversified QVLM factor mix can reduce single-factor regime risk if factor history and covariance are point-in-time.",
+        "next_action": "Prove Q/V/L/M leave-one-out contribution and factor-correlation stress before promotion.",
+    },
+)
+
+DEPRIORITIZED_LIVE_ENABLEMENT_PROFILES: tuple[dict[str, str], ...] = (
+    {
+        "profile": "hk_index_mean_reversion",
+        "decision": "exclude_from_live_enablement_shortlist",
+        "reason": "Full-sample return is close to flat and drawdown/warmup behavior is not competitive despite OOS improvement.",
+    },
+    {
+        "profile": "hk_etf_regime_rotation",
+        "decision": "exclude_from_live_enablement_shortlist",
+        "reason": "Superseded by hk_high_dividend_low_vol_trend and hk_listed_global_etf_rotation with cleaner promotion evidence.",
+    },
+    {
+        "profile": "snapshot_future_research_long_tail",
+        "decision": "exclude_from_live_enablement_shortlist",
+        "reason": "Non-curated future-research ideas remain raw research only because data, derivative, shorting, event, or capacity risk is too high.",
+    },
 )
 
 EVIDENCE_URI_POLICY: dict[str, Any] = build_evidence_uri_policy()
@@ -611,6 +724,8 @@ def build_snapshot_future_research_live_enablement_policy() -> dict[str, Any]:
         "source_matrix_field": "future_research_backlog.future_research_live_enablement_policy",
         "live_enablement_allowed": False,
         "candidate_order": list(SNAPSHOT_FUTURE_RESEARCH_CANDIDATES),
+        "curated_candidate_order": list(SNAPSHOT_FUTURE_RESEARCH_CURATED_CANDIDATES),
+        "deprioritized_candidate_order": list(SNAPSHOT_FUTURE_RESEARCH_DEPRIORITIZED_CANDIDATES),
         "required_pre_scaffold_gates": list(SNAPSHOT_FUTURE_RESEARCH_PRE_SCAFFOLD_GATES),
         "required_reject_criteria": [
             "mutating_existing_snapshot_contract_in_place",
@@ -625,6 +740,24 @@ def build_snapshot_future_research_live_enablement_policy() -> dict[str, Any]:
             "same-universe ablation, walk-forward evidence, artifact provenance, dry-run order preview, "
             "bilingual notifications, rollout controls, and operator approval."
         ),
+    }
+
+
+def build_curated_live_enablement_strategy_ranking() -> dict[str, Any]:
+    return {
+        "ranking_version": CURATED_LIVE_ENABLEMENT_STRATEGY_RANKING_VERSION,
+        "selection_scope": "runtime_profiles_and_snapshot_scaffolds_only",
+        "live_enablement_allowed_without_evidence": False,
+        "max_allowed_drawdown": 0.30,
+        "ranking": [dict(item) for item in CURATED_LIVE_ENABLEMENT_STRATEGY_RANKING],
+        "deprioritized_profiles": [dict(item) for item in DEPRIORITIZED_LIVE_ENABLEMENT_PROFILES],
+        "future_research_curated_candidate_order": list(SNAPSHOT_FUTURE_RESEARCH_CURATED_CANDIDATES),
+        "future_research_deprioritized_candidate_order": list(SNAPSHOT_FUTURE_RESEARCH_DEPRIORITIZED_CANDIDATES),
+        "notes": [
+            "The ranking is the live-enable work queue, not an investment recommendation.",
+            "Historical raw research candidates remain documented for auditability but are excluded from the live-enable shortlist.",
+            "Every promoted profile must still pass the runtime evidence validator, <=30% drawdown gate, dry-run order preview, bilingual notification, and operator approval.",
+        ],
     }
 
 
@@ -787,6 +920,7 @@ def build_live_enablement_matrix() -> dict[str, Any]:
         "selectable_profiles": selectable_profiles,
         "blocked_profiles": blocked_profiles,
         "first_snapshot_candidates": list(FIRST_SNAPSHOT_CANDIDATES),
+        "curated_live_enablement_strategy_ranking": build_curated_live_enablement_strategy_ranking(),
         "common_platform_evidence_requirements": list(COMMON_PLATFORM_EVIDENCE_REQUIREMENTS),
         "snapshot_required_repository_policies": list(SNAPSHOT_REQUIRED_REPOSITORY_POLICIES),
         "snapshot_future_research_live_enablement_policy": build_snapshot_future_research_live_enablement_policy(),
@@ -846,7 +980,11 @@ __all__ = [
     "SNAPSHOT_RESEARCH_EVIDENCE_URLS",
     "SNAPSHOT_SCAFFOLD_GATE",
     "SNAPSHOT_REQUIRED_REPOSITORY_POLICIES",
+    "SNAPSHOT_FUTURE_RESEARCH_CURATED_CANDIDATES",
+    "SNAPSHOT_FUTURE_RESEARCH_DEPRIORITIZED_CANDIDATES",
     "SNAPSHOT_FUTURE_RESEARCH_LIVE_ENABLEMENT_POLICY_VERSION",
+    "CURATED_LIVE_ENABLEMENT_STRATEGY_RANKING_VERSION",
+    "build_curated_live_enablement_strategy_ranking",
     "build_snapshot_future_research_live_enablement_policy",
     "build_live_enablement_matrix",
     "build_live_enablement_row",

@@ -13,10 +13,12 @@ from hk_equity_strategies.catalog import (
     get_runtime_enabled_profiles,
 )
 from hk_equity_strategies.live_enablement_matrix import (
+    CURATED_LIVE_ENABLEMENT_STRATEGY_RANKING_VERSION,
     RESEARCH_ONLY_GATE,
     RUNTIME_LIVE_GATE,
     SNAPSHOT_SCAFFOLD_GATE,
     SNAPSHOT_FUTURE_RESEARCH_LIVE_ENABLEMENT_POLICY_VERSION,
+    build_curated_live_enablement_strategy_ranking,
     build_live_enablement_matrix,
     build_live_enablement_row,
     build_snapshot_future_research_live_enablement_policy,
@@ -117,6 +119,40 @@ def test_live_enablement_matrix_keeps_selectable_surface_to_runtime_profiles():
         SNAPSHOT_FUTURE_RESEARCH_LIVE_ENABLEMENT_POLICY_VERSION
     )
     assert matrix["snapshot_future_research_live_enablement_policy"]["live_enablement_allowed"] is False
+    ranking = matrix["curated_live_enablement_strategy_ranking"]
+    assert ranking["ranking_version"] == CURATED_LIVE_ENABLEMENT_STRATEGY_RANKING_VERSION
+    assert [row["profile"] for row in ranking["ranking"][:2]] == [
+        HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE,
+        HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE,
+    ]
+    assert ranking["future_research_curated_candidate_order"] == [
+        "hk_earnings_revision_quality_overlay",
+        "hk_stock_connect_inclusion_event_flow",
+        "hk_share_repurchase_execution_signal_overlay",
+        "hk_etf_premium_discount_tracking_quality_overlay",
+        "hk_amihud_liquidity_risk_capacity_overlay",
+        "hk_downside_beta_tail_risk_volatility_overlay",
+        "hk_smart_beta_factor_regime_rotation_overlay",
+    ]
+    assert "hk_index_mean_reversion" in {row["profile"] for row in ranking["deprioritized_profiles"]}
+
+
+def test_curated_live_enablement_ranking_excludes_weaker_research_profiles():
+    ranking = build_curated_live_enablement_strategy_ranking()
+
+    assert ranking["live_enablement_allowed_without_evidence"] is False
+    assert ranking["max_allowed_drawdown"] == 0.30
+    assert ranking["ranking"][0]["profile"] == HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE
+    assert ranking["ranking"][0]["max_drawdown"] == -0.0806
+    assert ranking["ranking"][1]["profile"] == HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE
+    assert ranking["ranking"][1]["max_drawdown"] == -0.2051
+    assert all(item["decision"].startswith("exclude") for item in ranking["deprioritized_profiles"])
+    assert "hk_structured_product_warrant_cbbc_flow_risk_overlay" in (
+        ranking["future_research_deprioritized_candidate_order"]
+    )
+    assert "hk_margin_financing_collateral_forced_selling_risk_overlay" in (
+        ranking["future_research_deprioritized_candidate_order"]
+    )
 
 
 def test_runtime_rows_include_thresholds_evidence_commands_and_sources():
@@ -376,6 +412,17 @@ def test_snapshot_future_research_policy_blocks_non_scaffolded_ideas():
         "hk_smart_beta_factor_regime_rotation_overlay",
         "hk_esg_downside_risk_quality_overlay",
     ]
+    assert policy["curated_candidate_order"] == [
+        "hk_earnings_revision_quality_overlay",
+        "hk_stock_connect_inclusion_event_flow",
+        "hk_share_repurchase_execution_signal_overlay",
+        "hk_etf_premium_discount_tracking_quality_overlay",
+        "hk_amihud_liquidity_risk_capacity_overlay",
+        "hk_downside_beta_tail_risk_volatility_overlay",
+        "hk_smart_beta_factor_regime_rotation_overlay",
+    ]
+    assert "hk_structured_product_warrant_cbbc_flow_risk_overlay" in policy["deprioritized_candidate_order"]
+    assert "hk_liquid_pairs_cointegration_stat_arb_overlay" in policy["deprioritized_candidate_order"]
     assert "new_snapshot_profile_name_and_contract_version" in policy["required_pre_scaffold_gates"]
     assert "point_in_time_consensus_estimate_and_revision_history" in policy["required_pre_scaffold_gates"]
     assert "point_in_time_market_cap_liquidity_and_capacity_history" in policy["required_pre_scaffold_gates"]
