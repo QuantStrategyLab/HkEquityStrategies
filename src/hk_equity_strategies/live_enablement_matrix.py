@@ -79,6 +79,7 @@ SNAPSHOT_FUTURE_RESEARCH_CANDIDATES: tuple[str, ...] = (
     "hk_audit_opinion_suspension_risk_overlay",
     "hk_share_repurchase_execution_signal_overlay",
     "hk_liquid_pairs_cointegration_stat_arb_overlay",
+    "hk_macro_liquidity_inflation_rate_sensitivity_overlay",
 )
 
 SNAPSHOT_FUTURE_RESEARCH_PRE_SCAFFOLD_GATES: tuple[str, ...] = (
@@ -101,6 +102,7 @@ SNAPSHOT_FUTURE_RESEARCH_PRE_SCAFFOLD_GATES: tuple[str, ...] = (
     "audit_opinion_disclaimer_adverse_qualified_going_concern_suspension_resumption_history",
     "share_repurchase_execution_treasury_share_resale_mandate_and_undervaluation_history",
     "pairs_cointegration_spread_stability_borrow_shorting_tick_rule_and_capacity_history",
+    "macro_inflation_hibor_base_rate_release_lag_sector_sensitivity_and_capacity_history",
     "survivorship_safe_walk_forward_backtest_vs_02800_and_candidate_benchmark",
     "artifact_provenance_dry_run_order_preview_bilingual_notifications_and_rollout_controls",
     "operator_approval_reference",
