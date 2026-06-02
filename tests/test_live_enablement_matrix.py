@@ -288,6 +288,7 @@ def test_snapshot_future_research_policy_blocks_non_scaffolded_ideas():
         "hk_dually_traded_liquid_reversal_overlay",
         "hk_earnings_announcement_drift_overlay",
         "hk_lottery_stock_risk_exclusion_overlay",
+        "hk_equity_financing_dilution_risk_overlay",
     ]
     assert "new_snapshot_profile_name_and_contract_version" in policy["required_pre_scaffold_gates"]
     assert "point_in_time_consensus_estimate_and_revision_history" in policy["required_pre_scaffold_gates"]
@@ -306,6 +307,9 @@ def test_snapshot_future_research_policy_blocks_non_scaffolded_ideas():
         policy["required_pre_scaffold_gates"]
     )
     assert "lottery_feature_ivol_iskew_max_price_and_regime_history" in (
+        policy["required_pre_scaffold_gates"]
+    )
+    assert "equity_financing_rights_open_offer_placement_convertible_dilution_event_history" in (
         policy["required_pre_scaffold_gates"]
     )
     assert "mutating_existing_snapshot_contract_in_place" in policy["required_reject_criteria"]
