@@ -15,6 +15,7 @@ from hk_equity_strategies.notification_audit_policy import (
     build_notification_audit_policy,
 )
 from hk_equity_strategies.rollout_risk_policy import build_rollout_risk_policy
+from hk_equity_strategies.runtime_equity_product_policy import build_runtime_equity_product_policy
 from hk_equity_strategies.runtime_etf_product_policy import build_runtime_etf_product_policy
 from hk_equity_strategies.runtime_market_data_policy import build_runtime_market_data_policy
 from hk_equity_strategies.catalog import (
@@ -300,6 +301,7 @@ def build_hk_runtime_readiness(
         "execution_capacity_policy": build_execution_capacity_policy(canonical_profile),
         "dry_run_order_preview_policy": build_dry_run_order_preview_policy(),
         "rollout_risk_policy": build_rollout_risk_policy(),
+        "runtime_equity_product_policy": build_runtime_equity_product_policy(),
         "runtime_etf_product_policy": build_runtime_etf_product_policy(),
         "runtime_market_data_policy": build_runtime_market_data_policy(),
         "notification_audit_policy": build_notification_audit_policy(RUNTIME_DRY_RUN_NOTIFICATION_EVENT_TYPE),

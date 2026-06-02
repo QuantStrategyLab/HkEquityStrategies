@@ -173,6 +173,7 @@ def test_low_vol_dividend_quality_readiness_requires_snapshot_artifacts():
         "input_mode": "feature_snapshot",
         "requires_snapshot_artifacts": True,
         "requires_snapshot_manifest_path": True,
+        "snapshot_contract_version": "hk_low_vol_dividend_quality.factor_snapshot.v1",
         "requires_strategy_config_path": False,
         "config_source_policy": "none",
         "reconciliation_output_policy": "optional",
@@ -196,6 +197,7 @@ def test_low_vol_dividend_quality_readiness_requires_snapshot_artifacts():
         "max_single_period_return_contribution": 0.60,
     }
     assert plan["execution_capacity_policy"]["min_median_daily_turnover_hkd"] == 30_000_000
+    assert plan["runtime_equity_product_policy"]["policy_version"] == "hk_runtime_equity_product_due_diligence.v1"
     assert any("factor snapshot" in check for check in plan["profile_live_optimization_checks"])
     assert any("validated factor snapshot artifact" in note for note in plan["risk_notes"])
 

@@ -47,6 +47,7 @@ from hk_equity_strategies.notification_audit_policy import (
 )
 from hk_equity_strategies.catalog import (
     get_runtime_enabled_profiles,
+    get_strategy_definition,
     get_strategy_metadata,
     resolve_canonical_profile,
 )
@@ -55,6 +56,12 @@ from hk_equity_strategies.runtime_readiness import (
     PROFILE_LIVE_ENABLEMENT_THRESHOLDS,
     REQUIRED_LIVE_EVIDENCE_FIELDS,
     build_hk_runtime_readiness,
+)
+from hk_equity_strategies.runtime_equity_product_policy import (
+    REQUIRED_RUNTIME_EQUITY_PRODUCT_BOOLEAN_FIELDS,
+    REQUIRED_RUNTIME_EQUITY_PRODUCT_FIELDS,
+    REQUIRED_RUNTIME_EQUITY_PRODUCT_URI_FIELDS,
+    build_runtime_equity_product_policy,
 )
 from hk_equity_strategies.runtime_etf_product_policy import (
     REQUIRED_RUNTIME_ETF_PRODUCT_BOOLEAN_FIELDS,
@@ -197,6 +204,24 @@ def _validate_runtime_etf_product_due_diligence(
     for field in REQUIRED_RUNTIME_ETF_PRODUCT_URI_FIELDS:
         _require_stable_uri_field(errors, section_name, section, field)
     _add_missing_bool_errors(errors, section_name, section, REQUIRED_RUNTIME_ETF_PRODUCT_BOOLEAN_FIELDS)
+
+
+def _validate_runtime_equity_product_due_diligence(
+    errors: list[str],
+    section_name: str,
+    section: Mapping[str, Any],
+    *,
+    expected_symbol_count: int,
+) -> None:
+    for field in REQUIRED_RUNTIME_EQUITY_PRODUCT_FIELDS:
+        if not str(section.get(field, "")).strip():
+            errors.append(f"{section_name}.{field} is required")
+    audited_count = _number(section.get("managed_equity_symbols_audited_count"))
+    if audited_count is None or audited_count < expected_symbol_count:
+        errors.append(f"{section_name}.managed_equity_symbols_audited_count must be >= {expected_symbol_count}")
+    for field in REQUIRED_RUNTIME_EQUITY_PRODUCT_URI_FIELDS:
+        _require_stable_uri_field(errors, section_name, section, field)
+    _add_missing_bool_errors(errors, section_name, section, REQUIRED_RUNTIME_EQUITY_PRODUCT_BOOLEAN_FIELDS)
 
 
 def _validate_notification_audit(
@@ -386,17 +411,60 @@ def _validate_runtime_readiness(
         errors.append(f"{section_name}.profile mismatch: expected {profile!r}, got {section.get('profile')!r}")
     if section.get("platform") != platform:
         errors.append(f"{section_name}.platform mismatch: expected {platform!r}, got {section.get('platform')!r}")
+    try:
+        readiness = build_hk_runtime_readiness(profile, platform_id=platform)
+    except ValueError as exc:
+        errors.append(str(exc))
+        readiness = {}
+    runtime_requirements = _as_mapping(readiness.get("runtime_requirements"))
+    requires_snapshot_artifacts = runtime_requirements.get("requires_snapshot_artifacts") is True
     _add_missing_bool_errors(
         errors,
         section_name,
         section,
         (
-            "market_history_feed_verified",
             "managed_symbols_verified",
             "target_conversion_verified",
             "dry_run_only_before_approval",
         ),
     )
+    if requires_snapshot_artifacts:
+        _add_missing_bool_errors(
+            errors,
+            section_name,
+            section,
+            (
+                "feature_snapshot_artifact_pack_validated",
+                "feature_snapshot_manifest_verified",
+                "feature_snapshot_contract_version_matched",
+                "point_in_time_feature_snapshot_lineage_verified",
+            ),
+        )
+        for field in (
+            "feature_snapshot_source_name",
+            "feature_snapshot_path",
+            "feature_snapshot_manifest_path",
+            "feature_snapshot_contract_version",
+        ):
+            if not str(section.get(field, "")).strip():
+                errors.append(f"{section_name}.{field} is required")
+        expected_contract = str(runtime_requirements.get("snapshot_contract_version") or "").strip()
+        actual_contract = str(section.get("feature_snapshot_contract_version") or "").strip()
+        if expected_contract and actual_contract and actual_contract != expected_contract:
+            errors.append(
+                f"{section_name}.feature_snapshot_contract_version must be {expected_contract!r}: "
+                f"got {actual_contract!r}"
+            )
+        for field in (
+            "feature_snapshot_uri",
+            "feature_snapshot_manifest_uri",
+            "feature_snapshot_artifact_pack_validation_uri",
+            "feature_snapshot_source_lineage_uri",
+        ):
+            _require_stable_uri_field(errors, section_name, section, field)
+        return
+
+    _add_missing_bool_errors(errors, section_name, section, ("market_history_feed_verified",))
     for field in REQUIRED_RUNTIME_MARKET_DATA_PROVENANCE_FIELDS:
         if not str(section.get(field, "")).strip():
             errors.append(f"{section_name}.{field} is required")
@@ -488,7 +556,6 @@ def _validate_broker_permissions(
             "hkd_cash_handling",
             "fees_levies_verified",
             "stamp_duty_or_etf_exemption_verified",
-            "etf_product_permission_verified",
         ),
     )
     try:
@@ -496,12 +563,23 @@ def _validate_broker_permissions(
     except ValueError as exc:
         errors.append(str(exc))
         return
-    _validate_runtime_etf_product_due_diligence(
-        errors,
-        section_name,
-        section,
-        expected_symbol_count=len(readiness["managed_symbols"]),
-    )
+    if _as_mapping(readiness.get("runtime_requirements")).get("requires_snapshot_artifacts") is True:
+        requested_holdings_count = _number(get_strategy_definition(profile).default_config.get("holdings_count"))
+        expected_symbol_count = max(1, int(requested_holdings_count or 0) + 1)
+        _validate_runtime_equity_product_due_diligence(
+            errors,
+            section_name,
+            section,
+            expected_symbol_count=expected_symbol_count,
+        )
+    else:
+        _add_missing_bool_errors(errors, section_name, section, ("etf_product_permission_verified",))
+        _validate_runtime_etf_product_due_diligence(
+            errors,
+            section_name,
+            section,
+            expected_symbol_count=len(readiness["managed_symbols"]),
+        )
 
 
 def _validate_switch_plan(errors: list[str], evidence: Mapping[str, Any]) -> None:
@@ -561,6 +639,10 @@ def build_runtime_live_enablement_evidence_template(profile: str, *, platform: s
         raise ValueError(f"platform must be one of {sorted(SUPPORTED_RUNTIME_PLATFORMS)}")
     readiness = build_hk_runtime_readiness(canonical_profile, platform_id=normalized_platform)
     benchmark_symbol = str(get_strategy_metadata(canonical_profile).benchmark or "").strip()
+    runtime_requirements = _as_mapping(readiness["runtime_requirements"])
+    requires_snapshot_artifacts = runtime_requirements.get("requires_snapshot_artifacts") is True
+    snapshot_contract_version = str(runtime_requirements.get("snapshot_contract_version") or "")
+    managed_equity_symbol_count = int(_number(get_strategy_definition(canonical_profile).default_config.get("holdings_count")) or 0) + 1
     return {
         "evidence_type": EVIDENCE_TYPE,
         "template_status": "pending_operator_evidence",
@@ -574,6 +656,7 @@ def build_runtime_live_enablement_evidence_template(profile: str, *, platform: s
         "dry_run_order_preview_policy": build_dry_run_order_preview_policy(),
         "rollout_risk_policy": build_rollout_risk_policy(),
         "runtime_etf_product_policy": build_runtime_etf_product_policy(),
+        "runtime_equity_product_policy": build_runtime_equity_product_policy(),
         "runtime_market_data_policy": build_runtime_market_data_policy(),
         "backtest_validation_policy": build_backtest_validation_policy(),
         "notification_audit_policy": build_notification_audit_policy(RUNTIME_DRY_RUN_NOTIFICATION_EVENT_TYPE),
@@ -628,16 +711,28 @@ def build_runtime_live_enablement_evidence_template(profile: str, *, platform: s
                 f"--platform {normalized_platform} --json"
             ),
             "managed_symbols": readiness["managed_symbols"],
-            "market_history_feed_verified": False,
             "managed_symbols_verified": False,
             "target_conversion_verified": False,
             "dry_run_only_before_approval": False,
+            "market_history_feed_verified": False,
             "market_history_source_name": "",
             "market_history_coverage_start": "",
             "market_history_coverage_end": "",
             "market_history_source_uri": "",
             "market_history_quality_report_uri": "",
             "point_in_time_data_dictionary_uri": "",
+            "feature_snapshot_artifact_pack_validated": False,
+            "feature_snapshot_manifest_verified": False,
+            "feature_snapshot_contract_version_matched": False,
+            "point_in_time_feature_snapshot_lineage_verified": False,
+            "feature_snapshot_source_name": "",
+            "feature_snapshot_path": "",
+            "feature_snapshot_manifest_path": "",
+            "feature_snapshot_contract_version": snapshot_contract_version,
+            "feature_snapshot_uri": "",
+            "feature_snapshot_manifest_uri": "",
+            "feature_snapshot_artifact_pack_validation_uri": "",
+            "feature_snapshot_source_lineage_uri": "",
             **{field: False for field in REQUIRED_RUNTIME_MARKET_DATA_AUDIT_FIELDS},
             EVIDENCE_GENERATED_AT_FIELD: "",
             "evidence_uri": "",
@@ -697,19 +792,33 @@ def build_runtime_live_enablement_evidence_template(profile: str, *, platform: s
             "fees_levies_verified": False,
             "stamp_duty_or_etf_exemption_verified": False,
             "etf_product_permission_verified": False,
+            "single_name_equity_trading_permission_verified": False,
             "etf_product_audit_id": "",
             "managed_etf_symbols_audited_count": 0,
+            "equity_universe_audit_id": "",
+            "managed_equity_symbols_audited_count": 0,
+            "expected_managed_equity_symbols_min_count": managed_equity_symbol_count
+            if requires_snapshot_artifacts
+            else 0,
             "etf_product_universe_audit_uri": "",
+            "equity_universe_audit_uri": "",
             "official_product_document_uri": "",
             "underlying_index_or_reference_asset_source_uri": "",
             "nav_or_inav_source_uri": "",
             "market_maker_or_liquidity_provider_source_uri": "",
             "stock_connect_etf_eligibility_source_uri": "",
+            "stock_connect_eligibility_source_uri": "",
             "southbound_etf_turnover_and_fund_flow_source_uri": "",
             "distribution_tax_and_fee_treatment_source_uri": "",
+            "board_lot_source_uri": "",
+            "corporate_action_source_uri": "",
+            "suspension_trading_status_source_uri": "",
+            "dividend_payout_source_uri": "",
             "etf_fee_and_stamp_duty_audit_uri": "",
+            "fee_and_stamp_duty_audit_uri": "",
             "broker_product_permission_audit_uri": "",
             "all_managed_symbols_confirmed_etp": False,
+            "all_managed_symbols_confirmed_hk_equity": False,
             "leveraged_inverse_or_synthetic_flags_audited": False,
             "complex_or_futures_based_products_operator_reviewed": False,
             "etf_stamp_duty_exemption_or_tax_treatment_verified": False,
@@ -730,9 +839,13 @@ def build_runtime_live_enablement_evidence_template(profile: str, *, platform: s
             "distribution_policy_and_capital_distribution_risk_reviewed": False,
             "commodity_trust_single_asset_and_storage_risk_reviewed": False,
             "high_dividend_index_concentration_and_yield_trap_risk_reviewed": False,
+            "stock_connect_eligibility_or_broker_route_reviewed": False,
             "broker_trading_permission_per_symbol_verified": False,
             "currency_and_board_lot_per_symbol_verified": False,
             "distribution_and_corporate_action_treatment_verified": False,
+            "suspension_and_trading_status_verified": False,
+            "dividend_yield_and_payout_source_verified": False,
+            "sector_and_single_name_caps_verified": False,
             EVIDENCE_GENERATED_AT_FIELD: "",
             "evidence_uri": "",
         },
@@ -826,6 +939,7 @@ def validate_runtime_live_enablement_evidence(
         "dry_run_order_preview_policy": build_dry_run_order_preview_policy(),
         "rollout_risk_policy": build_rollout_risk_policy(),
         "runtime_etf_product_policy": build_runtime_etf_product_policy(),
+        "runtime_equity_product_policy": build_runtime_equity_product_policy(),
         "runtime_market_data_policy": build_runtime_market_data_policy(),
         "backtest_validation_policy": build_backtest_validation_policy(),
         "notification_audit_policy": build_notification_audit_policy(RUNTIME_DRY_RUN_NOTIFICATION_EVENT_TYPE),
@@ -862,6 +976,7 @@ def validate_runtime_live_enablement_evidence_file(
             "dry_run_order_preview_policy": build_dry_run_order_preview_policy(),
             "rollout_risk_policy": build_rollout_risk_policy(),
             "runtime_etf_product_policy": build_runtime_etf_product_policy(),
+            "runtime_equity_product_policy": build_runtime_equity_product_policy(),
             "runtime_market_data_policy": build_runtime_market_data_policy(),
             "notification_audit_policy": build_notification_audit_policy(RUNTIME_DRY_RUN_NOTIFICATION_EVENT_TYPE),
             "required_sections": list(REQUIRED_SECTIONS),

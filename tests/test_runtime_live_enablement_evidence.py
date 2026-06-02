@@ -5,7 +5,10 @@ import subprocess
 import sys
 from pathlib import Path
 
-from hk_equity_strategies.catalog import HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE
+from hk_equity_strategies.catalog import (
+    HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE,
+    HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE,
+)
 from hk_equity_strategies.runtime_live_enablement_evidence import (
     build_runtime_live_enablement_evidence_template,
     validate_runtime_live_enablement_evidence,
@@ -358,6 +361,109 @@ def test_build_runtime_live_enablement_evidence_template_is_not_preapproved():
     assert template["strategy_backtest"]["transaction_cost_slippage_lot_size_and_suspension_model_included"] is False
     assert template["platform_dry_run_order_preview"]["liquidity_cap_verified"] is False
     assert template["platform_dry_run_order_preview"]["notification_locale_zh_hans"] is False
+
+
+def _low_vol_dividend_evidence():
+    payload = _evidence()
+    payload["profile"] = HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE
+    payload["strategy_backtest"].update(
+        {
+            "benchmark_symbol": "02800",
+            "annual_return": 0.1334,
+            "max_drawdown": -0.2305,
+            "rolling_oos_fold_max_drawdown": -0.244,
+            "annual_return_to_max_drawdown_ratio": 0.58,
+            "annualized_turnover": 0.62,
+            "benchmark_annual_return": 0.04,
+            "strategy_excess_return": 0.0934,
+            "evidence_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality/backtest.json",
+        }
+    )
+    payload["runtime_readiness"].update(
+        {
+            "profile": HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE,
+            "managed_symbols": [],
+            "market_history_feed_verified": False,
+            "managed_symbols_verified": True,
+            "feature_snapshot_artifact_pack_validated": True,
+            "feature_snapshot_manifest_verified": True,
+            "feature_snapshot_contract_version_matched": True,
+            "point_in_time_feature_snapshot_lineage_verified": True,
+            "feature_snapshot_source_name": "audited-prod-hk-low-vol-dividend-factor-snapshot",
+            "feature_snapshot_path": "gs://qsl-hk-artifacts/hk_low_vol_dividend_quality/hk_low_vol_dividend_quality_factor_snapshot_latest.csv",
+            "feature_snapshot_manifest_path": "gs://qsl-hk-artifacts/hk_low_vol_dividend_quality/hk_low_vol_dividend_quality_factor_snapshot_latest.csv.manifest.json",
+            "feature_snapshot_contract_version": "hk_low_vol_dividend_quality.factor_snapshot.v1",
+            "feature_snapshot_uri": "gs://qsl-hk-artifacts/hk_low_vol_dividend_quality/hk_low_vol_dividend_quality_factor_snapshot_latest.csv",
+            "feature_snapshot_manifest_uri": "gs://qsl-hk-artifacts/hk_low_vol_dividend_quality/hk_low_vol_dividend_quality_factor_snapshot_latest.csv.manifest.json",
+            "feature_snapshot_artifact_pack_validation_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality/artifact-pack-validation.json",
+            "feature_snapshot_source_lineage_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality/source-lineage.json",
+            "evidence_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality/readiness.json",
+        }
+    )
+    payload["platform_dry_run_order_preview"].update(
+        {
+            "orders_previewed": 11,
+            "median_daily_turnover_hkd": 120_000_000,
+            "evidence_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality/order-preview.json",
+            "raw_order_preview_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality/order-preview/raw.json",
+            "quote_snapshot_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality/order-preview/quotes.json",
+            "fee_breakdown_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality/order-preview/fees.json",
+            "notification_delivery_log_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality/notifications/dry-run.json",
+        }
+    )
+    payload["broker_permission_and_fee_verification"].update(
+        {
+            "etf_product_permission_verified": False,
+            "single_name_equity_trading_permission_verified": True,
+            "equity_universe_audit_id": "hk-runtime-low-vol-dividend-longbridge-20260602-equity-audit-001",
+            "managed_equity_symbols_audited_count": 11,
+            "equity_universe_audit_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality/equity/universe.json",
+            "stock_connect_eligibility_source_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality/equity/stock-connect.json",
+            "board_lot_source_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality/equity/board-lots.json",
+            "corporate_action_source_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality/equity/corporate-actions.json",
+            "suspension_trading_status_source_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality/equity/suspensions.json",
+            "dividend_payout_source_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality/equity/dividend-payout.json",
+            "fee_and_stamp_duty_audit_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality/equity/fees-stamp-duty.json",
+            "broker_product_permission_audit_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality/equity/broker-permission.json",
+            "all_managed_symbols_confirmed_hk_equity": True,
+            "stock_connect_eligibility_or_broker_route_reviewed": True,
+            "broker_trading_permission_per_symbol_verified": True,
+            "currency_and_board_lot_per_symbol_verified": True,
+            "distribution_and_corporate_action_treatment_verified": True,
+            "suspension_and_trading_status_verified": True,
+            "dividend_yield_and_payout_source_verified": True,
+            "sector_and_single_name_caps_verified": True,
+            "evidence_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality/broker-fees.json",
+        }
+    )
+    return payload
+
+
+def test_validate_runtime_live_enablement_evidence_accepts_snapshot_backed_single_name_pack():
+    result = validate_runtime_live_enablement_evidence(_low_vol_dividend_evidence())
+
+    assert result["validation_status"] == "passed"
+    assert result["live_enablement_allowed"] is True
+    assert result["profile"] == HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE
+    assert result["live_enablement_thresholds"]["max_allowed_backtest_drawdown"] == 0.30
+    assert result["runtime_equity_product_policy"]["policy_version"] == "hk_runtime_equity_product_due_diligence.v1"
+    assert result["errors"] == []
+
+
+def test_build_low_vol_dividend_evidence_template_requires_snapshot_artifact_lineage():
+    template = build_runtime_live_enablement_evidence_template(
+        HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE,
+        platform="longbridge",
+    )
+
+    assert template["profile"] == HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE
+    assert template["runtime_readiness"]["managed_symbols"] == []
+    assert template["runtime_readiness"]["feature_snapshot_contract_version"] == (
+        "hk_low_vol_dividend_quality.factor_snapshot.v1"
+    )
+    assert template["runtime_readiness"]["feature_snapshot_artifact_pack_validated"] is False
+    assert template["broker_permission_and_fee_verification"]["expected_managed_equity_symbols_min_count"] == 11
+    assert "equity_universe_audit_uri" in template["runtime_equity_product_policy"]["required_uri_fields"]
     assert template["platform_dry_run_order_preview"]["notification_delivery_log_uri"] == ""
     assert template["platform_dry_run_order_preview"]["dry_run_session_id"] == ""
     assert template["platform_dry_run_order_preview"]["raw_order_preview_uri"] == ""

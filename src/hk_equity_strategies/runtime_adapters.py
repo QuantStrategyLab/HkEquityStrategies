@@ -133,6 +133,7 @@ def describe_platform_runtime_requirements(profile: str | None, *, platform_id: 
         "requires_snapshot_manifest_path": bool(
             requires_snapshot_artifacts and adapter.require_snapshot_manifest
         ),
+        "snapshot_contract_version": adapter.snapshot_contract_version,
         "requires_strategy_config_path": False,
         "config_source_policy": "none",
         "reconciliation_output_policy": "optional",

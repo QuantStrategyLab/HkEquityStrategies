@@ -38,6 +38,7 @@ def test_global_etf_rotation_runtime_requirements_are_direct_inputs():
     assert requirements["input_mode"] == "market_history"
     assert requirements["requires_snapshot_artifacts"] is False
     assert requirements["requires_snapshot_manifest_path"] is False
+    assert requirements["snapshot_contract_version"] is None
 
 
 def test_high_dividend_low_vol_trend_runtime_adapter_uses_market_history():
@@ -83,6 +84,7 @@ def test_low_vol_dividend_quality_runtime_requirements_are_snapshot_backed():
     assert requirements["input_mode"] == "feature_snapshot"
     assert requirements["requires_snapshot_artifacts"] is True
     assert requirements["requires_snapshot_manifest_path"] is True
+    assert requirements["snapshot_contract_version"] == "hk_low_vol_dividend_quality.factor_snapshot.v1"
 
 
 @pytest.mark.parametrize(
