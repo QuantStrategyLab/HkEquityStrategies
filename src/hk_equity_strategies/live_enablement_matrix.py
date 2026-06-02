@@ -95,6 +95,7 @@ SNAPSHOT_FUTURE_RESEARCH_CANDIDATES: tuple[str, ...] = (
     "hk_vcm_cas_microstructure_shock_risk_overlay",
     "hk_reit_dividend_spread_rate_sensitivity_overlay",
     "hk_regulatory_enforcement_disciplinary_risk_overlay",
+    "hk_margin_financing_collateral_forced_selling_risk_overlay",
 )
 
 SNAPSHOT_FUTURE_RESEARCH_PRE_SCAFFOLD_GATES: tuple[str, ...] = (
@@ -133,6 +134,7 @@ SNAPSHOT_FUTURE_RESEARCH_PRE_SCAFFOLD_GATES: tuple[str, ...] = (
     "vcm_cas_microstructure_shock_cooling_off_auction_and_execution_ablation_history",
     "reit_dividend_spread_distribution_nav_gearing_rate_sensitivity_and_ablation_history",
     "regulatory_enforcement_disciplinary_sanction_misconduct_and_governance_ablation_history",
+    "margin_financing_collateral_haircut_pledge_forced_selling_and_liquidity_ablation_history",
     "survivorship_safe_walk_forward_backtest_vs_02800_and_candidate_benchmark",
     "artifact_provenance_dry_run_order_preview_bilingual_notifications_and_rollout_controls",
     "operator_approval_reference",
