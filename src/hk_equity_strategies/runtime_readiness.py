@@ -21,6 +21,7 @@ from hk_equity_strategies.catalog import (
     HK_EQUITY_DOMAIN,
     HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE,
     HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE,
+    HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE,
     get_runtime_enabled_profiles,
     get_strategy_definition,
     get_strategy_metadata,
@@ -157,6 +158,15 @@ PROFILE_LIVE_ENABLEMENT_THRESHOLDS: dict[str, dict[str, float]] = {
         "min_required_oos_fold_count": MIN_REQUIRED_OOS_FOLD_COUNT,
         "max_single_period_return_contribution": MAX_SINGLE_PERIOD_RETURN_CONTRIBUTION,
     },
+    HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE: {
+        "max_allowed_backtest_drawdown": 0.30,
+        "min_required_return_to_drawdown_ratio": 0.50,
+        "max_allowed_annualized_turnover": 1.00,
+        "min_required_annual_return": 0.0,
+        "min_required_walk_forward_years": MIN_REQUIRED_WALK_FORWARD_YEARS,
+        "min_required_oos_fold_count": MIN_REQUIRED_OOS_FOLD_COUNT,
+        "max_single_period_return_contribution": MAX_SINGLE_PERIOD_RETURN_CONTRIBUTION,
+    },
 }
 
 PROFILE_LIVE_OPTIMIZATION_CHECKS: dict[str, tuple[str, ...]] = {
@@ -177,6 +187,13 @@ PROFILE_LIVE_OPTIMIZATION_CHECKS: dict[str, tuple[str, ...]] = {
         "Verify 02840 and 03110 dividend/distribution treatment, lot sizes, and bid/ask spreads before increasing exposure.",
         "For 03110, audit Hang Seng High Dividend Yield Index methodology, distribution policy, capital-distribution risk, and high-dividend concentration/yield-trap risk.",
         "For 02840, audit SPDR Gold Shares trust structure, physical-gold single-asset risk, NAV/iNAV, tracking difference, multi-counter currency, and USD creation/redemption handling.",
+    ),
+    HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE: (
+        "Treat this as the first snapshot-backed HK runtime profile; the strategy package consumes snapshots but does not generate them.",
+        "Require a published hk_low_vol_dividend_quality factor snapshot and manifest that pass HkEquitySnapshotPipelines artifact-pack validation.",
+        "Keep dry-run until point-in-time dividend, payout-ratio, volatility, beta, drawdown, trend, suspension, and corporate-action controls are evidenced.",
+        "Verify sector caps, single-name caps, safe-haven residual weight, lot sizes, bid/ask spreads, ADV capacity, and Southbound eligibility before order submission.",
+        "Re-run same-universe walk-forward evidence whenever factor-source lineage, eligible universe, or scoring weights change.",
     ),
 }
 
@@ -210,6 +227,10 @@ def _build_risk_notes(profile: str, symbols: tuple[str, ...], *, runtime_enabled
         notes.append("03175 is a crude-oil futures ETF; confirm suitability, spread, and product permission before live use.")
     if profile == HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE and HK_DEFENSIVE_ETF_SYMBOLS.issubset(symbols):
         notes.append("02840/03110 is the lower-drawdown live candidate, but it still requires ETF fee, spread, and distribution checks.")
+    if profile == HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE:
+        notes.append(
+            "This snapshot-backed profile requires a validated factor snapshot artifact and manifest at runtime."
+        )
     return tuple(notes)
 
 
@@ -243,6 +264,10 @@ def build_hk_runtime_readiness(
     managed_symbols = _extract_managed_symbols(canonical_profile, normalized_platform)
     dry_run_env = dict(PLATFORM_HK_DRY_RUN_ENV[normalized_platform])
     dry_run_env[next(key for key in dry_run_env if key.endswith("DRY_RUN_ONLY"))] = "true" if dry_run_only else "false"
+    if runtime_requirements["requires_snapshot_artifacts"]:
+        prefix = "IBKR" if normalized_platform == "ibkr" else "LONGBRIDGE"
+        dry_run_env[f"{prefix}_FEATURE_SNAPSHOT_PATH"] = "<required>"
+        dry_run_env[f"{prefix}_FEATURE_SNAPSHOT_MANIFEST_PATH"] = "<required>"
 
     return {
         "platform": normalized_platform,

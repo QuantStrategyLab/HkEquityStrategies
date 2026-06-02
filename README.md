@@ -4,7 +4,7 @@
 
 > Investment risk notice: this repository is for engineering, research, and operational review only. It is not investment advice.
 
-`HkEquityStrategies` is the non-snapshot Hong Kong equity strategy layer for QuantStrategyLab platform runtimes.
+`HkEquityStrategies` is the Hong Kong equity strategy layer for QuantStrategyLab platform runtimes.
 It follows the same repository boundary as `UsEquityStrategies`: this repo owns pure strategy logic, catalog metadata, entrypoints, and runtime readiness checks; broker repositories own market data ingestion, account state, order routing, secrets, deployment, and notifications.
 
 ## Repository boundary
@@ -12,6 +12,7 @@ It follows the same repository boundary as `UsEquityStrategies`: this repo owns 
 This repository owns:
 
 - non-snapshot `hk_equity` strategy implementations that consume direct `market_history`
+- promoted snapshot-backed runtime entrypoints that consume published `feature_snapshot` artifacts
 - manifest/catalog-backed runtime entrypoints
 - platform-neutral `StrategyDecision` generation
 - HK runtime readiness and live-enable evidence validators
@@ -19,13 +20,13 @@ This repository owns:
 
 This repository does not own:
 
-- snapshot-backed strategy artifact generation
+- snapshot-backed strategy artifact generation and publication
 - broker credentials or account reconciliation
 - order placement or broker-specific order previews
 - Cloud Run / Google Run service deployment
 - Telegram or broker notification delivery
 
-Snapshot-backed HK strategies are intentionally separated into [`../HkEquitySnapshotPipelines`](../HkEquitySnapshotPipelines). Do not add snapshot artifact contracts or snapshot profile lists to this README; keep those in the snapshot repository.
+Snapshot-backed HK artifact generation is intentionally separated into [`../HkEquitySnapshotPipelines`](../HkEquitySnapshotPipelines). This repository may expose a promoted snapshot-backed strategy as a runtime entrypoint, but the artifact contract, production source lineage, and artifact-pack validation stay in the snapshot repository.
 
 ## Current runtime profiles
 
@@ -33,6 +34,7 @@ Snapshot-backed HK strategies are intentionally separated into [`../HkEquitySnap
 | --- | --- | --- | --- | --- | --- | --- |
 | `hk_high_dividend_low_vol_trend` | HK High Dividend Low-Volatility Trend | `market_history` | `InteractiveBrokersPlatform`, `LongBridgePlatform` | monthly review | `03110` | `runtime_enabled` |
 | `hk_listed_global_etf_rotation` | HK-listed Global ETF Rotation | `market_history` | `InteractiveBrokersPlatform`, `LongBridgePlatform` | monthly review | `02800` | `runtime_enabled` |
+| `hk_low_vol_dividend_quality` | HK Low-Volatility Dividend Quality | `feature_snapshot` | `InteractiveBrokersPlatform`, `LongBridgePlatform` | monthly review | `02800` | `runtime_enabled` |
 
 Research/backtest-only profiles stay out of the runtime catalog:
 
@@ -62,6 +64,13 @@ Research details: [`docs/research/hk_high_dividend_low_vol_trend.md`](./docs/res
 
 Research details: [`docs/research/hk_listed_global_etf_rotation.md`](./docs/research/hk_listed_global_etf_rotation.md)
 
+### `hk_low_vol_dividend_quality`
+
+- Purpose: first promoted snapshot-backed HK single-name equity selector.
+- Input: published `feature_snapshot` artifact plus manifest from `HkEquitySnapshotPipelines`.
+- Signal style: monthly low-volatility / dividend-quality ranking with sector caps, single-name caps, breadth defense, and `02800` safe-haven residual allocation.
+- Current role: runtime-enabled at the strategy-package level for IBKR and LongBridge dry-run wiring; real order submission still requires validated snapshot artifacts, point-in-time walk-forward evidence, broker order previews, bilingual notification logs, and operator approval.
+
 ## Runtime enablement gates
 
 The live-enable ranking is a work queue, not an investment recommendation.
@@ -81,6 +90,7 @@ Use the packaged tools instead of manually interpreting README text:
 ```bash
 python scripts/print_hk_live_enablement_matrix.py --json
 python scripts/print_hk_runtime_readiness.py --profile hk_high_dividend_low_vol_trend --platform longbridge --json
+python scripts/print_hk_runtime_readiness.py --profile hk_low_vol_dividend_quality --platform longbridge --json
 python scripts/validate_hk_runtime_live_enablement.py --print-template --profile hk_high_dividend_low_vol_trend --platform longbridge --json
 ```
 

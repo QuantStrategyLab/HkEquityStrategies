@@ -4,9 +4,11 @@ from quant_platform_kit.strategy_contracts import StrategyManifest
 
 from hk_equity_strategies.strategies import hk_high_dividend_low_vol_trend as high_dividend_strategy
 from hk_equity_strategies.strategies import hk_listed_global_etf_rotation as global_etf_strategy
+from hk_equity_strategies.strategies import hk_low_vol_dividend_quality as low_vol_dividend_strategy
 
 HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE = global_etf_strategy.PROFILE_NAME
 HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE = high_dividend_strategy.PROFILE_NAME
+HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE = low_vol_dividend_strategy.PROFILE_NAME
 
 
 def _manifest(
@@ -79,9 +81,43 @@ hk_high_dividend_low_vol_trend_manifest = _manifest(
     },
 )
 
+hk_low_vol_dividend_quality_manifest = _manifest(
+    profile=HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE,
+    display_name="HK Low-Volatility Dividend Quality",
+    description=(
+        "Snapshot-backed monthly single-name HK equity selector using low-volatility, "
+        "sustainable dividend, quality, and trend controls."
+    ),
+    aliases=("hk_dividend_quality", "hk_low_vol_dividend", "hk_low_vol_dividend_snapshot"),
+    required_inputs=frozenset({"feature_snapshot"}),
+    default_config={
+        "safe_haven": low_vol_dividend_strategy.SAFE_HAVEN,
+        "holdings_count": low_vol_dividend_strategy.DEFAULT_HOLDINGS_COUNT,
+        "single_name_cap": low_vol_dividend_strategy.DEFAULT_SINGLE_NAME_CAP,
+        "sector_cap": low_vol_dividend_strategy.DEFAULT_SECTOR_CAP,
+        "min_adv20_hkd": low_vol_dividend_strategy.DEFAULT_MIN_ADV20_HKD,
+        "min_market_cap_hkd": low_vol_dividend_strategy.DEFAULT_MIN_MARKET_CAP_HKD,
+        "min_dividend_yield": low_vol_dividend_strategy.DEFAULT_MIN_DIVIDEND_YIELD,
+        "max_dividend_yield": low_vol_dividend_strategy.DEFAULT_MAX_DIVIDEND_YIELD,
+        "min_dividend_stability": low_vol_dividend_strategy.DEFAULT_MIN_DIVIDEND_STABILITY,
+        "max_payout_ratio": low_vol_dividend_strategy.DEFAULT_MAX_PAYOUT_RATIO,
+        "max_suspension_days_63": low_vol_dividend_strategy.DEFAULT_MAX_SUSPENSION_DAYS_63,
+        "hold_buffer": low_vol_dividend_strategy.DEFAULT_HOLD_BUFFER,
+        "hold_bonus": low_vol_dividend_strategy.DEFAULT_HOLD_BONUS,
+        "risk_on_exposure": low_vol_dividend_strategy.DEFAULT_RISK_ON_EXPOSURE,
+        "soft_defense_exposure": low_vol_dividend_strategy.DEFAULT_SOFT_DEFENSE_EXPOSURE,
+        "hard_defense_exposure": low_vol_dividend_strategy.DEFAULT_HARD_DEFENSE_EXPOSURE,
+        "soft_breadth_threshold": low_vol_dividend_strategy.DEFAULT_SOFT_BREADTH_THRESHOLD,
+        "hard_breadth_threshold": low_vol_dividend_strategy.DEFAULT_HARD_BREADTH_THRESHOLD,
+        "execution_cash_reserve_ratio": low_vol_dividend_strategy.DEFAULT_EXECUTION_CASH_RESERVE_RATIO,
+        "rebalance_frequency": "monthly",
+    },
+)
+
 MANIFESTS = {
     hk_listed_global_etf_rotation_manifest.profile: hk_listed_global_etf_rotation_manifest,
     hk_high_dividend_low_vol_trend_manifest.profile: hk_high_dividend_low_vol_trend_manifest,
+    hk_low_vol_dividend_quality_manifest.profile: hk_low_vol_dividend_quality_manifest,
 }
 
 MANIFEST_ALIASES = {
@@ -99,8 +135,10 @@ def get_strategy_manifest(profile: str) -> StrategyManifest:
 __all__ = [
     "HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE",
     "HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE",
+    "HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE",
     "MANIFESTS",
     "get_strategy_manifest",
     "hk_high_dividend_low_vol_trend_manifest",
     "hk_listed_global_etf_rotation_manifest",
+    "hk_low_vol_dividend_quality_manifest",
 ]

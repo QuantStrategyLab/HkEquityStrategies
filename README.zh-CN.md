@@ -4,7 +4,7 @@
 
 > 风险提示：本仓库仅用于工程实现、研究和运行审查，不构成投资建议。
 
-`HkEquityStrategies` 是 QuantStrategyLab 港股非 snapshot 策略仓库。
+`HkEquityStrategies` 是 QuantStrategyLab 港股策略仓库。
 它沿用 `UsEquityStrategies` 的边界：本仓库只负责纯策略逻辑、目录元数据、运行入口和 readiness / evidence 检查；券商仓库负责行情接入、账户状态、订单路由、密钥、部署和通知。
 
 ## 仓库边界
@@ -12,6 +12,7 @@
 本仓库负责：
 
 - 消费 direct `market_history` 的非 snapshot `hk_equity` 策略实现
+- 消费已发布 `feature_snapshot` artifact 的已提升 snapshot-backed runtime entrypoint
 - manifest/catalog 支撑的 runtime entrypoint
 - 平台无关的 `StrategyDecision` 生成
 - 港股 runtime readiness 与 live-enable evidence 校验工具
@@ -19,13 +20,13 @@
 
 本仓库不负责：
 
-- snapshot-backed 策略 artifact 生成
+- snapshot-backed 策略 artifact 生成与发布
 - 券商凭据或账户对账
 - 下单或券商专项 order preview
 - Cloud Run / Google Run 服务部署
 - Telegram 或券商通知投递
 
-Snapshot-backed 港股策略已经单独放在 [`../HkEquitySnapshotPipelines`](../HkEquitySnapshotPipelines)。不要在本 README 里继续堆 snapshot artifact contract 或 snapshot profile 列表；这些内容统一保留在 snapshot 仓库。
+Snapshot-backed 港股 artifact 生成已经单独放在 [`../HkEquitySnapshotPipelines`](../HkEquitySnapshotPipelines)。本仓库可以暴露已提升的 snapshot-backed runtime entrypoint，但 artifact contract、生产数据 lineage 和 artifact-pack validation 仍归 snapshot 仓库。
 
 ## 当前 runtime profile
 
@@ -33,6 +34,7 @@ Snapshot-backed 港股策略已经单独放在 [`../HkEquitySnapshotPipelines`](
 | --- | --- | --- | --- | --- | --- | --- |
 | `hk_high_dividend_low_vol_trend` | HK High Dividend Low-Volatility Trend | `market_history` | `InteractiveBrokersPlatform`, `LongBridgePlatform` | monthly review | `03110` | `runtime_enabled` |
 | `hk_listed_global_etf_rotation` | HK-listed Global ETF Rotation | `market_history` | `InteractiveBrokersPlatform`, `LongBridgePlatform` | monthly review | `02800` | `runtime_enabled` |
+| `hk_low_vol_dividend_quality` | HK Low-Volatility Dividend Quality | `feature_snapshot` | `InteractiveBrokersPlatform`, `LongBridgePlatform` | monthly review | `02800` | `runtime_enabled` |
 
 以下 profile 只保留为研究/回测记录，不进入 runtime catalog：
 
@@ -62,6 +64,13 @@ Snapshot-backed 港股策略已经单独放在 [`../HkEquitySnapshotPipelines`](
 
 研究记录：[`docs/research/hk_listed_global_etf_rotation.md`](./docs/research/hk_listed_global_etf_rotation.md)
 
+### `hk_low_vol_dividend_quality`
+
+- 目标：首个已提升的 snapshot-backed 港股单票选择策略。
+- 输入：来自 `HkEquitySnapshotPipelines` 的已发布 `feature_snapshot` artifact 和 manifest。
+- 信号方式：月度低波动 / 股息质量打分，叠加行业上限、单票上限、市场广度防御，以及 `02800` safe-haven 剩余仓位。
+- 当前角色：策略包层面已 runtime-enabled，支持 IBKR 和 LongBridge dry-run 接线；真实下单前仍必须补齐 validated snapshot artifact、point-in-time walk-forward evidence、券商 order preview、中英文通知日志和人工审批。
+
 ## Runtime enablement 门槛
 
 Live-enable 排名只是后续工作队列，不是投资推荐。
@@ -81,6 +90,7 @@ Live-enable 排名只是后续工作队列，不是投资推荐。
 ```bash
 python scripts/print_hk_live_enablement_matrix.py --json
 python scripts/print_hk_runtime_readiness.py --profile hk_high_dividend_low_vol_trend --platform longbridge --json
+python scripts/print_hk_runtime_readiness.py --profile hk_low_vol_dividend_quality --platform longbridge --json
 python scripts/validate_hk_runtime_live_enablement.py --print-template --profile hk_high_dividend_low_vol_trend --platform longbridge --json
 ```
 

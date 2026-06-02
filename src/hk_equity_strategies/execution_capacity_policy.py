@@ -10,6 +10,7 @@ DEFAULT_MAX_REBALANCE_ADV_FRACTION = 0.10
 MIN_MEDIAN_DAILY_TURNOVER_HKD_BY_PROFILE: dict[str, int] = {
     "hk_listed_global_etf_rotation": 20_000_000,
     "hk_high_dividend_low_vol_trend": 10_000_000,
+    "hk_low_vol_dividend_quality": 30_000_000,
 }
 
 REQUIRED_EXECUTION_CAPACITY_FIELDS: tuple[str, ...] = (

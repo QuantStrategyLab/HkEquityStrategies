@@ -14,17 +14,18 @@
 The HK strategy surface is split by input style:
 
 - Runtime non-snapshot/direct `market_history`: `hk_listed_global_etf_rotation`, `hk_high_dividend_low_vol_trend`.
+- Runtime snapshot-backed `feature_snapshot`: `hk_low_vol_dividend_quality`; artifact generation and publication still live in `HkEquitySnapshotPipelines`.
 - Research/backtest-only: `hk_index_mean_reversion`, `hk_etf_regime_rotation`; they are not runtime catalog profiles.
-- Snapshot-backed scaffold: `hk_blue_chip_leader_rotation`, `hk_low_vol_dividend_quality`, `hk_liquid_momentum_quality`, `hk_residual_momentum_quality`, `hk_shareholder_yield_quality`, `hk_composite_factor_quality_value_momentum`, `hk_factor_mix_qvlm_risk_parity`, `hk_central_soe_value_quality_select`, `hk_free_cash_flow_quality`, `hk_southbound_flow_momentum`, `hk_ah_premium_relative_value`, `hk_index_rebalance_event`; their artifact contracts, strategy helpers, and publication flow live in `HkEquitySnapshotPipelines`.
+- Snapshot-backed scaffold: `hk_blue_chip_leader_rotation`, `hk_liquid_momentum_quality`, `hk_residual_momentum_quality`, `hk_shareholder_yield_quality`, `hk_composite_factor_quality_value_momentum`, `hk_factor_mix_qvlm_risk_parity`, `hk_central_soe_value_quality_select`, `hk_free_cash_flow_quality`, `hk_southbound_flow_momentum`, `hk_ah_premium_relative_value`, `hk_index_rebalance_event`; their artifact contracts, strategy helpers, and publication flow live in `HkEquitySnapshotPipelines`.
 
 The runtime catalog profiles declare structural support for:
 
 - `ibkr` (`InteractiveBrokersPlatform`)
 - `longbridge` (`LongBridgePlatform`)
 
-The strategy package does not import platform code. Platforms load it through the same catalog/runtime-adapter contract used by `UsEquityStrategies`. `hk_listed_global_etf_rotation` and `hk_high_dividend_low_vol_trend` are HK runtime catalog profiles. `hk_blue_chip_leader_rotation`, `hk_low_vol_dividend_quality`, `hk_liquid_momentum_quality`, `hk_residual_momentum_quality`, `hk_shareholder_yield_quality`, `hk_composite_factor_quality_value_momentum`, `hk_factor_mix_qvlm_risk_parity`, `hk_central_soe_value_quality_select`, `hk_free_cash_flow_quality`, `hk_southbound_flow_momentum`, `hk_ah_premium_relative_value`, and `hk_index_rebalance_event` are snapshot scaffolds in `HkEquitySnapshotPipelines`; `hk_index_mean_reversion` and `hk_etf_regime_rotation` are research/backtest-only candidates. Platform repositories should expose only runtime-enabled HK profiles as selectable runtime targets. Research and snapshot-scaffold profiles remain in docs/backtests until they are explicitly promoted.
+The strategy package does not import platform code. Platforms load it through the same catalog/runtime-adapter contract used by `UsEquityStrategies`. `hk_listed_global_etf_rotation`, `hk_high_dividend_low_vol_trend`, and `hk_low_vol_dividend_quality` are HK runtime catalog profiles. `hk_low_vol_dividend_quality` is snapshot-backed and requires a published factor snapshot plus manifest at runtime. `hk_blue_chip_leader_rotation`, `hk_liquid_momentum_quality`, `hk_residual_momentum_quality`, `hk_shareholder_yield_quality`, `hk_composite_factor_quality_value_momentum`, `hk_factor_mix_qvlm_risk_parity`, `hk_central_soe_value_quality_select`, `hk_free_cash_flow_quality`, `hk_southbound_flow_momentum`, `hk_ah_premium_relative_value`, and `hk_index_rebalance_event` remain snapshot scaffolds in `HkEquitySnapshotPipelines`; `hk_index_mean_reversion` and `hk_etf_regime_rotation` are research/backtest-only candidates. Platform repositories should expose only runtime-enabled HK profiles as selectable runtime targets. Research and snapshot-scaffold profiles remain in docs/backtests until they are explicitly promoted.
 
-Integration tooling can call `get_external_snapshot_scaffold_profiles()` to display these snapshot-backed names as non-selectable scaffolds. Do not merge that helper with `get_runtime_enabled_profiles()`; the former is documentation/guardrail metadata, the latter is the platform selection surface.
+Integration tooling can call `get_external_snapshot_scaffold_profiles()` to display non-selectable snapshot scaffolds and `get_snapshot_backed_profiles()` to distinguish promoted runtime profiles that require `feature_snapshot` artifacts. Do not merge scaffold metadata with `get_runtime_enabled_profiles()`; the former is documentation/guardrail metadata, the latter is the platform selection surface.
 
 ## Live-enable matrix
 
@@ -43,7 +44,7 @@ Matrix semantics:
 - `live_enablement_gate=requires_snapshot_promotion_matrix_and_production_evidence` means the profile is only a snapshot scaffold. It must not be selectable until the snapshot repository promotion matrix, artifact-pack validation, live-evidence validation, and a later strategy-package runtime promotion all pass.
 - `live_enablement_gate=research_backtest_only_not_platform_selectable` means the profile stays in research docs only.
 
-The matrix currently reports the first snapshot candidates as `hk_low_vol_dividend_quality`, `hk_shareholder_yield_quality`, and `hk_free_cash_flow_quality`. Treat this as evidence-collection priority, not permission to deploy them. The snapshot repository's `recommended_live_enablement_sequence` is the detailed promotion order; `hk_free_cash_flow_quality` must also prove HSI/S&P-style FCF formula lineage, EV market-cap/debt/cash/FX inputs, reporting-date/restatement/as-of controls, sector normalization, and financial/real-estate/negative-FCF exceptions before platform selection. Momentum-factor profiles stay in later research stages until residual, liquid, and composite variants are compared and HSI close-to-high descriptors are reconciled with MSCI-style 6/12-month one-month-skip risk-adjusted momentum, volatility normalization, turnover buffers, sector/capacity controls, and momentum-crash stress.
+The matrix now reports `hk_low_vol_dividend_quality` as the first promoted snapshot-backed runtime profile. Treat strategy-package `runtime_enabled` as permission for platform dry-run wiring only, not permission to remove dry-run. Deferred snapshot ideas such as `hk_shareholder_yield_quality` and `hk_free_cash_flow_quality` remain non-selectable until same-universe walk-forward evidence and production-source lineage improve enough for a later promotion. Momentum-factor profiles stay in later research stages until residual, liquid, and composite variants are compared and HSI close-to-high descriptors are reconciled with MSCI-style 6/12-month one-month-skip risk-adjusted momentum, volatility normalization, turnover buffers, sector/capacity controls, and momentum-crash stress.
 
 For snapshot scaffolds, `research_evidence_urls` now includes profile-specific external sources in addition to the internal research note. Platform status pages can display those URLs to explain the promotion thesis, but they must still keep `selectable_by_platform=false` until the snapshot promotion and live-evidence gates pass.
 
@@ -65,14 +66,14 @@ IBKR_MARKET_DATA_SYMBOL_SUFFIX=.HK
 IBKR_DRY_RUN_ONLY=true
 ```
 
-Snapshot-backed profiles additionally require snapshot artifacts. The current HK snapshot profiles are scaffold-only, so these variables are examples for future rollout, not current production settings:
+`hk_low_vol_dividend_quality` additionally requires a validated feature snapshot and manifest:
 
 ```bash
-IBKR_FEATURE_SNAPSHOT_PATH=<published/hk_blue_chip_leader_rotation_feature_snapshot_latest.csv>
-IBKR_FEATURE_SNAPSHOT_MANIFEST_PATH=<published/hk_blue_chip_leader_rotation_feature_snapshot_latest.csv.manifest.json>
+IBKR_FEATURE_SNAPSHOT_PATH=<published/hk_low_vol_dividend_quality_factor_snapshot_latest.csv>
+IBKR_FEATURE_SNAPSHOT_MANIFEST_PATH=<published/hk_low_vol_dividend_quality_factor_snapshot_latest.csv.manifest.json>
 ```
 
-Use the profile-specific artifact names from `HkEquitySnapshotPipelines/docs/artifact_contract.md` when promoting `hk_low_vol_dividend_quality`, `hk_liquid_momentum_quality`, `hk_residual_momentum_quality`, `hk_shareholder_yield_quality`, `hk_composite_factor_quality_value_momentum`, `hk_factor_mix_qvlm_risk_parity`, `hk_central_soe_value_quality_select`, `hk_free_cash_flow_quality`, `hk_southbound_flow_momentum`, `hk_ah_premium_relative_value`, or `hk_index_rebalance_event`; do not reuse the blue-chip filenames.
+Use the profile-specific artifact names from `HkEquitySnapshotPipelines/docs/artifact_contract.md`; do not reuse blue-chip filenames. Other snapshot scaffolds remain non-selectable until promoted.
 
 ### LongBridgePlatform
 
@@ -90,14 +91,14 @@ LONGBRIDGE_SYMBOL_SUFFIX=.HK
 LONGBRIDGE_TRADING_CURRENCY=HKD
 ```
 
-Snapshot-backed profiles additionally require snapshot artifacts. The current HK snapshot profiles are scaffold-only, so these variables are examples for future rollout, not current production settings:
+`hk_low_vol_dividend_quality` additionally requires a validated feature snapshot and manifest:
 
 ```bash
-LONGBRIDGE_FEATURE_SNAPSHOT_PATH=<published/hk_blue_chip_leader_rotation_feature_snapshot_latest.csv>
-LONGBRIDGE_FEATURE_SNAPSHOT_MANIFEST_PATH=<published/hk_blue_chip_leader_rotation_feature_snapshot_latest.csv.manifest.json>
+LONGBRIDGE_FEATURE_SNAPSHOT_PATH=<published/hk_low_vol_dividend_quality_factor_snapshot_latest.csv>
+LONGBRIDGE_FEATURE_SNAPSHOT_MANIFEST_PATH=<published/hk_low_vol_dividend_quality_factor_snapshot_latest.csv.manifest.json>
 ```
 
-Use the profile-specific artifact names from `HkEquitySnapshotPipelines/docs/artifact_contract.md` when promoting `hk_low_vol_dividend_quality`, `hk_liquid_momentum_quality`, `hk_residual_momentum_quality`, `hk_shareholder_yield_quality`, `hk_composite_factor_quality_value_momentum`, `hk_factor_mix_qvlm_risk_parity`, `hk_central_soe_value_quality_select`, `hk_free_cash_flow_quality`, `hk_southbound_flow_momentum`, `hk_ah_premium_relative_value`, or `hk_index_rebalance_event`; do not reuse the blue-chip filenames.
+Use the profile-specific artifact names from `HkEquitySnapshotPipelines/docs/artifact_contract.md`; do not reuse blue-chip filenames. Other snapshot scaffolds remain non-selectable until promoted.
 
 ## Runtime readiness checklist
 
@@ -108,17 +109,19 @@ python scripts/print_hk_runtime_readiness.py --profile hk_listed_global_etf_rota
 python scripts/print_hk_runtime_readiness.py --profile hk_listed_global_etf_rotation --platform longbridge --json
 python scripts/print_hk_runtime_readiness.py --profile hk_high_dividend_low_vol_trend --platform ibkr --json
 python scripts/print_hk_runtime_readiness.py --profile hk_high_dividend_low_vol_trend --platform longbridge --json
+python scripts/print_hk_runtime_readiness.py --profile hk_low_vol_dividend_quality --platform ibkr --json
+python scripts/print_hk_runtime_readiness.py --profile hk_low_vol_dividend_quality --platform longbridge --json
 ```
 
 The plan is intentionally `dry_run_only=true` by default and does not deploy Cloud Run. It records:
 
 - HK market defaults: `HK` / `XHKG` / `Asia/Hong_Kong` / `SEHK` / `HKD` / `.HK`.
-- Managed symbols and required direct `market_history` inputs.
+- Managed symbols and required runtime inputs (`market_history` for direct profiles, `feature_snapshot` plus manifest for snapshot-backed profiles).
 - Platform target conversion: IBKR accepts weight targets directly; LongBridge needs a portfolio snapshot for weight-to-value conversion.
 - Dry-run checks for market-data permission, order preview, integer-share and broker lot-size validation, HKD cash lines, and bilingual operator notifications.
 - ETF live-enable checks for stamp-duty / levy / minimum-commission treatment, bid/ask spread, slippage, distribution handling, stale quotes, NAV, market-maker liquidity, and suspension status.
-- Profile-specific optimization checks. `hk_high_dividend_low_vol_trend` is the preferred lower-drawdown first HK live candidate; `hk_listed_global_etf_rotation` remains the broader higher-return candidate and needs per-symbol product evidence for all eight ETFs, with extra review for `03175` futures roll/margin/curve and complex-product suitability risk.
-- Machine-readable live thresholds and evidence fields. `hk_listed_global_etf_rotation` currently requires max drawdown <= 30%, at least 3 OOS folds, max single-period return contribution <= 60%, and annualized turnover <= 150%; `hk_high_dividend_low_vol_trend` requires max drawdown <= 12%, at least 3 OOS folds, max single-period return contribution <= 60%, and annualized turnover <= 100%.
+- Profile-specific optimization checks. `hk_high_dividend_low_vol_trend` is the preferred lower-drawdown direct-market profile; `hk_listed_global_etf_rotation` remains the broader higher-return ETF candidate and needs per-symbol product evidence for all eight ETFs, with extra review for `03175` futures roll/margin/curve and complex-product suitability risk. `hk_low_vol_dividend_quality` is the first snapshot-backed runtime candidate and requires validated factor-snapshot provenance before any order preview is treated as live evidence.
+- Machine-readable live thresholds and evidence fields. `hk_listed_global_etf_rotation` currently requires max drawdown <= 30%, at least 3 OOS folds, max single-period return contribution <= 60%, and annualized turnover <= 150%; `hk_high_dividend_low_vol_trend` requires max drawdown <= 12%, at least 3 OOS folds, max single-period return contribution <= 60%, and annualized turnover <= 100%; `hk_low_vol_dividend_quality` requires max drawdown <= 30%, at least 3 OOS folds, max single-period return contribution <= 60%, and annualized turnover <= 100%.
 - Machine-readable `evidence_uri_policy`, `evidence_freshness_policy`, `runtime_etf_product_policy` with per-symbol ETF product due-diligence and ETF Connect / Southbound route requirements, `runtime_market_data_policy` with market-history provenance URI requirements, `execution_capacity_policy`, `dry_run_order_preview_policy`, `rollout_risk_policy`, and `notification_audit_policy`, shared with the live-enable matrix, readiness output, evidence template, and validation result.
 
 HK ETF transfers are generally stamp-duty exempt under the Inland Revenue Department's ETF FAQ, but platform live approval must still capture broker order-preview evidence for the specific symbols because HKEX/broker fees, minimum commission, bid/ask spread, and product permission are separate from stamp duty.
@@ -174,7 +177,9 @@ Do not remove platform dry-run mode or mark a snapshot-backed profile as `runtim
 
 ## Runtime profile boundary
 
-Do not set `STRATEGY_PROFILE=hk_blue_chip_leader_rotation`, `STRATEGY_PROFILE=hk_low_vol_dividend_quality`, `STRATEGY_PROFILE=hk_liquid_momentum_quality`, `STRATEGY_PROFILE=hk_residual_momentum_quality`, `STRATEGY_PROFILE=hk_shareholder_yield_quality`, `STRATEGY_PROFILE=hk_composite_factor_quality_value_momentum`, `STRATEGY_PROFILE=hk_factor_mix_qvlm_risk_parity`, `STRATEGY_PROFILE=hk_central_soe_value_quality_select`, `STRATEGY_PROFILE=hk_free_cash_flow_quality`, `STRATEGY_PROFILE=hk_southbound_flow_momentum`, `STRATEGY_PROFILE=hk_ah_premium_relative_value`, `STRATEGY_PROFILE=hk_index_rebalance_event`, `STRATEGY_PROFILE=hk_index_mean_reversion`, or `STRATEGY_PROFILE=hk_etf_regime_rotation` in Cloud Run while the profiles are not `runtime_enabled`. Platform status and switch-plan tooling should not expose these profiles as selectable runtime targets. `hk_listed_global_etf_rotation` and `hk_high_dividend_low_vol_trend` are runtime-enabled at the strategy-package level and can be selected by Cloud Run through `RUNTIME_TARGET_JSON` / `STRATEGY_PROFILE`; dry-run versus live execution remains a platform runtime setting.
+`hk_low_vol_dividend_quality` is now a runtime-enabled snapshot-backed profile and may be selected only when `feature_snapshot` and manifest paths are configured and dry-run remains enabled until evidence passes.
+
+Do not set `STRATEGY_PROFILE=hk_blue_chip_leader_rotation`, `STRATEGY_PROFILE=hk_liquid_momentum_quality`, `STRATEGY_PROFILE=hk_residual_momentum_quality`, `STRATEGY_PROFILE=hk_shareholder_yield_quality`, `STRATEGY_PROFILE=hk_composite_factor_quality_value_momentum`, `STRATEGY_PROFILE=hk_factor_mix_qvlm_risk_parity`, `STRATEGY_PROFILE=hk_central_soe_value_quality_select`, `STRATEGY_PROFILE=hk_free_cash_flow_quality`, `STRATEGY_PROFILE=hk_southbound_flow_momentum`, `STRATEGY_PROFILE=hk_ah_premium_relative_value`, `STRATEGY_PROFILE=hk_index_rebalance_event`, `STRATEGY_PROFILE=hk_index_mean_reversion`, or `STRATEGY_PROFILE=hk_etf_regime_rotation` in Cloud Run while the profiles are not `runtime_enabled`. Platform status and switch-plan tooling should not expose these profiles as selectable runtime targets. `hk_listed_global_etf_rotation`, `hk_high_dividend_low_vol_trend`, and `hk_low_vol_dividend_quality` are runtime-enabled at the strategy-package level and can be selected by Cloud Run through `RUNTIME_TARGET_JSON` / `STRATEGY_PROFILE`; dry-run versus live execution remains a platform runtime setting.
 
 ## Risks before live trading
 
