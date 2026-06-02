@@ -371,6 +371,7 @@ def test_snapshot_future_research_policy_blocks_non_scaffolded_ideas():
         "hk_reit_dividend_spread_rate_sensitivity_overlay",
         "hk_regulatory_enforcement_disciplinary_risk_overlay",
         "hk_margin_financing_collateral_forced_selling_risk_overlay",
+        "hk_liquid_largecap_weekly_reversal_cost_aware_overlay",
     ]
     assert "new_snapshot_profile_name_and_contract_version" in policy["required_pre_scaffold_gates"]
     assert "point_in_time_consensus_estimate_and_revision_history" in policy["required_pre_scaffold_gates"]
@@ -477,6 +478,10 @@ def test_snapshot_future_research_policy_blocks_non_scaffolded_ideas():
     )
     assert (
         "margin_financing_collateral_haircut_pledge_forced_selling_and_liquidity_ablation_history"
+        in policy["required_pre_scaffold_gates"]
+    )
+    assert (
+        "weekly_reversal_extreme_return_cost_slippage_vcm_cas_and_momentum_ablation_history"
         in policy["required_pre_scaffold_gates"]
     )
     assert "mutating_existing_snapshot_contract_in_place" in policy["required_reject_criteria"]
