@@ -81,6 +81,7 @@ SNAPSHOT_FUTURE_RESEARCH_CANDIDATES: tuple[str, ...] = (
     "hk_liquid_pairs_cointegration_stat_arb_overlay",
     "hk_macro_liquidity_inflation_rate_sensitivity_overlay",
     "hk_turn_of_month_lunar_new_year_calendar_overlay",
+    "hk_etf_premium_discount_tracking_quality_overlay",
 )
 
 SNAPSHOT_FUTURE_RESEARCH_PRE_SCAFFOLD_GATES: tuple[str, ...] = (
@@ -105,6 +106,7 @@ SNAPSHOT_FUTURE_RESEARCH_PRE_SCAFFOLD_GATES: tuple[str, ...] = (
     "pairs_cointegration_spread_stability_borrow_shorting_tick_rule_and_capacity_history",
     "macro_inflation_hibor_base_rate_release_lag_sector_sensitivity_and_capacity_history",
     "calendar_turn_of_month_lunar_new_year_hkex_trading_settlement_and_short_sale_history",
+    "etf_premium_discount_tracking_nav_inav_liquidity_complex_product_and_permission_history",
     "survivorship_safe_walk_forward_backtest_vs_02800_and_candidate_benchmark",
     "artifact_provenance_dry_run_order_preview_bilingual_notifications_and_rollout_controls",
     "operator_approval_reference",
@@ -336,6 +338,7 @@ RUNTIME_PROFILE_NOTES: dict[str, tuple[str, ...]] = {
         "A-share sleeves 02822 and 03188 require RQFII/Stock Connect, RMB base-currency, A-share trading-hour/price-band, cross-market holiday, FX, and premium/discount review.",
         "Overseas/commodity sleeves 02834, 02840, and 03175 require Nasdaq trading-hour, gold trust, futures-roll/margin/curve, USD creation/redemption, and complex-product suitability review.",
         "ETF Connect / Southbound ETF route evidence must prove current eligibility or sell-only status, daily turnover/fund-flow trend, broker buy-order availability, and cross-boundary settlement/holiday handling before dry-run removal.",
+        "ETF premium/discount and tracking-quality overlay evidence should prove NAV/iNAV freshness, tracking-difference history, spread/depth, market-maker coverage, product-structure risk, and same-universe ETF-rotation ablation before changing live weights.",
     ),
 }
 
