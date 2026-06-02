@@ -69,6 +69,7 @@ SNAPSHOT_FUTURE_RESEARCH_CANDIDATES: tuple[str, ...] = (
     "hk_short_selling_pressure_risk_overlay",
     "hk_director_dealing_disclosure_quality_overlay",
     "hk_dually_traded_liquid_reversal_overlay",
+    "hk_earnings_announcement_drift_overlay",
 )
 
 SNAPSHOT_FUTURE_RESEARCH_PRE_SCAFFOLD_GATES: tuple[str, ...] = (
@@ -81,6 +82,7 @@ SNAPSHOT_FUTURE_RESEARCH_PRE_SCAFFOLD_GATES: tuple[str, ...] = (
     "short_selling_turnover_shortable_status_and_short_interest_history",
     "director_dealing_disclosure_notice_and_blackout_context_history",
     "dually_traded_security_mapping_reversal_cost_and_capacity_history",
+    "earnings_announcement_timestamp_profit_warning_and_pead_event_history",
     "survivorship_safe_walk_forward_backtest_vs_02800_and_candidate_benchmark",
     "artifact_provenance_dry_run_order_preview_bilingual_notifications_and_rollout_controls",
     "operator_approval_reference",
