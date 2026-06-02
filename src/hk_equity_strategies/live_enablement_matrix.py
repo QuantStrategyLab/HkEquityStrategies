@@ -83,6 +83,7 @@ SNAPSHOT_FUTURE_RESEARCH_CANDIDATES: tuple[str, ...] = (
     "hk_turn_of_month_lunar_new_year_calendar_overlay",
     "hk_etf_premium_discount_tracking_quality_overlay",
     "hk_asset_growth_net_issuance_quality_overlay",
+    "hk_accrual_quality_earnings_persistence_overlay",
 )
 
 SNAPSHOT_FUTURE_RESEARCH_PRE_SCAFFOLD_GATES: tuple[str, ...] = (
@@ -109,6 +110,7 @@ SNAPSHOT_FUTURE_RESEARCH_PRE_SCAFFOLD_GATES: tuple[str, ...] = (
     "calendar_turn_of_month_lunar_new_year_hkex_trading_settlement_and_short_sale_history",
     "etf_premium_discount_tracking_nav_inav_liquidity_complex_product_and_permission_history",
     "asset_growth_net_share_issuance_reporting_date_restatement_and_sector_exception_history",
+    "accrual_quality_earnings_persistence_reporting_date_restatement_sector_exception_and_liquidity_history",
     "survivorship_safe_walk_forward_backtest_vs_02800_and_candidate_benchmark",
     "artifact_provenance_dry_run_order_preview_bilingual_notifications_and_rollout_controls",
     "operator_approval_reference",
