@@ -49,6 +49,22 @@ def test_live_enablement_matrix_keeps_selectable_surface_to_runtime_profiles():
     assert "no_full_sample_parameter_selection" in (
         matrix["backtest_validation_policy"]["required_boolean_fields"]
     )
+    assert "rolling_oos_fold_drawdown_controls" in (
+        matrix["backtest_validation_policy"]["required_boolean_fields"]
+    )
+    assert "regime_stress_and_liquidity_shock_controls" in (
+        matrix["backtest_validation_policy"]["required_boolean_fields"]
+    )
+    assert "each_oos_fold_max_drawdown_at_or_below_30_percent" in (
+        matrix["backtest_validation_policy"]["required_risk_constraints"]
+    )
+    assert "cash_leverage_short_borrow_and_margin_constraints" in (
+        matrix["backtest_validation_policy"]["required_risk_constraints"]
+    )
+    assert "rolling_or_oos_fold_drawdown_above_30_percent" in matrix["backtest_validation_policy"]["reject_criteria"]
+    assert "per_fold_drawdown_parameter_stability_and_regime_stress_controls" in (
+        matrix["common_platform_evidence_requirements"]
+    )
     assert matrix["execution_capacity_policy"]["max_single_order_adv_fraction"] == 0.025
     assert matrix["rollout_risk_policy"]["max_initial_capital_fraction"] == 0.25
     assert matrix["runtime_etf_product_policy"]["policy_version"] == "hk_runtime_etf_product_due_diligence.v2"

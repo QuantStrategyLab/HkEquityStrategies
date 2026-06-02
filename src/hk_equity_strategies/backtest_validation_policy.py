@@ -16,15 +16,24 @@ REQUIRED_BACKTEST_VALIDATION_BOOLEAN_FIELDS: tuple[str, ...] = (
     "train_validation_test_or_walk_forward_split_documented",
     "parameter_grid_pre_registered_and_small",
     "no_full_sample_parameter_selection",
+    "rolling_oos_fold_drawdown_controls",
+    "parameter_sensitivity_and_holdout_stability_controls",
     "multiple_period_robustness_checked",
+    "regime_stress_and_liquidity_shock_controls",
     "transaction_cost_slippage_lot_size_and_suspension_model_included",
+    "net_return_after_costs_controls",
+    "corporate_action_delisting_and_stale_price_controls",
+    "cash_leverage_short_borrow_and_margin_controls",
 )
 
 REQUIRED_BACKTEST_RISK_CONSTRAINTS: tuple[str, ...] = (
     "max_drawdown_at_or_below_30_percent",
+    "each_oos_fold_max_drawdown_at_or_below_30_percent",
     "positive_strategy_excess_return_vs_profile_benchmark",
     "annualized_turnover_within_profile_threshold",
     "single_name_sector_and_theme_concentration_limits",
+    "factor_exposure_crowding_and_loss_concentration_limits",
+    "cash_leverage_short_borrow_and_margin_constraints",
     "adv_capacity_spread_board_lot_and_odd_lot_limits",
     "suspension_stale_quote_vcm_cas_and_market_session_controls",
     "hk_fee_levy_stamp_duty_or_etf_exemption_slippage_model",
@@ -39,6 +48,11 @@ REQUIRED_BACKTEST_VALIDATION_METRICS: tuple[str, ...] = (
     "strategy_excess_return",
     "max_drawdown",
     "annualized_turnover",
+    "rolling_oos_fold_max_drawdown",
+    "net_annual_return_after_costs",
+    "worst_month_or_worst_rebalance_loss",
+    "parameter_sensitivity_summary",
+    "capacity_at_target_aum",
 )
 
 BACKTEST_VALIDATION_REJECT_CRITERIA: tuple[str, ...] = (
@@ -49,6 +63,11 @@ BACKTEST_VALIDATION_REJECT_CRITERIA: tuple[str, ...] = (
     "missing_transaction_cost_slippage_lot_size_or_suspension_model",
     "single_period_only_backtest_without_walk_forward_or_robustness_checks",
     "sample_artifact_or_synthetic_data_used_as_live_enablement_evidence",
+    "gross_return_only_backtest_without_net_cost_validation",
+    "rolling_or_oos_fold_drawdown_above_30_percent",
+    "insufficient_parameter_sensitivity_or_holdout_stability",
+    "hidden_leverage_or_short_exposure_without_borrow_margin_and_tick_rule_controls",
+    "unmodeled_corporate_actions_suspensions_delistings_or_stale_prices",
 )
 
 
@@ -67,8 +86,9 @@ def build_backtest_validation_policy() -> dict[str, Any]:
             "Every HK strategy must provide out-of-sample or walk-forward backtest evidence before live enablement, "
             "and max drawdown must be <= 30% unless a stricter per-profile threshold applies. "
             "Evidence must prove point-in-time inputs, no look-ahead or survivorship bias, pre-registered and small "
-            "parameter searches, HK cost/slippage/lot-size/suspension handling, benchmark alignment, and robustness "
-            "across multiple periods."
+            "parameter searches, per-fold drawdown <= 30%, net-of-cost returns, HK cost/slippage/lot-size/suspension "
+            "handling, corporate-action / stale-price handling, benchmark alignment, leverage/shorting feasibility, capacity, "
+            "regime stress, and robustness across multiple periods."
         ),
     }
 

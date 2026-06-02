@@ -38,8 +38,14 @@ def _evidence(**overrides):
             "train_validation_test_or_walk_forward_split_documented": True,
             "parameter_grid_pre_registered_and_small": True,
             "no_full_sample_parameter_selection": True,
+            "rolling_oos_fold_drawdown_controls": True,
+            "parameter_sensitivity_and_holdout_stability_controls": True,
             "multiple_period_robustness_checked": True,
+            "regime_stress_and_liquidity_shock_controls": True,
             "transaction_cost_slippage_lot_size_and_suspension_model_included": True,
+            "net_return_after_costs_controls": True,
+            "corporate_action_delisting_and_stale_price_controls": True,
+            "cash_leverage_short_borrow_and_margin_controls": True,
             "benchmark_symbol": "03110",
             "benchmark_annual_return": 0.08,
             "strategy_excess_return": 0.0916,
@@ -326,6 +332,10 @@ def test_build_runtime_live_enablement_evidence_template_is_not_preapproved():
     assert template["strategy_backtest"]["strategy_excess_return"] is None
     assert template["strategy_backtest"]["point_in_time_inputs_only"] is False
     assert template["strategy_backtest"]["no_full_sample_parameter_selection"] is False
+    assert template["strategy_backtest"]["rolling_oos_fold_drawdown_controls"] is False
+    assert template["strategy_backtest"]["parameter_sensitivity_and_holdout_stability_controls"] is False
+    assert template["strategy_backtest"]["regime_stress_and_liquidity_shock_controls"] is False
+    assert template["strategy_backtest"]["net_return_after_costs_controls"] is False
     assert template["strategy_backtest"]["transaction_cost_slippage_lot_size_and_suspension_model_included"] is False
     assert template["platform_dry_run_order_preview"]["liquidity_cap_verified"] is False
     assert template["platform_dry_run_order_preview"]["notification_locale_zh_hans"] is False
