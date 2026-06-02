@@ -61,6 +61,8 @@ def test_ibkr_global_etf_readiness_uses_hk_market_defaults():
         "max_allowed_annualized_turnover": 1.50,
         "min_required_annual_return": 0.0,
         "min_required_walk_forward_years": 3.0,
+        "min_required_oos_fold_count": 3,
+        "max_single_period_return_contribution": 0.60,
     }
     assert "hk_fees_levies_and_stamp_duty_or_etf_exemption_verified" in plan["required_live_evidence_fields"]
     assert "runtime_etf_product_due_diligence_verified" in plan["required_live_evidence_fields"]
@@ -68,6 +70,10 @@ def test_ibkr_global_etf_readiness_uses_hk_market_defaults():
     assert "runtime_market_history_source_provenance_verified" in plan["required_live_evidence_fields"]
     assert "backtest_validation_policy_evidence" in plan["required_live_evidence_fields"]
     assert "point_in_time_no_lookahead_and_no_overfit_controls" in plan["required_live_evidence_fields"]
+    assert "walk_forward_backtest_min_three_oos_folds" in plan["required_live_evidence_fields"]
+    assert "walk_forward_backtest_single_period_return_contribution_below_60_percent" in (
+        plan["required_live_evidence_fields"]
+    )
     assert "fresh_section_evidence_generated_at" in plan["required_live_evidence_fields"]
     assert "execution_capacity_and_liquidity_limits_verified" in plan["required_live_evidence_fields"]
     assert "dry_run_order_preview_artifact_provenance_verified" in plan["required_live_evidence_fields"]
@@ -140,6 +146,8 @@ def test_high_dividend_low_vol_trend_readiness_uses_two_managed_symbols():
         "max_allowed_annualized_turnover": 1.00,
         "min_required_annual_return": 0.0,
         "min_required_walk_forward_years": 3.0,
+        "min_required_oos_fold_count": 3,
+        "max_single_period_return_contribution": 0.60,
     }
     assert plan["execution_capacity_policy"]["min_median_daily_turnover_hkd"] == 10_000_000
     assert plan["rollout_risk_policy"]["min_observation_trading_days_before_scale_up"] == 20

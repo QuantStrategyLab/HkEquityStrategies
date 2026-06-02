@@ -28,6 +28,8 @@ def _evidence(**overrides):
             "annual_return": 0.1716,
             "max_drawdown": -0.0806,
             "rolling_oos_fold_max_drawdown": -0.092,
+            "oos_fold_count": 4,
+            "max_single_period_return_contribution": 0.35,
             "annual_return_to_max_drawdown_ratio": 2.13,
             "annualized_turnover": 0.42,
             "survivorship_bias_controls": True,
@@ -262,6 +264,8 @@ def test_validate_runtime_live_enablement_evidence_accepts_complete_pack():
         "max_allowed_annualized_turnover": 1.0,
         "min_required_annual_return": 0.0,
         "min_required_walk_forward_years": 3.0,
+        "min_required_oos_fold_count": 3,
+        "max_single_period_return_contribution": 0.60,
     }
     assert result["evidence_uri_policy"]["allowed_schemes"] == ["gs://", "https://", "s3://"]
     assert "token=" in result["evidence_uri_policy"]["rejected_query_markers"]
@@ -336,6 +340,8 @@ def test_build_runtime_live_enablement_evidence_template_is_not_preapproved():
     assert template["validation_as_of"] == "<YYYY-MM-DD>"
     assert template["strategy_backtest"]["annual_return"] is None
     assert template["strategy_backtest"]["rolling_oos_fold_max_drawdown"] is None
+    assert template["strategy_backtest"]["oos_fold_count"] is None
+    assert template["strategy_backtest"]["max_single_period_return_contribution"] is None
     assert template["strategy_backtest"]["annual_return_to_max_drawdown_ratio"] is None
     assert template["strategy_backtest"]["benchmark_symbol"] == "03110"
     assert template["strategy_backtest"]["strategy_excess_return"] is None
@@ -409,6 +415,29 @@ def test_validate_runtime_live_enablement_evidence_rejects_oos_fold_drawdown_abo
 
     assert result["live_enablement_allowed"] is False
     assert any("rolling_oos_fold_max_drawdown exceeds" in error for error in result["errors"])
+
+
+def test_validate_runtime_live_enablement_evidence_rejects_too_few_oos_folds():
+    payload = _evidence(strategy_backtest={**_evidence()["strategy_backtest"], "oos_fold_count": 2})
+
+    result = validate_runtime_live_enablement_evidence(payload)
+
+    assert result["live_enablement_allowed"] is False
+    assert any("oos_fold_count must be" in error for error in result["errors"])
+
+
+def test_validate_runtime_live_enablement_evidence_rejects_high_single_period_return_contribution():
+    payload = _evidence(
+        strategy_backtest={
+            **_evidence()["strategy_backtest"],
+            "max_single_period_return_contribution": 0.61,
+        }
+    )
+
+    result = validate_runtime_live_enablement_evidence(payload)
+
+    assert result["live_enablement_allowed"] is False
+    assert any("max_single_period_return_contribution exceeds" in error for error in result["errors"])
 
 
 def test_validate_runtime_live_enablement_evidence_rejects_low_return_to_drawdown_ratio():

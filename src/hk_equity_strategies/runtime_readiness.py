@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from typing import Any
 
+from hk_equity_strategies.backtest_validation_policy import (
+    MAX_SINGLE_PERIOD_RETURN_CONTRIBUTION,
+    MIN_REQUIRED_OOS_FOLD_COUNT,
+)
 from hk_equity_strategies.evidence_freshness_policy import build_evidence_freshness_policy
 from hk_equity_strategies.evidence_uri_policy import build_evidence_uri_policy
 from hk_equity_strategies.execution_capacity_policy import build_execution_capacity_policy
@@ -105,6 +109,8 @@ LIVE_ENABLEMENT_REQUIREMENTS: tuple[str, ...] = (
 
 REQUIRED_LIVE_EVIDENCE_FIELDS: tuple[str, ...] = (
     "walk_forward_backtest_min_three_oos_years",
+    "walk_forward_backtest_min_three_oos_folds",
+    "walk_forward_backtest_single_period_return_contribution_below_60_percent",
     "walk_forward_backtest_positive_annual_return",
     "profile_benchmark_symbol_matched",
     "strategy_excess_return_vs_benchmark_positive",
@@ -139,6 +145,8 @@ PROFILE_LIVE_ENABLEMENT_THRESHOLDS: dict[str, dict[str, float]] = {
         "max_allowed_annualized_turnover": 1.50,
         "min_required_annual_return": 0.0,
         "min_required_walk_forward_years": MIN_REQUIRED_WALK_FORWARD_YEARS,
+        "min_required_oos_fold_count": MIN_REQUIRED_OOS_FOLD_COUNT,
+        "max_single_period_return_contribution": MAX_SINGLE_PERIOD_RETURN_CONTRIBUTION,
     },
     HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE: {
         "max_allowed_backtest_drawdown": 0.12,
@@ -146,6 +154,8 @@ PROFILE_LIVE_ENABLEMENT_THRESHOLDS: dict[str, dict[str, float]] = {
         "max_allowed_annualized_turnover": 1.00,
         "min_required_annual_return": 0.0,
         "min_required_walk_forward_years": MIN_REQUIRED_WALK_FORWARD_YEARS,
+        "min_required_oos_fold_count": MIN_REQUIRED_OOS_FOLD_COUNT,
+        "max_single_period_return_contribution": MAX_SINGLE_PERIOD_RETURN_CONTRIBUTION,
     },
 }
 

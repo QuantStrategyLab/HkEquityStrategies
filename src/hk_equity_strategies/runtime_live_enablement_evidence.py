@@ -10,6 +10,8 @@ from urllib.parse import urlparse
 
 from hk_equity_strategies.backtest_validation_policy import (
     MAX_ALLOWED_HK_STRATEGY_DRAWDOWN,
+    MAX_SINGLE_PERIOD_RETURN_CONTRIBUTION,
+    MIN_REQUIRED_OOS_FOLD_COUNT,
     MIN_RETURN_TO_DRAWDOWN_RATIO,
     REQUIRED_BACKTEST_VALIDATION_BOOLEAN_FIELDS,
     build_backtest_validation_policy,
@@ -300,6 +302,25 @@ def _validate_strategy_backtest(
             f"{section_name}.rolling_oos_fold_max_drawdown exceeds {max_drawdown_limit:.0%}: "
             f"got {rolling_oos_fold_max_drawdown:.2%}"
         )
+    min_required_oos_fold_count = max(
+        float(thresholds.get("min_required_oos_fold_count", MIN_REQUIRED_OOS_FOLD_COUNT)),
+        float(MIN_REQUIRED_OOS_FOLD_COUNT),
+    )
+    oos_fold_count = _number(section.get("oos_fold_count"))
+    if oos_fold_count is None or oos_fold_count < min_required_oos_fold_count:
+        errors.append(f"{section_name}.oos_fold_count must be >= {min_required_oos_fold_count:.0f}")
+    max_single_period_return_contribution_limit = min(
+        float(thresholds.get("max_single_period_return_contribution", MAX_SINGLE_PERIOD_RETURN_CONTRIBUTION)),
+        MAX_SINGLE_PERIOD_RETURN_CONTRIBUTION,
+    )
+    max_single_period_return_contribution = _number(section.get("max_single_period_return_contribution"))
+    if max_single_period_return_contribution is None:
+        errors.append(f"{section_name}.max_single_period_return_contribution is required")
+    elif max_single_period_return_contribution > max_single_period_return_contribution_limit:
+        errors.append(
+            f"{section_name}.max_single_period_return_contribution exceeds "
+            f"{max_single_period_return_contribution_limit:.0%}: got {max_single_period_return_contribution:.2%}"
+        )
     min_return_to_drawdown_ratio = max(
         float(thresholds.get("min_required_return_to_drawdown_ratio", MIN_RETURN_TO_DRAWDOWN_RATIO)),
         MIN_RETURN_TO_DRAWDOWN_RATIO,
@@ -566,6 +587,8 @@ def build_runtime_live_enablement_evidence_template(profile: str, *, platform: s
             "annual_return": None,
             "max_drawdown": None,
             "rolling_oos_fold_max_drawdown": None,
+            "oos_fold_count": None,
+            "max_single_period_return_contribution": None,
             "annual_return_to_max_drawdown_ratio": None,
             "annualized_turnover": None,
             "survivorship_bias_controls": False,

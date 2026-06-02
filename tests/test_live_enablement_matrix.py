@@ -44,6 +44,8 @@ def test_live_enablement_matrix_keeps_selectable_surface_to_runtime_profiles():
     assert matrix["backtest_validation_policy"]["policy_version"] == "hk_backtest_validation_policy.v1"
     assert matrix["backtest_validation_policy"]["max_allowed_drawdown"] == 0.30
     assert matrix["backtest_validation_policy"]["min_return_to_drawdown_ratio"] == 0.50
+    assert matrix["backtest_validation_policy"]["min_required_oos_fold_count"] == 3
+    assert matrix["backtest_validation_policy"]["max_single_period_return_contribution"] == 0.60
     assert "max_drawdown_at_or_below_30_percent" in (
         matrix["backtest_validation_policy"]["required_risk_constraints"]
     )
@@ -68,9 +70,17 @@ def test_live_enablement_matrix_keeps_selectable_surface_to_runtime_profiles():
     assert "annual_return_to_max_drawdown_ratio_at_or_above_50_percent" in (
         matrix["backtest_validation_policy"]["required_risk_constraints"]
     )
+    assert "minimum_three_independent_oos_folds" in (
+        matrix["backtest_validation_policy"]["required_risk_constraints"]
+    )
+    assert "single_period_return_contribution_at_or_below_60_percent" in (
+        matrix["backtest_validation_policy"]["required_risk_constraints"]
+    )
     assert "cross_strategy_correlation_and_aggregate_drawdown_budget_limits" in (
         matrix["backtest_validation_policy"]["required_risk_constraints"]
     )
+    assert "oos_fold_count" in matrix["backtest_validation_policy"]["required_metrics"]
+    assert "max_single_period_return_contribution" in matrix["backtest_validation_policy"]["required_metrics"]
     assert "annual_return_to_max_drawdown_ratio" in matrix["backtest_validation_policy"]["required_metrics"]
     assert "data_vendor_reconciliation_and_missingness_controls" in (
         matrix["backtest_validation_policy"]["required_boolean_fields"]
@@ -83,6 +93,10 @@ def test_live_enablement_matrix_keeps_selectable_surface_to_runtime_profiles():
         matrix["backtest_validation_policy"]["reject_criteria"]
     )
     assert "annual_return_to_max_drawdown_ratio_below_50_percent" in (
+        matrix["backtest_validation_policy"]["reject_criteria"]
+    )
+    assert "fewer_than_three_independent_oos_folds" in matrix["backtest_validation_policy"]["reject_criteria"]
+    assert "single_period_return_contribution_above_60_percent" in (
         matrix["backtest_validation_policy"]["reject_criteria"]
     )
     assert "per_fold_drawdown_parameter_stability_and_regime_stress_controls" in (
