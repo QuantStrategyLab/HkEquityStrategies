@@ -287,6 +287,7 @@ def test_snapshot_future_research_policy_blocks_non_scaffolded_ideas():
         "hk_director_dealing_disclosure_quality_overlay",
         "hk_dually_traded_liquid_reversal_overlay",
         "hk_earnings_announcement_drift_overlay",
+        "hk_lottery_stock_risk_exclusion_overlay",
     ]
     assert "new_snapshot_profile_name_and_contract_version" in policy["required_pre_scaffold_gates"]
     assert "point_in_time_consensus_estimate_and_revision_history" in policy["required_pre_scaffold_gates"]
@@ -302,6 +303,9 @@ def test_snapshot_future_research_policy_blocks_non_scaffolded_ideas():
         policy["required_pre_scaffold_gates"]
     )
     assert "earnings_announcement_timestamp_profit_warning_and_pead_event_history" in (
+        policy["required_pre_scaffold_gates"]
+    )
+    assert "lottery_feature_ivol_iskew_max_price_and_regime_history" in (
         policy["required_pre_scaffold_gates"]
     )
     assert "mutating_existing_snapshot_contract_in_place" in policy["required_reject_criteria"]
