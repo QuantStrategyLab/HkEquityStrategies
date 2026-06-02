@@ -12,10 +12,12 @@ from hk_equity_strategies.backtest_validation_policy import (
 from hk_equity_strategies.catalog import (
     HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE,
     HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE,
+    HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE,
     get_direct_market_history_profiles,
     get_external_snapshot_scaffold_profiles,
     get_research_backtest_only_profiles,
     get_runtime_enabled_profiles,
+    get_snapshot_backed_profiles,
     get_strategy_definition,
     get_strategy_metadata,
 )
@@ -28,11 +30,12 @@ from hk_equity_strategies.notification_audit_policy import (
     build_notification_audit_policy,
 )
 from hk_equity_strategies.rollout_risk_policy import build_rollout_risk_policy
+from hk_equity_strategies.runtime_equity_product_policy import build_runtime_equity_product_policy
 from hk_equity_strategies.runtime_etf_product_policy import build_runtime_etf_product_policy
 from hk_equity_strategies.runtime_market_data_policy import build_runtime_market_data_policy
 from hk_equity_strategies.runtime_readiness import (
     PROFILE_LIVE_ENABLEMENT_THRESHOLDS,
-    REQUIRED_LIVE_EVIDENCE_FIELDS,
+    get_required_live_evidence_fields,
 )
 
 HK_STRATEGY_LIVE_ENABLEMENT_MATRIX_VERSION = "hk_equity_strategies.live_enablement_matrix.v1"
@@ -41,11 +44,7 @@ SNAPSHOT_SCAFFOLD_GATE = "requires_snapshot_promotion_matrix_and_production_evid
 RESEARCH_ONLY_GATE = "research_backtest_only_not_platform_selectable"
 SUPPORTED_PLATFORMS = ("ibkr", "longbridge")
 
-FIRST_SNAPSHOT_CANDIDATES = (
-    "hk_low_vol_dividend_quality",
-    "hk_shareholder_yield_quality",
-    "hk_free_cash_flow_quality",
-)
+FIRST_SNAPSHOT_CANDIDATES = (HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE,)
 
 SNAPSHOT_PROMOTION_MATRIX_COMMAND = "hkeq-print-snapshot-promotion-matrix --json"
 RUNTIME_EVIDENCE_TEMPLATE_COMMAND = "python scripts/validate_hk_runtime_live_enablement.py --print-template --profile <profile> --platform <platform> --json"
@@ -183,6 +182,20 @@ COMMON_PLATFORM_EVIDENCE_REQUIREMENTS: tuple[str, ...] = (
     "operator_approval_reference",
 )
 
+
+def _common_platform_evidence_requirements(profile: str) -> tuple[str, ...]:
+    if profile == HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE:
+        return tuple(
+            "runtime_equity_product_due_diligence_verified"
+            if item == "runtime_etf_product_due_diligence_verified"
+            else "hk_fees_levies_and_stamp_duty_verified"
+            if item == "hk_fees_levies_and_stamp_duty_or_etf_exemption_verified"
+            else item
+            for item in COMMON_PLATFORM_EVIDENCE_REQUIREMENTS
+            if item != "etf_connect_eligibility_and_southbound_flow_review_verified"
+        )
+    return COMMON_PLATFORM_EVIDENCE_REQUIREMENTS
+
 CURATED_LIVE_ENABLEMENT_STRATEGY_RANKING_VERSION = "hk_equity_strategies.curated_live_enablement_ranking.v1"
 
 CURATED_LIVE_ENABLEMENT_STRATEGY_RANKING: tuple[dict[str, object], ...] = (
@@ -214,13 +227,19 @@ CURATED_LIVE_ENABLEMENT_STRATEGY_RANKING: tuple[dict[str, object], ...] = (
     },
     {
         "rank": 3,
-        "profile": "hk_low_vol_dividend_quality",
-        "profile_type": "external_snapshot_scaffold",
-        "decision": "first_snapshot_candidate",
+        "profile": HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE,
+        "profile_type": "runtime_snapshot_backed",
+        "decision": "runtime_enabled_pending_evidence",
         "annualized_return": None,
         "max_drawdown": None,
-        "why": "Strongest single-name HK snapshot direction because low-volatility and dividend evidence is official and low-turnover.",
-        "next_action": "Prioritize production dividend/fundamentals source audit and same-universe walk-forward tests.",
+        "why": (
+            "First promoted snapshot-backed runtime profile; it consumes production low-volatility/dividend "
+            "factor snapshots while keeping snapshot generation in HkEquitySnapshotPipelines."
+        ),
+        "next_action": (
+            "Keep dry-run only until artifact-pack validation, point-in-time walk-forward evidence, "
+            "broker order preview, bilingual notification logs, and operator approval all pass."
+        ),
     },
     {
         "rank": 4,
@@ -795,6 +814,7 @@ class LiveEnablementRow:
             "execution_capacity_policy": build_execution_capacity_policy(self.profile),
             "dry_run_order_preview_policy": build_dry_run_order_preview_policy(),
             "rollout_risk_policy": build_rollout_risk_policy(),
+            "runtime_equity_product_policy": build_runtime_equity_product_policy(),
             "runtime_etf_product_policy": build_runtime_etf_product_policy(),
             "runtime_market_data_policy": build_runtime_market_data_policy(),
             "notification_audit_policy": build_notification_audit_policy(RUNTIME_DRY_RUN_NOTIFICATION_EVENT_TYPE),
@@ -811,6 +831,15 @@ def _runtime_row(profile: str) -> LiveEnablementRow:
     metadata = get_strategy_metadata(profile)
     thresholds = PROFILE_LIVE_ENABLEMENT_THRESHOLDS[profile]
     threshold_evidence = tuple(f"{key}={value}" for key, value in sorted(thresholds.items()))
+    snapshot_evidence = (
+        (
+            "feature_snapshot_artifact_pack_validation",
+            "feature_snapshot_manifest_contract_version_matched",
+            "feature_snapshot_point_in_time_lineage_verified",
+        )
+        if profile in get_snapshot_backed_profiles()
+        else ()
+    )
     evidence_commands = tuple(
         RUNTIME_EVIDENCE_TEMPLATE_COMMAND.replace("<profile>", profile).replace("<platform>", platform)
         for platform in sorted(definition.supported_platforms)
@@ -818,7 +847,9 @@ def _runtime_row(profile: str) -> LiveEnablementRow:
     return LiveEnablementRow(
         profile=profile,
         display_name=metadata.display_name,
-        profile_type="runtime_market_history",
+        profile_type="runtime_snapshot_backed"
+        if profile in get_snapshot_backed_profiles()
+        else "runtime_market_history",
         selectable_by_platform=True,
         runtime_enabled=profile in get_runtime_enabled_profiles(),
         live_enablement_gate=RUNTIME_LIVE_GATE,
@@ -826,10 +857,16 @@ def _runtime_row(profile: str) -> LiveEnablementRow:
         benchmark=metadata.benchmark,
         evidence_commands=evidence_commands,
         required_evidence=_dedupe(
-            tuple(REQUIRED_LIVE_EVIDENCE_FIELDS) + COMMON_PLATFORM_EVIDENCE_REQUIREMENTS + threshold_evidence
+            tuple(get_required_live_evidence_fields(profile))
+            + snapshot_evidence
+            + _common_platform_evidence_requirements(profile)
+            + threshold_evidence
         ),
-        research_evidence_urls=RUNTIME_RESEARCH_EVIDENCE_URLS.get(profile, ()),
-        notes=RUNTIME_PROFILE_NOTES.get(profile, ()),
+        research_evidence_urls=RUNTIME_RESEARCH_EVIDENCE_URLS.get(
+            profile,
+            SNAPSHOT_RESEARCH_EVIDENCE_URLS.get(profile, ()),
+        ),
+        notes=RUNTIME_PROFILE_NOTES.get(profile, SNAPSHOT_SCAFFOLD_NOTES.get(profile, ())),
     )
 
 
@@ -903,7 +940,8 @@ def build_live_enablement_row(profile: str) -> dict[str, Any]:
 
 
 def build_live_enablement_matrix() -> dict[str, Any]:
-    runtime_rows = [_runtime_row(profile).as_dict() for profile in sorted(get_direct_market_history_profiles())]
+    runtime_profiles = set(get_direct_market_history_profiles()) | set(get_snapshot_backed_profiles())
+    runtime_rows = [_runtime_row(profile).as_dict() for profile in sorted(runtime_profiles)]
     research_rows = [_research_only_row(profile).as_dict() for profile in sorted(get_research_backtest_only_profiles())]
     snapshot_rows = [
         _snapshot_scaffold_row(profile).as_dict() for profile in sorted(get_external_snapshot_scaffold_profiles())
@@ -933,6 +971,7 @@ def build_live_enablement_matrix() -> dict[str, Any]:
         "execution_capacity_policy": build_execution_capacity_policy(""),
         "dry_run_order_preview_policy": build_dry_run_order_preview_policy(),
         "rollout_risk_policy": build_rollout_risk_policy(),
+        "runtime_equity_product_policy": build_runtime_equity_product_policy(),
         "runtime_etf_product_policy": build_runtime_etf_product_policy(),
         "runtime_market_data_policy": build_runtime_market_data_policy(),
         "notification_audit_policy": build_notification_audit_policy(RUNTIME_DRY_RUN_NOTIFICATION_EVENT_TYPE),

@@ -15,12 +15,14 @@ from hk_equity_strategies.notification_audit_policy import (
     build_notification_audit_policy,
 )
 from hk_equity_strategies.rollout_risk_policy import build_rollout_risk_policy
+from hk_equity_strategies.runtime_equity_product_policy import build_runtime_equity_product_policy
 from hk_equity_strategies.runtime_etf_product_policy import build_runtime_etf_product_policy
 from hk_equity_strategies.runtime_market_data_policy import build_runtime_market_data_policy
 from hk_equity_strategies.catalog import (
     HK_EQUITY_DOMAIN,
     HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE,
     HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE,
+    HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE,
     get_runtime_enabled_profiles,
     get_strategy_definition,
     get_strategy_metadata,
@@ -90,6 +92,16 @@ HK_ETF_LIVE_ENABLEMENT_CHECKS: tuple[str, ...] = (
     "Block order submission when quotes, NAV, lot size, market-maker liquidity, or trading status cannot be verified for the order date.",
 )
 
+HK_EQUITY_LIVE_ENABLEMENT_CHECKS: tuple[str, ...] = (
+    "Confirm every managed symbol is an HKEX-listed single-name equity and capture the equity universe audit record.",
+    "Confirm Stock Connect eligibility or a direct broker route for every managed symbol before operator approval.",
+    "Capture current board lot, trading currency, suspension/trading-status, and corporate-action source evidence per symbol.",
+    "Reconcile dividend yield and payout-ratio source lineage against point-in-time factor snapshot inputs.",
+    "Verify sector caps, single-name caps, spread/depth, ADV capacity, and forced cash residual behavior before order preview.",
+    "Confirm HK stamp duty, levies, broker commission, odd-lot handling, VCM, CAS, and market-session routing before dry-run removal.",
+    "Block order submission when quote freshness, trading status, corporate-action treatment, board lot, or broker permission cannot be verified for the order date.",
+)
+
 ORDER_CONVERSION_CHECKS: tuple[str, ...] = (
     "Map HK numeric symbols to broker-native symbols using the .HK suffix or SEHK exchange mapping.",
     "Convert target weights with the latest portfolio equity or broker positions when the platform needs value targets.",
@@ -134,6 +146,24 @@ REQUIRED_LIVE_EVIDENCE_FIELDS: tuple[str, ...] = (
     "operator_approval_reference",
 )
 
+
+def get_required_live_evidence_fields(profile: str) -> tuple[str, ...]:
+    fields = list(REQUIRED_LIVE_EVIDENCE_FIELDS)
+    if profile == HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE:
+        fields = [
+            "runtime_equity_product_due_diligence_verified"
+            if field == "runtime_etf_product_due_diligence_verified"
+            else field
+            for field in fields
+        ]
+        fields = [
+            "hk_fees_levies_and_stamp_duty_verified"
+            if field == "hk_fees_levies_and_stamp_duty_or_etf_exemption_verified"
+            else field
+            for field in fields
+        ]
+    return tuple(dict.fromkeys(fields))
+
 HK_DERIVATIVE_OR_COMPLEX_ETF_SYMBOLS = frozenset({"03175"})
 HK_DEFENSIVE_ETF_SYMBOLS = frozenset({"02840", "03110"})
 MIN_REQUIRED_WALK_FORWARD_YEARS = 3.0
@@ -150,6 +180,15 @@ PROFILE_LIVE_ENABLEMENT_THRESHOLDS: dict[str, dict[str, float]] = {
     },
     HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE: {
         "max_allowed_backtest_drawdown": 0.12,
+        "min_required_return_to_drawdown_ratio": 0.50,
+        "max_allowed_annualized_turnover": 1.00,
+        "min_required_annual_return": 0.0,
+        "min_required_walk_forward_years": MIN_REQUIRED_WALK_FORWARD_YEARS,
+        "min_required_oos_fold_count": MIN_REQUIRED_OOS_FOLD_COUNT,
+        "max_single_period_return_contribution": MAX_SINGLE_PERIOD_RETURN_CONTRIBUTION,
+    },
+    HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE: {
+        "max_allowed_backtest_drawdown": 0.30,
         "min_required_return_to_drawdown_ratio": 0.50,
         "max_allowed_annualized_turnover": 1.00,
         "min_required_annual_return": 0.0,
@@ -177,6 +216,13 @@ PROFILE_LIVE_OPTIMIZATION_CHECKS: dict[str, tuple[str, ...]] = {
         "Verify 02840 and 03110 dividend/distribution treatment, lot sizes, and bid/ask spreads before increasing exposure.",
         "For 03110, audit Hang Seng High Dividend Yield Index methodology, distribution policy, capital-distribution risk, and high-dividend concentration/yield-trap risk.",
         "For 02840, audit SPDR Gold Shares trust structure, physical-gold single-asset risk, NAV/iNAV, tracking difference, multi-counter currency, and USD creation/redemption handling.",
+    ),
+    HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE: (
+        "Treat this as the first snapshot-backed HK runtime profile; the strategy package consumes snapshots but does not generate them.",
+        "Require a published hk_low_vol_dividend_quality factor snapshot and manifest that pass HkEquitySnapshotPipelines artifact-pack validation.",
+        "Keep dry-run until point-in-time dividend, payout-ratio, volatility, beta, drawdown, trend, suspension, and corporate-action controls are evidenced.",
+        "Verify sector caps, single-name caps, safe-haven residual weight, lot sizes, bid/ask spreads, ADV capacity, and Southbound eligibility before order submission.",
+        "Re-run same-universe walk-forward evidence whenever factor-source lineage, eligible universe, or scoring weights change.",
     ),
 }
 
@@ -210,6 +256,10 @@ def _build_risk_notes(profile: str, symbols: tuple[str, ...], *, runtime_enabled
         notes.append("03175 is a crude-oil futures ETF; confirm suitability, spread, and product permission before live use.")
     if profile == HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE and HK_DEFENSIVE_ETF_SYMBOLS.issubset(symbols):
         notes.append("02840/03110 is the lower-drawdown live candidate, but it still requires ETF fee, spread, and distribution checks.")
+    if profile == HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE:
+        notes.append(
+            "This snapshot-backed profile requires a validated factor snapshot artifact and manifest at runtime."
+        )
     return tuple(notes)
 
 
@@ -243,6 +293,17 @@ def build_hk_runtime_readiness(
     managed_symbols = _extract_managed_symbols(canonical_profile, normalized_platform)
     dry_run_env = dict(PLATFORM_HK_DRY_RUN_ENV[normalized_platform])
     dry_run_env[next(key for key in dry_run_env if key.endswith("DRY_RUN_ONLY"))] = "true" if dry_run_only else "false"
+    if runtime_requirements["requires_snapshot_artifacts"]:
+        prefix = "IBKR" if normalized_platform == "ibkr" else "LONGBRIDGE"
+        dry_run_env[f"{prefix}_FEATURE_SNAPSHOT_PATH"] = "<required>"
+        dry_run_env[f"{prefix}_FEATURE_SNAPSHOT_MANIFEST_PATH"] = "<required>"
+    is_single_name_snapshot_profile = canonical_profile == HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE
+    equity_live_enablement_checks = (
+        HK_EQUITY_LIVE_ENABLEMENT_CHECKS if is_single_name_snapshot_profile else ()
+    )
+    etf_live_enablement_checks = (
+        () if is_single_name_snapshot_profile else HK_ETF_LIVE_ENABLEMENT_CHECKS
+    )
 
     return {
         "platform": normalized_platform,
@@ -265,16 +326,19 @@ def build_hk_runtime_readiness(
         "platform_dry_run_env": dry_run_env,
         "runtime_requirements": runtime_requirements,
         "dry_run_checks": list(HK_DRY_RUN_CHECKS),
-        "etf_live_enablement_checks": list(HK_ETF_LIVE_ENABLEMENT_CHECKS),
+        "etf_live_enablement_checks": list(etf_live_enablement_checks),
+        "equity_live_enablement_checks": list(equity_live_enablement_checks),
+        "product_live_enablement_checks": list(equity_live_enablement_checks or etf_live_enablement_checks),
         "order_conversion_checks": list(ORDER_CONVERSION_CHECKS),
         "live_enablement_requirements": list(LIVE_ENABLEMENT_REQUIREMENTS),
         "live_enablement_thresholds": dict(PROFILE_LIVE_ENABLEMENT_THRESHOLDS[canonical_profile]),
-        "required_live_evidence_fields": list(REQUIRED_LIVE_EVIDENCE_FIELDS),
+        "required_live_evidence_fields": list(get_required_live_evidence_fields(canonical_profile)),
         "evidence_uri_policy": build_evidence_uri_policy(),
         "evidence_freshness_policy": build_evidence_freshness_policy(),
         "execution_capacity_policy": build_execution_capacity_policy(canonical_profile),
         "dry_run_order_preview_policy": build_dry_run_order_preview_policy(),
         "rollout_risk_policy": build_rollout_risk_policy(),
+        "runtime_equity_product_policy": build_runtime_equity_product_policy(),
         "runtime_etf_product_policy": build_runtime_etf_product_policy(),
         "runtime_market_data_policy": build_runtime_market_data_policy(),
         "notification_audit_policy": build_notification_audit_policy(RUNTIME_DRY_RUN_NOTIFICATION_EVENT_TYPE),
@@ -285,6 +349,7 @@ def build_hk_runtime_readiness(
 
 __all__ = [
     "HK_DRY_RUN_CHECKS",
+    "HK_EQUITY_LIVE_ENABLEMENT_CHECKS",
     "HK_ETF_LIVE_ENABLEMENT_CHECKS",
     "HK_MARKET_DEFAULTS",
     "LIVE_ENABLEMENT_REQUIREMENTS",
@@ -293,4 +358,5 @@ __all__ = [
     "PROFILE_LIVE_ENABLEMENT_THRESHOLDS",
     "REQUIRED_LIVE_EVIDENCE_FIELDS",
     "build_hk_runtime_readiness",
+    "get_required_live_evidence_fields",
 ]

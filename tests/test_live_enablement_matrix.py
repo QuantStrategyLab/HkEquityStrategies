@@ -8,6 +8,7 @@ from pathlib import Path
 from hk_equity_strategies.catalog import (
     HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE,
     HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE,
+    HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE,
     get_external_snapshot_scaffold_profiles,
     get_research_backtest_only_profiles,
     get_runtime_enabled_profiles,
@@ -31,15 +32,11 @@ def test_live_enablement_matrix_keeps_selectable_surface_to_runtime_profiles():
     matrix = build_live_enablement_matrix()
 
     assert set(matrix["selectable_profiles"]) == get_runtime_enabled_profiles()
-    assert matrix["selectable_profile_count"] == 2
+    assert matrix["selectable_profile_count"] == 3
     assert matrix["blocked_profile_count"] == len(get_external_snapshot_scaffold_profiles()) + len(
         get_research_backtest_only_profiles()
     )
-    assert matrix["first_snapshot_candidates"] == [
-        "hk_low_vol_dividend_quality",
-        "hk_shareholder_yield_quality",
-        "hk_free_cash_flow_quality",
-    ]
+    assert matrix["first_snapshot_candidates"] == [HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE]
     assert matrix["evidence_uri_policy"]["allowed_schemes"] == ["gs://", "https://", "s3://"]
     assert "token=" in matrix["evidence_uri_policy"]["rejected_query_markers"]
     assert matrix["evidence_freshness_policy"]["required_field"] == "evidence_generated_at"
@@ -125,6 +122,8 @@ def test_live_enablement_matrix_keeps_selectable_surface_to_runtime_profiles():
         HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE,
         HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE,
     ]
+    assert ranking["ranking"][2]["profile"] == HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE
+    assert ranking["ranking"][2]["profile_type"] == "runtime_snapshot_backed"
     assert ranking["future_research_curated_candidate_order"] == [
         "hk_earnings_revision_quality_overlay",
         "hk_stock_connect_inclusion_event_flow",
@@ -146,6 +145,7 @@ def test_curated_live_enablement_ranking_excludes_weaker_research_profiles():
     assert ranking["ranking"][0]["max_drawdown"] == -0.0806
     assert ranking["ranking"][1]["profile"] == HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE
     assert ranking["ranking"][1]["max_drawdown"] == -0.2051
+    assert ranking["ranking"][2]["decision"] == "runtime_enabled_pending_evidence"
     assert all(item["decision"].startswith("exclude") for item in ranking["deprioritized_profiles"])
     assert "hk_structured_product_warrant_cbbc_flow_risk_overlay" in (
         ranking["future_research_deprioritized_candidate_order"]
@@ -248,7 +248,6 @@ def test_snapshot_scaffold_row_is_blocked_and_points_to_snapshot_gates():
     assert "snapshot_live_enablement_evidence_validation" in row["required_evidence"]
     assert "snapshot_repository_required_policy_review" in row["required_evidence"]
     assert "snapshot_future_research_live_enablement_policy_review" in row["required_evidence"]
-    assert any("Prioritized" in note for note in row["notes"])
     assert any("newsletter_202506.pdf" in url for url in row["research_evidence_urls"])
     assert any("repurchase-securities-and-treasury-shares" in url for url in row["research_evidence_urls"])
     assert any("240412news" in url for url in row["research_evidence_urls"])
@@ -291,11 +290,25 @@ def test_first_snapshot_candidates_expose_profile_specific_external_evidence():
     assert any("financial/real-estate/negative-FCF" in note for note in row["notes"])
 
 
-def test_low_vol_dividend_snapshot_row_includes_hshylv_live_enablement_sources():
-    row = build_live_enablement_row("hk_low_vol_dividend_quality")
+def test_low_vol_dividend_runtime_snapshot_row_includes_hshylv_live_enablement_sources():
+    row = build_live_enablement_row(HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE)
 
-    assert row["profile_type"] == "external_snapshot_scaffold"
-    assert row["selectable_by_platform"] is False
+    assert row["profile_type"] == "runtime_snapshot_backed"
+    assert row["selectable_by_platform"] is True
+    assert row["runtime_enabled"] is True
+    assert row["live_enablement_gate"] == RUNTIME_LIVE_GATE
+    assert any("max_allowed_backtest_drawdown=0.3" in item for item in row["required_evidence"])
+    assert "feature_snapshot_artifact_pack_validation" in row["required_evidence"]
+    assert "feature_snapshot_manifest_contract_version_matched" in row["required_evidence"]
+    assert "feature_snapshot_point_in_time_lineage_verified" in row["required_evidence"]
+    assert "runtime_equity_product_due_diligence_verified" in row["required_evidence"]
+    assert "runtime_etf_product_due_diligence_verified" not in row["required_evidence"]
+    assert "etf_connect_eligibility_and_southbound_flow_review_verified" not in row["required_evidence"]
+    assert "hk_fees_levies_and_stamp_duty_verified" in row["required_evidence"]
+    assert "equity_spread_and_trading_status_guard_verified" in (
+        row["execution_capacity_policy"]["required_boolean_fields"]
+    )
+    assert any("validate_hk_runtime_live_enablement.py" in command for command in row["evidence_commands"])
     assert any("forecast-dividend-yield-strategy" in url for url in row["research_evidence_urls"])
     assert any("hshylve.pdf" in url for url in row["research_evidence_urls"])
     assert any("IM_hshylve.pdf" in url for url in row["research_evidence_urls"])
@@ -624,6 +637,7 @@ def test_print_hk_live_enablement_matrix_json():
     assert set(payload["selectable_profiles"]) == {
         HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE,
         HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE,
+        HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE,
     }
     assert any(row["profile"] == "hk_shareholder_yield_quality" for row in payload["profiles"])
     assert payload["snapshot_future_research_live_enablement_policy"]["live_enablement_allowed"] is False

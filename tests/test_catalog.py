@@ -9,6 +9,7 @@ from hk_equity_strategies.catalog import (
     HK_EQUITY_DOMAIN,
     HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE,
     HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE,
+    HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE,
     get_compatible_platforms,
     get_direct_market_history_profiles,
     get_external_snapshot_scaffold_profiles,
@@ -27,6 +28,7 @@ def test_catalog_declares_runtime_enabled_hk_direct_strategies():
     assert set(catalog) == {
         HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE,
         HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE,
+        HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE,
     }
     definition = catalog[HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE]
 
@@ -57,6 +59,20 @@ def test_catalog_declares_runtime_enabled_hk_direct_strategies():
         "hk_equity_strategies.strategies.hk_high_dividend_low_vol_trend"
     )
 
+    low_vol_definition = catalog[HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE]
+    assert low_vol_definition.domain == HK_EQUITY_DOMAIN
+    assert low_vol_definition.required_inputs == frozenset({"feature_snapshot"})
+    assert low_vol_definition.target_mode == "weight"
+    assert get_compatible_platforms(HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE) == frozenset({"ibkr", "longbridge"})
+    assert get_strategy_metadata(HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE).status == "runtime_enabled"
+    assert HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE in get_runtime_enabled_profiles()
+    assert get_profile_aliases()["hk_low_vol_dividend_snapshot"] == HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE
+
+    low_vol_component_map = get_strategy_component_map(low_vol_definition)
+    assert low_vol_component_map["signal_logic"].module_path == (
+        "hk_equity_strategies.strategies.hk_low_vol_dividend_quality"
+    )
+
 
 def test_profile_groups_keep_runtime_research_and_snapshot_scaffolds_separate():
     assert get_direct_market_history_profiles() == frozenset(
@@ -65,7 +81,7 @@ def test_profile_groups_keep_runtime_research_and_snapshot_scaffolds_separate():
             HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE,
         }
     )
-    assert get_snapshot_backed_profiles() == frozenset()
+    assert get_snapshot_backed_profiles() == frozenset({HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE})
     assert get_external_snapshot_scaffold_profiles() == frozenset(
         {
             "hk_ah_premium_relative_value",
@@ -76,7 +92,6 @@ def test_profile_groups_keep_runtime_research_and_snapshot_scaffolds_separate():
             "hk_free_cash_flow_quality",
             "hk_index_rebalance_event",
             "hk_liquid_momentum_quality",
-            "hk_low_vol_dividend_quality",
             "hk_quality_growth_low_volatility",
             "hk_residual_momentum_quality",
             "hk_shareholder_yield_quality",
@@ -93,6 +108,7 @@ def test_profile_groups_keep_runtime_research_and_snapshot_scaffolds_separate():
         {
             HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE,
             HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE,
+            HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE,
         }
     )
     assert get_research_backtest_only_profiles().isdisjoint(get_runtime_enabled_profiles())
@@ -111,7 +127,6 @@ def test_profile_groups_keep_runtime_research_and_snapshot_scaffolds_separate():
         "hk_index_rebalance_event",
         "hk_index_mean_reversion",
         "hk_liquid_momentum_quality",
-        "hk_low_vol_dividend_quality",
         "hk_quality_growth_low_volatility",
         "hk_residual_momentum_quality",
         "hk_shareholder_yield_quality",
@@ -132,3 +147,5 @@ def test_aliases_resolve_to_canonical_profile():
     assert get_strategy_definition("hk_listed_global_rotation").profile == HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE
     assert resolve_canonical_profile("hk-hd-gold-trend") == HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE
     assert get_strategy_definition("hk_high_dividend_low_vol").profile == HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE
+    assert resolve_canonical_profile("hk-low-vol-dividend-snapshot") == HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE
+    assert get_strategy_definition("hk_dividend_quality").profile == HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE

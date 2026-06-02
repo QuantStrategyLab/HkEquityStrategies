@@ -17,10 +17,12 @@ from quant_platform_kit.common.strategies import (
 
 from hk_equity_strategies.strategies import hk_high_dividend_low_vol_trend as high_dividend_strategy
 from hk_equity_strategies.strategies import hk_listed_global_etf_rotation as global_etf_strategy
+from hk_equity_strategies.strategies import hk_low_vol_dividend_quality as low_vol_dividend_strategy
 
 HK_EQUITY_DOMAIN = global_etf_strategy.HK_EQUITY_DOMAIN
 HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE = global_etf_strategy.PROFILE_NAME
 HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE = high_dividend_strategy.PROFILE_NAME
+HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE = low_vol_dividend_strategy.PROFILE_NAME
 
 HK_DIRECT_MARKET_HISTORY_PROFILES = frozenset(
     {
@@ -28,7 +30,7 @@ HK_DIRECT_MARKET_HISTORY_PROFILES = frozenset(
         HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE,
     }
 )
-HK_SNAPSHOT_BACKED_PROFILES = frozenset()
+HK_SNAPSHOT_BACKED_PROFILES = frozenset({HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE})
 HK_EXTERNAL_SNAPSHOT_SCAFFOLD_PROFILES = frozenset(
     {
         "hk_ah_premium_relative_value",
@@ -39,7 +41,6 @@ HK_EXTERNAL_SNAPSHOT_SCAFFOLD_PROFILES = frozenset(
         "hk_free_cash_flow_quality",
         "hk_index_rebalance_event",
         "hk_liquid_momentum_quality",
-        "hk_low_vol_dividend_quality",
         "hk_quality_growth_low_volatility",
         "hk_residual_momentum_quality",
         "hk_shareholder_yield_quality",
@@ -56,11 +57,13 @@ HK_RESEARCH_BACKTEST_ONLY_PROFILES = frozenset(
 STRATEGY_PLATFORM_COMPATIBILITY: dict[str, frozenset[str]] = {
     HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE: frozenset({"ibkr", "longbridge"}),
     HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE: frozenset({"ibkr", "longbridge"}),
+    HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE: frozenset({"ibkr", "longbridge"}),
 }
 
 STRATEGY_REQUIRED_INPUTS: dict[str, frozenset[str]] = {
     HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE: frozenset({"market_history"}),
     HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE: frozenset({"market_history"}),
+    HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE: frozenset({"feature_snapshot"}),
 }
 
 STRATEGY_DEFAULT_CONFIG: dict[str, dict[str, object]] = {
@@ -92,16 +95,40 @@ STRATEGY_DEFAULT_CONFIG: dict[str, dict[str, object]] = {
         "min_history_days": high_dividend_strategy.DEFAULT_MIN_HISTORY_DAYS,
         "execution_cash_reserve_ratio": high_dividend_strategy.DEFAULT_EXECUTION_CASH_RESERVE_RATIO,
     },
+    HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE: {
+        "safe_haven": low_vol_dividend_strategy.SAFE_HAVEN,
+        "holdings_count": low_vol_dividend_strategy.DEFAULT_HOLDINGS_COUNT,
+        "single_name_cap": low_vol_dividend_strategy.DEFAULT_SINGLE_NAME_CAP,
+        "sector_cap": low_vol_dividend_strategy.DEFAULT_SECTOR_CAP,
+        "min_adv20_hkd": low_vol_dividend_strategy.DEFAULT_MIN_ADV20_HKD,
+        "min_market_cap_hkd": low_vol_dividend_strategy.DEFAULT_MIN_MARKET_CAP_HKD,
+        "min_dividend_yield": low_vol_dividend_strategy.DEFAULT_MIN_DIVIDEND_YIELD,
+        "max_dividend_yield": low_vol_dividend_strategy.DEFAULT_MAX_DIVIDEND_YIELD,
+        "min_dividend_stability": low_vol_dividend_strategy.DEFAULT_MIN_DIVIDEND_STABILITY,
+        "max_payout_ratio": low_vol_dividend_strategy.DEFAULT_MAX_PAYOUT_RATIO,
+        "max_suspension_days_63": low_vol_dividend_strategy.DEFAULT_MAX_SUSPENSION_DAYS_63,
+        "hold_buffer": low_vol_dividend_strategy.DEFAULT_HOLD_BUFFER,
+        "hold_bonus": low_vol_dividend_strategy.DEFAULT_HOLD_BONUS,
+        "risk_on_exposure": low_vol_dividend_strategy.DEFAULT_RISK_ON_EXPOSURE,
+        "soft_defense_exposure": low_vol_dividend_strategy.DEFAULT_SOFT_DEFENSE_EXPOSURE,
+        "hard_defense_exposure": low_vol_dividend_strategy.DEFAULT_HARD_DEFENSE_EXPOSURE,
+        "soft_breadth_threshold": low_vol_dividend_strategy.DEFAULT_SOFT_BREADTH_THRESHOLD,
+        "hard_breadth_threshold": low_vol_dividend_strategy.DEFAULT_HARD_BREADTH_THRESHOLD,
+        "execution_cash_reserve_ratio": low_vol_dividend_strategy.DEFAULT_EXECUTION_CASH_RESERVE_RATIO,
+        "rebalance_frequency": "monthly",
+    },
 }
 
 STRATEGY_ENTRYPOINT_ATTRIBUTES: dict[str, str] = {
     HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE: "hk_listed_global_etf_rotation_entrypoint",
     HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE: "hk_high_dividend_low_vol_trend_entrypoint",
+    HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE: "hk_low_vol_dividend_quality_entrypoint",
 }
 
 STRATEGY_TARGET_MODES: dict[str, str] = {
     HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE: "weight",
     HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE: "weight",
+    HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE: "weight",
 }
 
 
@@ -144,6 +171,11 @@ STRATEGY_DEFINITIONS: dict[str, StrategyDefinition] = {
         component_name="signal_logic",
         module_path="hk_equity_strategies.strategies.hk_high_dividend_low_vol_trend",
     ),
+    HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE: _build_strategy_definition(
+        HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE,
+        component_name="signal_logic",
+        module_path="hk_equity_strategies.strategies.hk_low_vol_dividend_quality",
+    ),
 }
 
 STRATEGY_METADATA: dict[str, StrategyMetadata] = {
@@ -173,6 +205,20 @@ STRATEGY_METADATA: dict[str, StrategyMetadata] = {
         asset_scope="hk_high_dividend_gold_etfs",
         benchmark="03110",
         role="hk_non_snapshot_high_dividend_low_vol_trend",
+        status="runtime_enabled",
+    ),
+    HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE: StrategyMetadata(
+        canonical_profile=HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE,
+        display_name="HK Low-Volatility Dividend Quality",
+        description=(
+            "Runtime-enabled snapshot-backed single-name HK equity selector using production factor snapshots "
+            "from HkEquitySnapshotPipelines."
+        ),
+        aliases=("hk_dividend_quality", "hk_low_vol_dividend", "hk_low_vol_dividend_snapshot"),
+        cadence="monthly review",
+        asset_scope="hk_single_name_snapshot_factor",
+        benchmark="02800",
+        role="hk_snapshot_low_vol_dividend_quality",
         status="runtime_enabled",
     ),
 }
