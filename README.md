@@ -1,380 +1,114 @@
 # HkEquityStrategies
 
-> ⚠️ 投资有风险，不构成投资建议，仅供学习交流用途。
+[Chinese README](./README.zh-CN.md)
 
+> Investment risk notice: this repository is for engineering, research, and operational review only. It is not investment advice.
 
-## 中文
+`HkEquityStrategies` is the non-snapshot Hong Kong equity strategy layer for QuantStrategyLab platform runtimes.
+It follows the same repository boundary as `UsEquityStrategies`: this repo owns pure strategy logic, catalog metadata, entrypoints, and runtime readiness checks; broker repositories own market data ingestion, account state, order routing, secrets, deployment, and notifications.
 
-港股策略包，供 QuantStrategyLab 平台运行时加载。
+## Repository boundary
 
-### 范围
+This repository owns:
 
-本仓库负责 `hk_equity` 非 snapshot 策略的策略目录元数据、运行入口和运行时适配契约。它不负责券商凭据、Cloud Run 部署或 snapshot 发布。
+- non-snapshot `hk_equity` strategy implementations that consume direct `market_history`
+- manifest/catalog-backed runtime entrypoints
+- platform-neutral `StrategyDecision` generation
+- HK runtime readiness and live-enable evidence validators
+- research notes for non-snapshot HK strategies
 
-港股非 snapshot 策略和港股 snapshot 策略保持分开：
+This repository does not own:
 
-- `HkEquityStrategies`：只暴露可进入平台 runtime catalog 的非 snapshot 港股策略。当前 `hk_listed_global_etf_rotation` 和 `hk_high_dividend_low_vol_trend` 标记为 `runtime_enabled`；`hk_index_mean_reversion`、`hk_etf_regime_rotation` 只保留为研究回测，不注册为 runtime profile。
-- `HkEquitySnapshotPipelines`：snapshot-backed 策略的数据管线、artifact contract、策略 helper 和发布流程。当前 snapshot profile 都只是架构 scaffold，不进入平台 live enable；其中 `hk_liquid_momentum_quality` 是港股版“动量因子选股” scaffold；`hk_composite_factor_quality_value_momentum` 是更完整的质量/价值/动量/低波多因子 scaffold；`hk_factor_mix_qvlm_risk_parity` 是带 HSI component-index / MSCI Factor Mix 证据门槛的 QVLM risk-parity 多因子 scaffold；`hk_central_soe_value_quality_select` 是带 SASAC/MOF source-list / HSI screening-capping 证据门槛的央国企/政策价值质量 scaffold；`hk_quality_growth_low_volatility` 是带 HSI QGLV 四因子 / MSCI Quality 证据门槛的质量成长低波 scaffold；`hk_residual_momentum_quality` 是残差/行业中性动量 scaffold；`hk_shareholder_yield_quality` 是股息/回购股东收益 scaffold；`hk_free_cash_flow_quality` 是 FCF yield 质量价值 scaffold。
+- snapshot-backed strategy artifact generation
+- broker credentials or account reconciliation
+- order placement or broker-specific order previews
+- Cloud Run / Google Run service deployment
+- Telegram or broker notification delivery
 
-可兼容的运行平台：
+Snapshot-backed HK strategies are intentionally separated into [`../HkEquitySnapshotPipelines`](../HkEquitySnapshotPipelines). Do not add snapshot artifact contracts or snapshot profile lists to this README; keep those in the snapshot repository.
 
-- `InteractiveBrokersPlatform`，使用 `IBKR_MARKET=HK` / `SEHK` / `HKD`。
-- `LongBridgePlatform`，使用 `ACCOUNT_REGION=HK` 或 `LONGBRIDGE_MARKET=HK`。
+## Current runtime profiles
 
-### 架构
+| Canonical profile | Display name | Input | Compatible platforms | Cadence | Benchmark | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| `hk_high_dividend_low_vol_trend` | HK High Dividend Low-Volatility Trend | `market_history` | `InteractiveBrokersPlatform`, `LongBridgePlatform` | monthly review | `03110` | `runtime_enabled` |
+| `hk_listed_global_etf_rotation` | HK-listed Global ETF Rotation | `market_history` | `InteractiveBrokersPlatform`, `LongBridgePlatform` | monthly review | `02800` | `runtime_enabled` |
 
-```text
-Platform market-data feed
-  -> non-snapshot profile 的 direct market_history
-HkEquityStrategies
-  -> 非 snapshot 策略目录 + 入口 + runtime adapter
-HkEquitySnapshotPipelines
-  -> snapshot-backed profile 的特征快照 CSV + manifest + 发布/研究回测
-InteractiveBrokersPlatform / LongBridgePlatform
-  -> 加载策略包，提供必要输入，并执行券商订单
-```
+Research/backtest-only profiles stay out of the runtime catalog:
 
-本包沿用 `UsEquityStrategies` 的边界：策略只返回平台无关的 `StrategyDecision`；平台仓库负责行情、组合快照、订单转换、通知和运行报告。
+- `hk_index_mean_reversion`
+- `hk_etf_regime_rotation`
 
-### 非 snapshot 港股策略 profile
+Platform repositories should only expose profiles returned by `get_runtime_enabled_profiles()`.
 
-| Profile | 领域 | 输入 | 目标模式 | 平台 | 状态 |
-| --- | --- | --- | --- | --- | --- |
-| `hk_listed_global_etf_rotation` | `hk_equity` | `market_history` | `weight` | `ibkr`, `longbridge` | `runtime_enabled` |
-| `hk_high_dividend_low_vol_trend` | `hk_equity` | `market_history` | `weight` | `ibkr`, `longbridge` | `runtime_enabled` |
+## Strategy index
 
-研究回测-only 候选不注册为 runtime profile：`hk_index_mean_reversion`、`hk_etf_regime_rotation`。平台侧只应允许 `get_runtime_enabled_profiles()` 返回的 profile。
+### `hk_high_dividend_low_vol_trend`
 
-### Snapshot-backed 港股策略 profile
+- Purpose: a lower-drawdown HK ETF rotation profile for the first live-enable candidate.
+- Universe: HK-listed high-dividend and gold ETFs.
+- Signal style: monthly trend rotation with volatility targeting.
+- Risk target: 12% annual volatility target.
+- Current role: preferred non-snapshot runtime candidate; real order submission still requires broker dry-run evidence and operator approval.
 
-| Profile | 输入 | 状态 | Snapshot 仓库 |
-| --- | --- | --- | --- |
-| `hk_blue_chip_leader_rotation` | `feature_snapshot` | `architecture_scaffold` | `HkEquitySnapshotPipelines` |
-| `hk_low_vol_dividend_quality` | `factor_snapshot` | `architecture_scaffold` | `HkEquitySnapshotPipelines` |
-| `hk_liquid_momentum_quality` | `feature_snapshot` | `architecture_scaffold` | `HkEquitySnapshotPipelines` |
-| `hk_composite_factor_quality_value_momentum` | `factor_snapshot` | `architecture_scaffold` | `HkEquitySnapshotPipelines` |
-| `hk_free_cash_flow_quality` | `factor_snapshot` | `architecture_scaffold` | `HkEquitySnapshotPipelines` |
-| `hk_factor_mix_qvlm_risk_parity` | `factor_snapshot` | `architecture_scaffold` | `HkEquitySnapshotPipelines` |
-| `hk_central_soe_value_quality_select` | `factor_snapshot` | `architecture_scaffold` | `HkEquitySnapshotPipelines` |
-| `hk_quality_growth_low_volatility` | `factor_snapshot` | `architecture_scaffold` | `HkEquitySnapshotPipelines` |
-| `hk_residual_momentum_quality` | `factor_snapshot` | `architecture_scaffold` | `HkEquitySnapshotPipelines` |
-| `hk_shareholder_yield_quality` | `factor_snapshot` | `architecture_scaffold` | `HkEquitySnapshotPipelines` |
-| `hk_southbound_flow_momentum` | `flow_snapshot` | `architecture_scaffold` | `HkEquitySnapshotPipelines` |
-| `hk_ah_premium_relative_value` | `valuation_snapshot` | `architecture_scaffold` | `HkEquitySnapshotPipelines` |
-| `hk_index_rebalance_event` | `event_calendar_snapshot` | `architecture_scaffold` | `HkEquitySnapshotPipelines` |
+Research details: [`docs/research/hk_high_dividend_low_vol_trend.md`](./docs/research/hk_high_dividend_low_vol_trend.md)
 
-### Snapshot contract
+### `hk_listed_global_etf_rotation`
 
-The snapshot-backed artifact contract now lives in `HkEquitySnapshotPipelines/docs/artifact_contract.md`. This repository no longer owns snapshot feature-column definitions. If a snapshot profile is promoted later, validate the data source, manifest, ranking, and publication flow in the snapshot repository first.
+- Purpose: diversified HK-listed ETF rotation across local equity, overseas equity, gold, and crude-oil ETF sleeves.
+- Input: direct daily market history.
+- Signal style: monthly review, momentum/trend filter, and volatility-targeted allocation.
+- Current role: secondary non-snapshot runtime candidate; ETF product evidence, NAV/iNAV review, liquidity checks, and dry-run order previews are required before real orders.
 
-## Runtime enablement policy
+Research details: [`docs/research/hk_listed_global_etf_rotation.md`](./docs/research/hk_listed_global_etf_rotation.md)
 
-`get_runtime_enabled_profiles()` 只返回可进入平台 rollout 的 profile。目前 `hk_listed_global_etf_rotation` 和 `hk_high_dividend_low_vol_trend` 启用。
+## Runtime enablement gates
 
-分组辅助函数：
+The live-enable ranking is a work queue, not an investment recommendation.
+A profile must pass the evidence gates before production order submission:
 
-- `get_direct_market_history_profiles()`：已注册 runtime catalog 的非 snapshot 港股策略。
-- `get_snapshot_backed_profiles()`：本仓库内 snapshot-backed runtime profile；当前为空，snapshot scaffold 在 `HkEquitySnapshotPipelines`。
-- `get_external_snapshot_scaffold_profiles()`：列出已在 `HkEquitySnapshotPipelines` 建好 contract/helper、但不能被平台当作 runtime profile 的 snapshot scaffold。
-- `get_research_backtest_only_profiles()`：只保留研究回测、不应 live enable 的港股策略。
+- max drawdown gate: `<= 30%` unless the profile defines a stricter threshold
+- point-in-time data and no look-ahead / survivorship-bias controls
+- at least 3 independent out-of-sample folds
+- net-of-cost and HK slippage / lot-size / suspension / VCM / CAS checks
+- broker permission, ETF product, NAV/iNAV, fee, tax, and liquidity evidence
+- dry-run order preview with stable artifact URIs and sha256 provenance
+- bilingual notification and delivery-log evidence
+- staged rollout, tripwire, kill switch, rollback plan, and operator approval
 
-平台仓库负责最终运行环境选择：`hk_listed_global_etf_rotation` 和 `hk_high_dividend_low_vol_trend` 已经可以通过 Cloud Run 的 `RUNTIME_TARGET_JSON` / `STRATEGY_PROFILE` 启用；dry-run、paper/live 和账户范围由平台环境变量控制。
-
-### 港股 live enablement 矩阵
-
-平台侧集成、状态页和 switch-plan 工具应先读取统一矩阵，再决定哪些 profile 可以显示为可选项：
+Use the packaged tools instead of manually interpreting README text:
 
 ```bash
 python scripts/print_hk_live_enablement_matrix.py --json
-python scripts/print_hk_live_enablement_matrix.py --profile hk_high_dividend_low_vol_trend --json
-python scripts/print_hk_live_enablement_matrix.py --profile hk_shareholder_yield_quality --json
-```
-
-矩阵是只读检查，不会部署或修改 Cloud Run。它把 profile 分成三类：
-
-- `runtime_market_history`：平台可选的非 snapshot runtime profile，目前只有 `hk_listed_global_etf_rotation` 和 `hk_high_dividend_low_vol_trend`。
-- `research_backtest_only`：只保留研究记录，不允许平台选择。
-- `external_snapshot_scaffold`：snapshot 仓库已建 contract/helper，但仍需 `HkEquitySnapshotPipelines` promotion matrix、artifact pack 和 live evidence pack 通过后才能提升为平台 runtime profile。
-
-矩阵也输出 `backtest_validation_policy`，作为所有港股 runtime 和 snapshot scaffold 的统一回测门槛：最大回撤不得超过 30%（profile 有更严格阈值时按更严格阈值），必须证明 point-in-time 输入、无未来函数、无 survivorship bias、无全样本收益最优选参，并覆盖至少 3 个独立 OOS fold、每个 OOS fold 最大回撤 <= 30%、单一周期收益贡献 <= 60%、年化收益/最大回撤比至少 0.50、参数敏感性/holdout 稳定性、净收益扣费、熊市/震荡/低流动性压力、HK 成本/滑点/lot-size/停牌/VCM/CAS、杠杆/做空/融资可行性、费用/滑点/价差压力后仍有正超额收益、最差月/最差调仓损失、time-under-water 恢复、与现有 live profile 的相关性和组合级风险预算、容量约束。矩阵同时输出 `evidence_uri_policy`、`evidence_freshness_policy`、`runtime_etf_product_policy`、`runtime_market_data_policy`、`execution_capacity_policy`、`dry_run_order_preview_policy`、`rollout_risk_policy`、`snapshot_required_repository_policies`（包含 `baseline_rotation_live_enablement_policy` 和 `policy_value_live_enablement_policy`）和 `snapshot_future_research_live_enablement_policy`（当前镜像 snapshot 仓的 37 个 raw research-only non-selectable 候选，并额外输出 7 个 curated future-research 候选和 30 个剔除/降级候选；真正 live-enable 收口排名以 `curated_live_enablement_strategy_ranking` 为准），平台可据此自动要求 `https://`、`gs://` 或 `s3://` 证据 URI，并拒绝带 token/password/signature 等 secret-like query 参数、超过时效窗口、缺少逐 symbol HKEX ETP/ETF 分类、官方产品文档 URI、underlying index / reference asset 来源、NAV/iNAV 来源、tracking error / tracking difference 复核、ETF Connect / Stock Connect eligible / sell-only 状态、南向 ETF 日度成交/资金流趋势、券商南向 ETF 买单路由、跨境结算/假期/资格变更复核、杠杆/反向/合成/期货型或复杂产品复核、KID/prospectus 风险披露、多柜台货币和 creation/redemption 处理、分派/税费/费用处理、券商产品权限、交易货币/board lot、分红和 corporate-action 处理、生产行情/ETF NAV/分红/停牌审计、ADV/board-lot/odd-lot/VCM 容量校验、raw order preview / quote snapshot / fee breakdown URI 与 sha256 provenance，或缺少分阶段上线/回滚/tripwire 计划的证据。
-
-当前收口后的 live-enable 排名由 `curated_live_enablement_strategy_ranking` 给出：1）`hk_high_dividend_low_vol_trend`，2）`hk_listed_global_etf_rotation`，3）`hk_low_vol_dividend_quality`，4）`hk_shareholder_yield_quality`，5）`hk_free_cash_flow_quality`，6）`hk_residual_momentum_quality`，7）`hk_factor_mix_qvlm_risk_parity`。`hk_index_mean_reversion` 和旧 `hk_etf_regime_rotation` 已从 live-enable shortlist 剔除，只保留 research/backtest-only 记录。
-
-当前首批 snapshot 推进候选由矩阵字段 `first_snapshot_candidates` 给出：`hk_low_vol_dividend_quality`、`hk_shareholder_yield_quality`、`hk_free_cash_flow_quality`。这不是 live 开关；它只是给后续生产数据、回测、dry-run 证据收集排序。
-更细的 snapshot 顺序以 `HkEquitySnapshotPipelines` 的 `recommended_live_enablement_sequence` 为准；首批低换手质量/收益候选必须先通过 `quality_yield_live_enablement_policy` 的低波红利 / 股东收益 / FCF 同 universe ablation、forecast dividend yield vs trailing yield ablation、stale estimate-revision 控制、yield-trap 控制、HSHYLV/HSSCHYS-style Southbound / 三年现金分红 / payout-ratio / price-crash / high-volatility exclusion / financial-soundness screen、share-count/treasury-share 对账、FCF formula/EV inputs/reporting-date/restatement/sector-exception、HKEX next-day repurchase returns、treasury-share retention/cancellation/resale、moratorium/blackout/connected-person controls、post-buyback financing review、sector/rate-cycle stress 和 order-preview provenance；动量因子候选存在，但排在这些首批候选之后，并且必须通过 `momentum_live_enablement_policy` 的 residual/liquid/composite ablation、HSI close-to-high 与 MSCI 6/12 个月 one-month-skip risk-adjusted momentum 对齐、52-week-high vs 12-1 momentum 比较、volatility normalization、industry-neutral/quality-screen 测试、turnover buffer、sector/capacity、reversal/high-beta/suspension/Southbound stress windows 和 dry-run order-preview provenance 后才允许移除 dry-run；南向资金、AH 溢价和指数调仓 scaffold 还必须通过 `special_situation_live_enablement_policy` 的官方来源、日历/收盘对齐、HSI methodology/operation-guide 版本、schedule-file 版本、next-review notice、review-result press-release 时间戳、constituent weight/pro-forma 记录、MOC-vs-next-open 与 pro-forma-weighted ablation、fast-entry / suspension / buffer-rule exception、HKEX CAS / market-on-close random-close / two-stage price-limit / order-rejection / passive-flow imbalance 控制、signal-decay、crowding/slippage 和 dry-run order-preview provenance 检查。
-
-### 港股运行准备检查
-
-修改 IBKR 或 LongBridge 运行时设置前，先使用本包提供的 readiness 命令：
-
-```bash
-python scripts/print_hk_runtime_readiness.py --profile hk_listed_global_etf_rotation --platform ibkr --json
-python scripts/print_hk_runtime_readiness.py --profile hk_listed_global_etf_rotation --platform longbridge --json
-python scripts/print_hk_runtime_readiness.py --profile hk_high_dividend_low_vol_trend --platform ibkr --json
 python scripts/print_hk_runtime_readiness.py --profile hk_high_dividend_low_vol_trend --platform longbridge --json
+python scripts/validate_hk_runtime_live_enablement.py --print-template --profile hk_high_dividend_low_vol_trend --platform longbridge --json
 ```
 
-输出只是运行准备检查清单，不会直接修改 Cloud Run。检查内容包括港股市场默认值、managed symbols、direct `market_history` 要求、LongBridge weight-to-value 转换、订单预览、整数股 / lot-size 检查、HKD 现金口径和 Cloud Run 环境复核项。
+These commands are read-only unless you explicitly pass an evidence file to the validator. They do not mutate Cloud Run or broker state.
 
-Readiness JSON 同样输出 `evidence_uri_policy`、`evidence_freshness_policy`、`runtime_etf_product_policy`、`runtime_market_data_policy`、`execution_capacity_policy`、`dry_run_order_preview_policy`、`rollout_risk_policy` 和 `notification_audit_policy`，平台可在 dry-run readiness 阶段就阻止不稳定或带 secret-like query 参数的证据链接，并要求 direct `market_history` 先证明 source name、覆盖区间、稳定 `market_history_source_uri`、`market_history_quality_report_uri`、`point_in_time_data_dictionary_uri`、point-in-time、adjusted price、distribution、corporate action、stale quote、suspension/trading status、ETF NAV/iNAV 和 stamp-duty/exemption 来源；同时必须完成逐 symbol ETF 产品尽调，包括 HKEX ETP/ETF 分类、官方产品文档、underlying index / reference asset、NAV/iNAV、tracking error / tracking difference、ETF Connect / Stock Connect eligible / sell-only 状态、南向 ETF 日度成交/资金流趋势、券商南向 ETF 买单路由、跨境结算/假期/资格变更复核、杠杆/反向/合成/期货型或复杂产品复核、KID/prospectus 风险披露、多柜台货币和 creation/redemption 处理、分派/税费/费用处理、券商产品权限、交易货币/board lot、分红和 corporate-action 处理。之后再进入 ADV 容量、board-lot rounding、odd-lot avoidance、交易时段路由、VCM/price-band 控制、raw order preview / quote snapshot / fee breakdown artifact provenance、初始资金上限、kill switch、SWT/VCM runbook、扩容前观察期，以及 EN/ZH-Hans 双语通知、correlation id、脱敏和稳定 delivery-log URI 检查。
-
-Readiness JSON 还会输出 `live_enablement_thresholds` 和 `required_live_evidence_fields`。当前非 snapshot live profile 的硬边界是：`hk_listed_global_etf_rotation` 最大回撤 30%、年化收益/最大回撤比至少 0.50、至少 3 个 OOS fold、单一周期收益贡献 <= 60%、年化换手 150%；`hk_high_dividend_low_vol_trend` 最大回撤 12%、年化收益/最大回撤比至少 0.50、至少 3 个 OOS fold、单一周期收益贡献 <= 60%、年化换手 100%。真正切到 live 前仍需提供至少 3 年 walk-forward / out-of-sample 证据、正年化收益、相对 metadata benchmark 正超额收益、survivorship/look-ahead 控制、逐 symbol ETF 产品尽调、HK 费用/征费、ETF 印花税豁免或适用税费、bid/ask spread、slippage、lot-size rounding、订单预览通知、双语通知 delivery-log 和人工审批证据。
-
-切换到 live 前生成并校验 runtime evidence pack：
-
-```bash
-python scripts/validate_hk_runtime_live_enablement.py \
-  --print-template \
-  --profile hk_high_dividend_low_vol_trend \
-  --platform longbridge \
-  --json > runtime-live-enable-evidence.json
-```
-
-```bash
-python scripts/validate_hk_runtime_live_enablement.py \
-  --evidence-file runtime-live-enable-evidence.json \
-  --json
-```
-
-模板和校验结果也会输出同一份 `evidence_uri_policy`、`evidence_freshness_policy`、`runtime_etf_product_policy`、`runtime_market_data_policy`、`execution_capacity_policy`、`dry_run_order_preview_policy`、`rollout_risk_policy` 和 `notification_audit_policy`。通过校验的 evidence pack 不能只填布尔值：`strategy_backtest`、`runtime_readiness`、`platform_dry_run_order_preview`、`broker_permission_and_fee_verification` 和 `runtime_switch_plan` 都必须提供非空、稳定的 `evidence_uri`（允许 `https://`、`gs://`、`s3://`）和 ISO 日期格式 `evidence_generated_at`，且 URI 不能包含 token/password/signature 等 secret-like query 参数；`runtime_readiness` 必须证明 direct `market_history` 的 source name、覆盖区间、稳定 `market_history_source_uri`、`market_history_quality_report_uri`、`point_in_time_data_dictionary_uri`、adjusted price、distribution、corporate action、stale quote、suspension/trading status、ETF NAV/iNAV 和 stamp-duty/exemption 来源；`broker_permission_and_fee_verification` 必须提供 `etf_product_audit_id`、`managed_etf_symbols_audited_count`、稳定的 `etf_product_universe_audit_uri` / `official_product_document_uri` / `underlying_index_or_reference_asset_source_uri` / `nav_or_inav_source_uri` / `market_maker_or_liquidity_provider_source_uri` / `stock_connect_etf_eligibility_source_uri` / `southbound_etf_turnover_and_fund_flow_source_uri` / `distribution_tax_and_fee_treatment_source_uri` / `etf_fee_and_stamp_duty_audit_uri` / `broker_product_permission_audit_uri`，并确认 managed symbols 均为 ETP、杠杆/反向/合成/期货型或复杂产品已复核、ETF 税费/印花税处理已核验、market maker 或 liquidity provider 存在性已检查、KID/prospectus 风险披露已审阅、官方产品文档仍有效、NAV/iNAV 已对账、tracking error / tracking difference 已复核、ETF Connect / Stock Connect eligible / sell-only 状态、南向 ETF 日度成交/资金流趋势、券商南向 ETF 买单路由、跨境结算/假期/资格变更已复核、多柜台货币和 creation/redemption 已复核、商品信托单一资产/存储风险与高股息集中度/收益陷阱风险已复核、券商产品权限、交易货币/board lot、分红和 corporate-action 处理均已核验；`platform_dry_run_order_preview` 还必须证明 ADV 窗口、median daily turnover、单笔订单 ADV 占比、rebalance ADV 占比、liquidity cap、board-lot rounding、odd-lot avoidance、交易时段路由和 VCM/price-band controls 均满足门槛，并提供 `dry_run_session_id`、稳定的 `raw_order_preview_uri` / `quote_snapshot_uri` / `fee_breakdown_uri`、对应 64 位 hex sha256、非 sample artifact 证明、敏感字段脱敏、quote 覆盖全 symbols、fee breakdown 与券商预览对账、order preview 与策略决策对账，以及 `hk_live_enablement_notification.v1`、`hk_runtime_live_enablement_dry_run`、EN/ZH-Hans 文案、correlation id、敏感字段脱敏和稳定 `notification_delivery_log_uri`；`runtime_switch_plan` 必须证明分阶段上线、初始资金/单标的上限、盘中和累计回撤 tripwire、kill switch、operator notification、SWT/VCM runbook、回滚计划和扩容前观察期；`risk_approval.approval_reference` 也必须非空，便于审计和回滚。
-
-券商专项验证前，先运行本地 smoke。它使用合成行情，不会连接 IBKR、LongBridge、Google Cloud 或任何真实账户：
-
-```bash
-python scripts/smoke_hk_listed_global_etf_rotation_dry_run.py --json
-```
-
-### 本地验证
+## Local smoke commands
 
 ```bash
 python -m pytest -q
 ```
 
-### 研究记录
-
-- `docs/research/hk_index_mean_reversion.md` 记录恒生指数 / 恒生科技 ETF 均值回归回测。当前结论：保留为研究回测-only，暂不注册 runtime profile。
-- `docs/research/hk_etf_regime_rotation.md` 记录港股上市 ETF regime rotation 回测。当前结论：结果有潜力，但 2021-2023 训练期为负，仍保持研究回测-only。
-- `docs/research/hk_high_dividend_low_vol_trend.md` 记录高股息 / 黄金双 ETF 趋势轮动回测。当前结论：12% 波动率目标版本全样本最大回撤低于 10%，已标记为 `runtime_enabled`，可由平台 Cloud Run 环境启用。
-- `docs/research/hk_listed_global_etf_rotation.md` 记录港股上市全球 ETF 轮动回测。当前结论：波动率目标版本全样本最大回撤低于 30%，已标记为 `runtime_enabled`，可由平台 Cloud Run 环境启用；但 dry-run 移除前必须补齐 8 只 ETF 的 issuer docs、NAV/iNAV、underlying/reference asset、tracking difference、market-maker/liquidity provider、multi-counter、fee/tax、broker permission、A 股交易时段/涨跌停、Nasdaq 时区、黄金信托和原油期货 roll/margin/curve 证据。
-
-## English
-
-Hong Kong equity strategy package for QuantStrategyLab platform runtimes.
-
-## Scope
-
-This repository owns strategy catalog metadata, runtime entrypoints, and runtime adapter contracts for non-snapshot `hk_equity` strategies. It does not own broker credentials, Cloud Run deployment, or snapshot publication.
-
-HK non-snapshot strategies and HK snapshot strategies stay separated:
-
-- `HkEquityStrategies`: only platform runtime catalog entries for non-snapshot HK strategies. `hk_listed_global_etf_rotation` and `hk_high_dividend_low_vol_trend` are currently `runtime_enabled`; `hk_index_mean_reversion` and `hk_etf_regime_rotation` remain research/backtest-only and are not runtime profiles.
-- `HkEquitySnapshotPipelines`: snapshot-backed data pipelines, artifact contracts, strategy helpers, and publication flows. Current snapshot profiles are architecture scaffolds and must not be live-enabled by platform repositories; `hk_liquid_momentum_quality` is the HK momentum factor stock-selection scaffold; `hk_composite_factor_quality_value_momentum` is the broader quality/value/momentum/low-volatility multi-factor scaffold; `hk_factor_mix_qvlm_risk_parity` is the QVLM risk-parity multi-factor scaffold with HSI component-index and MSCI Factor Mix evidence gates; `hk_central_soe_value_quality_select` is the central-SOE / policy-value quality scaffold with SASAC/MOF source-list and HSI screening/capping evidence gates; `hk_quality_growth_low_volatility` is the quality-growth low-volatility scaffold with HSI QGLV four-factor / MSCI Quality evidence gates; `hk_residual_momentum_quality` is the residual / industry-neutral momentum scaffold; `hk_shareholder_yield_quality` is the dividend/buyback shareholder-yield scaffold; `hk_free_cash_flow_quality` is the FCF-yield quality/value scaffold.
-
-Runtime-compatible platforms:
-
-- `InteractiveBrokersPlatform` with `IBKR_MARKET=HK` / `SEHK` / `HKD`.
-- `LongBridgePlatform` with `ACCOUNT_REGION=HK` or `LONGBRIDGE_MARKET=HK`.
-
-## Architecture
-
-```text
-Platform market-data feed
-  -> direct market_history for non-snapshot profiles
-HkEquityStrategies
-  -> non-snapshot catalog + entrypoint + runtime adapter
-HkEquitySnapshotPipelines
-  -> feature snapshot CSV + manifest + publish/research flow for snapshot-backed profiles
-InteractiveBrokersPlatform / LongBridgePlatform
-  -> load the strategy package, provide required inputs, and execute broker orders
-```
-
-The package follows the same boundary as `UsEquityStrategies`: strategies return platform-neutral `StrategyDecision` objects; platform repositories own market data, portfolio snapshots, order conversion, notifications, and runtime reports.
-
-## Non-snapshot HK strategy profiles
-
-| Profile | Domain | Inputs | Target mode | Platforms | Status |
-| --- | --- | --- | --- | --- | --- |
-| `hk_listed_global_etf_rotation` | `hk_equity` | `market_history` | `weight` | `ibkr`, `longbridge` | `runtime_enabled` |
-| `hk_high_dividend_low_vol_trend` | `hk_equity` | `market_history` | `weight` | `ibkr`, `longbridge` | `runtime_enabled` |
-
-Research/backtest-only candidates are not registered as runtime profiles: `hk_index_mean_reversion`, `hk_etf_regime_rotation`. Platform runtimes should only allow profiles returned by `get_runtime_enabled_profiles()`.
-
-## Snapshot-backed HK strategy profile
-
-| Profile | Inputs | Status | Snapshot repository |
-| --- | --- | --- | --- |
-| `hk_blue_chip_leader_rotation` | `feature_snapshot` | `architecture_scaffold` | `HkEquitySnapshotPipelines` |
-| `hk_low_vol_dividend_quality` | `factor_snapshot` | `architecture_scaffold` | `HkEquitySnapshotPipelines` |
-| `hk_liquid_momentum_quality` | `feature_snapshot` | `architecture_scaffold` | `HkEquitySnapshotPipelines` |
-| `hk_composite_factor_quality_value_momentum` | `factor_snapshot` | `architecture_scaffold` | `HkEquitySnapshotPipelines` |
-| `hk_free_cash_flow_quality` | `factor_snapshot` | `architecture_scaffold` | `HkEquitySnapshotPipelines` |
-| `hk_factor_mix_qvlm_risk_parity` | `factor_snapshot` | `architecture_scaffold` | `HkEquitySnapshotPipelines` |
-| `hk_central_soe_value_quality_select` | `factor_snapshot` | `architecture_scaffold` | `HkEquitySnapshotPipelines` |
-| `hk_quality_growth_low_volatility` | `factor_snapshot` | `architecture_scaffold` | `HkEquitySnapshotPipelines` |
-| `hk_residual_momentum_quality` | `factor_snapshot` | `architecture_scaffold` | `HkEquitySnapshotPipelines` |
-| `hk_shareholder_yield_quality` | `factor_snapshot` | `architecture_scaffold` | `HkEquitySnapshotPipelines` |
-| `hk_southbound_flow_momentum` | `flow_snapshot` | `architecture_scaffold` | `HkEquitySnapshotPipelines` |
-| `hk_ah_premium_relative_value` | `valuation_snapshot` | `architecture_scaffold` | `HkEquitySnapshotPipelines` |
-| `hk_index_rebalance_event` | `event_calendar_snapshot` | `architecture_scaffold` | `HkEquitySnapshotPipelines` |
-
-## Snapshot contract
-
-Snapshot-backed artifact columns are documented in `HkEquitySnapshotPipelines/docs/artifact_contract.md`. Do not duplicate or mutate those contracts from this repository.
-
-## Runtime enablement policy
-
-`get_runtime_enabled_profiles()` returns only profiles that are eligible for platform rollout. `hk_listed_global_etf_rotation` and `hk_high_dividend_low_vol_trend` are currently runtime-enabled HK profiles.
-
-Grouping helpers:
-
-- `get_direct_market_history_profiles()`: registered runtime-catalog non-snapshot HK strategies.
-- `get_snapshot_backed_profiles()`: snapshot-backed runtime profiles inside this repository; currently empty because snapshot scaffolds live in `HkEquitySnapshotPipelines`.
-- `get_external_snapshot_scaffold_profiles()`: snapshot scaffolds with contracts/helpers in `HkEquitySnapshotPipelines`; platform runtimes must not treat them as selectable profiles.
-- `get_research_backtest_only_profiles()`: HK strategies that remain research/backtest-only and must not be live-enabled.
-
-Platform repositories own the runtime environment selection: `hk_listed_global_etf_rotation` and `hk_high_dividend_low_vol_trend` can be enabled through Cloud Run `RUNTIME_TARGET_JSON` / `STRATEGY_PROFILE`, while dry-run, paper/live mode, and account scope remain controlled by platform environment variables.
-
-## HK live-enable matrix
-
-Platform integration, status pages, and switch-plan tooling should read the unified matrix before exposing selectable profiles:
-
-```bash
-python scripts/print_hk_live_enablement_matrix.py --json
-python scripts/print_hk_live_enablement_matrix.py --profile hk_high_dividend_low_vol_trend --json
-python scripts/print_hk_live_enablement_matrix.py --profile hk_shareholder_yield_quality --json
-```
-
-The matrix is read-only and does not deploy or mutate Cloud Run. It groups profiles into:
-
-- `runtime_market_history`: selectable non-snapshot runtime profiles, currently `hk_listed_global_etf_rotation` and `hk_high_dividend_low_vol_trend`.
-- `research_backtest_only`: research records that must not be platform-selectable.
-- `external_snapshot_scaffold`: snapshot contracts/helpers exist in `HkEquitySnapshotPipelines`, but promotion still requires the snapshot promotion matrix, artifact-pack validation, and live-evidence validation before any runtime enablement.
-
-The matrix also exposes `backtest_validation_policy`, the shared gate for all HK runtime and snapshot-scaffold profiles: max drawdown must stay at or below 30% unless a stricter profile threshold applies; evidence must prove point-in-time inputs, no look-ahead or survivorship bias, no full-sample return-based parameter selection, at least 3 independent OOS folds, each OOS fold max drawdown <= 30%, max single-period return contribution <= 60%, annual-return-to-max-drawdown ratio >= 0.50, parameter-sensitivity / holdout stability, net-of-cost returns, bear/sideways/low-liquidity stress, HK cost/slippage/lot-size/suspension/VCM/CAS, leverage/shorting/margin feasibility, positive excess return under fee/slippage/spread stress, worst-month / worst-rebalance-loss and time-under-water recovery limits, correlation to existing live profiles with an aggregate risk budget, and capacity controls. The matrix also exposes `evidence_uri_policy`, `evidence_freshness_policy`, `runtime_etf_product_policy`, `runtime_market_data_policy`, `execution_capacity_policy`, `dry_run_order_preview_policy`, `rollout_risk_policy`, `snapshot_required_repository_policies` (including `baseline_rotation_live_enablement_policy` and `policy_value_live_enablement_policy`), and `snapshot_future_research_live_enablement_policy` (currently mirroring the snapshot repository's 37 raw research-only non-selectable candidates, while separately exposing 7 curated future-research candidates and 30 deprioritized candidates; use `curated_live_enablement_strategy_ranking` as the narrowed live-enable ranking), so platforms can require `https://`, `gs://`, or `s3://` evidence URIs and reject evidence links that include token/password/signature-like query parameters, exceed freshness windows, miss per-symbol HKEX ETP/ETF classification, official product-document URI, underlying index / reference-asset source, NAV/iNAV source, tracking-error / tracking-difference review, ETF Connect / Stock Connect eligible or sell-only status, Southbound ETF daily turnover / fund-flow trend, broker Southbound ETF buy-route availability, cross-boundary settlement / holiday / eligibility-change review, leveraged/inverse/synthetic/futures-based or complex-product review, KID/prospectus risk review, multi-counter currency and creation/redemption handling, distribution/tax/fee treatment, broker product permission, trading-currency/board-lot/distribution/corporate-action checks, production market-data / ETF NAV / distribution / suspension audits, ADV / board-lot / odd-lot / VCM capacity checks, raw order-preview / quote-snapshot / fee-breakdown URI and sha256 provenance, or staged-rollout tripwire and rollback evidence.
-
-The narrowed live-enable ranking is exposed by `curated_live_enablement_strategy_ranking`: 1) `hk_high_dividend_low_vol_trend`, 2) `hk_listed_global_etf_rotation`, 3) `hk_low_vol_dividend_quality`, 4) `hk_shareholder_yield_quality`, 5) `hk_free_cash_flow_quality`, 6) `hk_residual_momentum_quality`, and 7) `hk_factor_mix_qvlm_risk_parity`. `hk_index_mean_reversion` and the legacy `hk_etf_regime_rotation` are excluded from the live-enable shortlist and retained only as research/backtest-only records.
-
-The current first snapshot candidates are exposed by `first_snapshot_candidates`: `hk_low_vol_dividend_quality`, `hk_shareholder_yield_quality`, and `hk_free_cash_flow_quality`. This is not a live switch; it only prioritizes production data, backtest, and dry-run evidence work.
-The detailed snapshot order comes from `HkEquitySnapshotPipelines` `recommended_live_enablement_sequence`; the first low-turnover quality/yield candidates must pass `quality_yield_live_enablement_policy` checks for low-vol dividend / shareholder-yield / FCF same-universe ablation, forecast-dividend-yield versus trailing-yield ablation, stale estimate-revision controls, yield-trap controls, HSHYLV/HSSCHYS-style Southbound eligibility, three-year cash-dividend records, payout-ratio bounds, price-crash screens, high-volatility exclusion, financial-soundness screens, share-count/treasury-share reconciliation, FCF formula/EV input/reporting-date/restatement/sector-exception handling, HKEX next-day repurchase returns, treasury-share retention/cancellation/resale, moratorium/blackout/connected-person controls, post-buyback financing review, sector/rate-cycle stress, and order-preview provenance; momentum-factor candidates exist, but they stay behind those first candidates and must pass `momentum_live_enablement_policy` checks for residual/liquid/composite ablation, HSI close-to-high versus MSCI 6/12-month one-month-skip risk-adjusted momentum reconciliation, 52-week-high versus 12-1 momentum comparison, volatility normalization, industry-neutral and quality-screen tests, turnover buffers, sector/capacity controls, reversal/high-beta/suspension/Southbound stress windows, and dry-run order-preview provenance before dry-run can be removed; Southbound-flow, AH-premium, and index-rebalance scaffolds must additionally pass `special_situation_live_enablement_policy` checks for official sources, calendar/close alignment, HSI methodology/operation-guide versioning, schedule-file versions, next-review notices, review-result press-release timestamps, constituent weight/pro-forma records, MOC-vs-next-open and pro-forma-weighted ablations, fast-entry / suspension / buffer-rule exception, HKEX CAS / market-on-close random-close / two-stage price-limit / order-rejection / passive-flow imbalance controls, signal decay, crowding/slippage, and dry-run order-preview provenance.
-
-## HK runtime readiness
-
-Use the packaged readiness command before changing IBKR or LongBridge runtime settings:
-
-```bash
-python scripts/print_hk_runtime_readiness.py --profile hk_listed_global_etf_rotation --platform ibkr --json
-python scripts/print_hk_runtime_readiness.py --profile hk_listed_global_etf_rotation --platform longbridge --json
-python scripts/print_hk_runtime_readiness.py --profile hk_high_dividend_low_vol_trend --platform ibkr --json
-python scripts/print_hk_runtime_readiness.py --profile hk_high_dividend_low_vol_trend --platform longbridge --json
-```
-
-The output is a runtime-readiness checklist, not a direct Cloud Run mutation. It covers HK market defaults, managed symbols, direct `market_history` requirements, LongBridge weight-to-value conversion, order preview, integer-share / lot-size checks, HKD cash lines, and Cloud Run environment review items.
-
-The readiness JSON also exposes `evidence_uri_policy`, `evidence_freshness_policy`, `runtime_etf_product_policy`, `runtime_market_data_policy`, `execution_capacity_policy`, `dry_run_order_preview_policy`, `rollout_risk_policy`, and `notification_audit_policy`, so platforms can block unstable evidence links or links with secret-like query parameters during dry-run readiness review, and require direct `market_history` proof for source name, coverage dates, stable `market_history_source_uri`, `market_history_quality_report_uri`, `point_in_time_data_dictionary_uri`, point-in-time adjusted prices, distributions, corporate actions, stale quotes, suspension/trading status, ETF NAV/iNAV, and stamp-duty/exemption sources; per-symbol ETF product due diligence for HKEX ETP/ETF classification, official product documents, underlying index / reference asset, NAV/iNAV, tracking error / tracking difference, ETF Connect / Stock Connect eligible or sell-only status, Southbound ETF daily turnover / fund-flow trend, broker Southbound ETF buy-route availability, cross-boundary settlement / holiday / eligibility-change review, leveraged/inverse/synthetic/futures-based or complex-product review, KID/prospectus risk disclosures, multi-counter currency and creation/redemption handling, distribution/tax/fee treatment, broker product permission, trading currency, board lot, distribution, and corporate actions; plus dry-run order-preview proof for ADV capacity, board-lot rounding, odd-lot avoidance, session routing, VCM/price-band controls, raw preview / quote snapshot / fee-breakdown artifact provenance, initial capital caps, kill switch, SWT/VCM runbooks, observation windows before scale-up, and bilingual EN/ZH-Hans notification delivery logs with correlation ids and redaction.
-
-The readiness JSON also exposes `live_enablement_thresholds` and `required_live_evidence_fields`. Current hard limits are: `hk_listed_global_etf_rotation` max drawdown 30%, annual-return-to-max-drawdown ratio at least 0.50, at least 3 OOS folds, max single-period return contribution <= 60%, and annualized turnover 150%; `hk_high_dividend_low_vol_trend` max drawdown 12%, annual-return-to-max-drawdown ratio at least 0.50, at least 3 OOS folds, max single-period return contribution <= 60%, and annualized turnover 100%. A real live switch still needs at least three walk-forward / out-of-sample years, positive annual return, positive excess return versus the strategy metadata benchmark, survivorship/look-ahead controls, per-symbol ETF product due diligence, HK fees/levies, ETF stamp-duty exemption or applicable taxes, bid/ask spread, slippage, lot-size rounding, order-preview notifications, bilingual notification delivery-log proof, and operator approval.
-
-Generate and validate a runtime evidence pack before switching to live:
-
-```bash
-python scripts/validate_hk_runtime_live_enablement.py \
-  --print-template \
-  --profile hk_high_dividend_low_vol_trend \
-  --platform longbridge \
-  --json > runtime-live-enable-evidence.json
-```
-
-```bash
-python scripts/validate_hk_runtime_live_enablement.py \
-  --evidence-file runtime-live-enable-evidence.json \
-  --json
-```
-
-The template and validation result also expose the same `evidence_uri_policy`, `evidence_freshness_policy`, `runtime_etf_product_policy`, `runtime_market_data_policy`, `execution_capacity_policy`, `dry_run_order_preview_policy`, `rollout_risk_policy`, and `notification_audit_policy`. Passing evidence packs cannot rely on booleans only: `strategy_backtest`, `runtime_readiness`, `platform_dry_run_order_preview`, `broker_permission_and_fee_verification`, and `runtime_switch_plan` must all provide non-empty stable `evidence_uri` values (`https://`, `gs://`, or `s3://`) plus ISO-date `evidence_generated_at` values, those URIs must not contain token/password/signature-like query parameters, `runtime_readiness` must satisfy production market-history provenance fields and market-data audit fields, `broker_permission_and_fee_verification` must include `etf_product_audit_id`, `managed_etf_symbols_audited_count`, stable `etf_product_universe_audit_uri` / `official_product_document_uri` / `underlying_index_or_reference_asset_source_uri` / `nav_or_inav_source_uri` / `market_maker_or_liquidity_provider_source_uri` / `stock_connect_etf_eligibility_source_uri` / `southbound_etf_turnover_and_fund_flow_source_uri` / `distribution_tax_and_fee_treatment_source_uri` / `etf_fee_and_stamp_duty_audit_uri` / `broker_product_permission_audit_uri`, and proof that all managed symbols are ETPs, leveraged/inverse/synthetic/futures-based or complex-product flags were reviewed, ETF tax/stamp-duty treatment was verified, market maker or liquidity-provider presence was checked, KID/prospectus risk disclosures were reviewed, official product documents are current, NAV/iNAV was reconciled, tracking difference was reviewed, ETF Connect / Stock Connect eligible or sell-only status, Southbound ETF daily turnover / fund-flow trend, broker Southbound ETF buy-route availability, and cross-boundary settlement / holiday / eligibility-change risks were reviewed, multi-counter currency / creation-redemption was reviewed, commodity-trust single-asset/storage risk and high-dividend concentration/yield-trap risk were reviewed, and broker permission, trading currency, board lot, distribution, and corporate-action handling were verified; `platform_dry_run_order_preview` must satisfy ADV / liquidity / board-lot / odd-lot / VCM capacity checks, include `dry_run_session_id`, stable raw order-preview / quote-snapshot / fee-breakdown artifact URIs, matching 64-character hex sha256 values, non-sample and redaction proof, quote coverage, broker fee reconciliation, strategy-decision reconciliation, and the `hk_live_enablement_notification.v1` audit schema (`hk_runtime_live_enablement_dry_run`, EN/ZH-Hans locales, correlation id, redaction, stable `notification_delivery_log_uri`), `runtime_switch_plan` must satisfy staged rollout / capital cap / tripwire / kill-switch / SWT-runbook / observation-window checks, and `risk_approval.approval_reference` must be non-empty for audit and rollback traceability.
-
-Run the local smoke before broker-specific verification. It uses synthetic market history and does not connect to IBKR, LongBridge, Google Cloud, or any live account:
+Run the synthetic dry-run smoke for the ETF rotation strategy:
 
 ```bash
 python scripts/smoke_hk_listed_global_etf_rotation_dry_run.py --json
 ```
 
-## Local validation
+## Documentation
 
-```bash
-python -m pytest -q
-```
+- [`docs/platform_integration.md`](./docs/platform_integration.md): platform integration notes for IBKR and LongBridge.
+- [`docs/research/hk_high_dividend_low_vol_trend.md`](./docs/research/hk_high_dividend_low_vol_trend.md): high-dividend / gold trend-rotation research.
+- [`docs/research/hk_listed_global_etf_rotation.md`](./docs/research/hk_listed_global_etf_rotation.md): HK-listed global ETF rotation research.
+- [`docs/research/hk_index_mean_reversion.md`](./docs/research/hk_index_mean_reversion.md): Hang Seng / HSTECH mean-reversion research-only notes.
+- [`docs/research/hk_etf_regime_rotation.md`](./docs/research/hk_etf_regime_rotation.md): earlier ETF regime-rotation research-only notes.
+- [`docs/research/hk_quant_strategy_ideas.md`](./docs/research/hk_quant_strategy_ideas.md): broader HK strategy idea inventory.
 
-## Research notes
+## Related repositories
 
-- `docs/research/hk_index_mean_reversion.md` records the HSI / Hang Seng TECH ETF mean-reversion backtest. Current conclusion: keep as research/backtest-only; do not register as a runtime profile yet.
-- `docs/research/hk_etf_regime_rotation.md` records the HK-listed ETF regime rotation backtest. Current conclusion: promising but still keep as research/backtest-only because the 2021-2023 train period was negative.
-- `docs/research/hk_high_dividend_low_vol_trend.md` records the high-dividend / gold two-ETF trend rotation backtest. Current conclusion: mark `runtime_enabled` because the 12% volatility-targeted version kept full-sample drawdown below 10%; platform Cloud Run environments can select it through runtime configuration.
-- `docs/research/hk_listed_global_etf_rotation.md` records the HK-listed global ETF rotation backtest. Current conclusion: mark `runtime_enabled` because the volatility-targeted version kept full-sample drawdown under 30%; platform Cloud Run environments can select it through runtime configuration, but dry-run removal requires all eight ETFs' issuer documents, NAV/iNAV, underlying/reference asset, tracking difference, market-maker/liquidity provider, multi-counter, fee/tax, broker-permission, A-share trading-hour/price-band, Nasdaq time-zone, gold-trust, and crude-oil futures-roll/margin/curve evidence.
-
-### 2026-06-02 update: mirrored downside-risk / volatility snapshot gate
-
-`snapshot_future_research_live_enablement_policy` now mirrors `hk_downside_beta_tail_risk_volatility_overlay` from `HkEquitySnapshotPipelines`. It remains non-selectable in platform tooling and only defines pre-scaffold gates for downside beta, semivariance, VaR/CVaR, tail-risk, stress-beta, realized-volatility regime, same-universe ablation, dry-run order previews, bilingual notifications, rollout controls, and operator approval. This does not deploy or live-enable a new platform profile.
-
-`snapshot_future_research_live_enablement_policy` 现在镜像 `HkEquitySnapshotPipelines` 的 `hk_downside_beta_tail_risk_volatility_overlay`。平台侧仍保持 non-selectable，只增加 downside beta、semivariance、VaR/CVaR、tail-risk、stress-beta、realized-volatility regime、同 universe ablation、dry-run order preview、双语通知、rollout controls 和 operator approval 的 pre-scaffold gate。此变更不会部署或 live-enable 新平台 profile。
-
-### 2026-06-02 update: mirrored structured-product warrant / CBBC flow gate
-
-`snapshot_future_research_live_enablement_policy` now mirrors `hk_structured_product_warrant_cbbc_flow_risk_overlay` from `HkEquitySnapshotPipelines`. It remains non-selectable and only defines pre-scaffold gates for HKEX derivative-warrant / CBBC listing, issuance, expiry, underlying, turnover, call/put or bull/bear classification, strike/call-price/maturity, mandatory-call-event distance, liquidity-provider quote availability, same-universe ablation, dry-run order previews, bilingual notifications, rollout controls, and operator approval. This does not add a broker order surface for warrants or CBBCs.
-
-`snapshot_future_research_live_enablement_policy` 现在镜像 `HkEquitySnapshotPipelines` 的 `hk_structured_product_warrant_cbbc_flow_risk_overlay`。平台侧仍保持 non-selectable，只增加 HKEX derivative-warrant / CBBC 上市、发行、到期、正股映射、成交、call/put 或 bull/bear 分类、strike/call-price/maturity、mandatory-call-event distance、liquidity-provider quote availability、同 universe ablation、dry-run order preview、双语通知、rollout controls 和 operator approval 的 pre-scaffold gate。此变更不会增加权证或牛熊证券商下单入口。
-
-### 2026-06-02 update: mirrored index futures / options sentiment-basis gate
-
-`snapshot_future_research_live_enablement_policy` now mirrors `hk_index_derivatives_futures_options_sentiment_basis_overlay` from `HkEquitySnapshotPipelines`. It remains non-selectable and only defines pre-scaffold gates for HSI / HSTECH / HSCEI futures/options basis, put-call open-interest ratio, implied-volatility skew, term structure, calendar spread, expiry-roll, night-session, cash/futures close alignment, same-universe ablation, dry-run order previews, bilingual notifications, rollout controls, and operator approval. This does not add a futures/options broker order surface.
-
-`snapshot_future_research_live_enablement_policy` 现在镜像 `HkEquitySnapshotPipelines` 的 `hk_index_derivatives_futures_options_sentiment_basis_overlay`。平台侧仍保持 non-selectable，只增加 HSI / HSTECH / HSCEI futures/options basis、put-call open-interest ratio、implied-volatility skew、term structure、calendar spread、expiry-roll、night-session、cash/futures close alignment、同 universe ablation、dry-run order preview、双语通知、rollout controls 和 operator approval 的 pre-scaffold gate。此变更不会增加期货/期权券商下单入口。
-
-### 2026-06-02 update: mirrored VCM / CAS microstructure shock gate
-
-`snapshot_future_research_live_enablement_policy` now mirrors `hk_vcm_cas_microstructure_shock_risk_overlay` from `HkEquitySnapshotPipelines`. It remains non-selectable and only defines pre-scaffold gates for VCM securities-list, trigger timestamp, reference price, cooling-off band, POS/CAS reference price, auction status, derivatives VCM coverage, broker order-preview rejection, same-universe ablation, dry-run order previews, bilingual notifications, rollout controls, and operator approval. This does not add a high-frequency or auction-trading broker order surface.
-
-`snapshot_future_research_live_enablement_policy` 现在镜像 `HkEquitySnapshotPipelines` 的 `hk_vcm_cas_microstructure_shock_risk_overlay`。平台侧仍保持 non-selectable，只增加 VCM securities-list、trigger timestamp、reference price、cooling-off band、POS/CAS reference price、auction status、derivatives VCM coverage、broker order-preview rejection、同 universe ablation、dry-run order preview、双语通知、rollout controls 和 operator approval 的 pre-scaffold gate。此变更不会增加高频或竞价交易券商下单入口。
-
-### 2026-06-02 update: mirrored REIT dividend-spread / rate-sensitivity gate
-
-`hk_reit_dividend_spread_rate_sensitivity_overlay` is mirrored from the snapshot future-research backlog. Strategy packaging must keep it non-selectable until the snapshot repository creates a new contract and evidence pack. It may use HK-listed REIT distribution, NAV / GAV, gearing, property-sector, rental, refinancing, HIBOR / base-rate and yield-spread data as income / rate-risk overlay evidence, but it must not create a leveraged REIT carry, margin, property-developer proxy, or dividend-capture runtime surface.
-
-`hk_reit_dividend_spread_rate_sensitivity_overlay` 已从 snapshot future-research backlog 镜像到策略仓。策略包装必须保持 non-selectable，直到 snapshot 仓库创建新 contract 和 evidence pack。它可以使用 HK-listed REIT distribution、NAV / GAV、gearing、property-sector、rental、refinancing、HIBOR / base-rate 和 yield-spread 数据作为 income / rate-risk overlay 证据，但不能创建 leveraged REIT carry、margin、property-developer proxy 或 dividend-capture runtime 入口。
-
-### 2026-06-02 update: mirrored regulatory enforcement / disciplinary risk gate
-
-`hk_regulatory_enforcement_disciplinary_risk_overlay` is mirrored from the snapshot future-research backlog. Strategy packaging must keep it non-selectable until the snapshot repository creates a new contract and evidence pack. It may use public HKEX disciplinary sanctions / enforcement materials, SFC enforcement releases, MMT outcomes, restriction notices, false-disclosure cases, issuer/director mapping and trading-halt/suspension context as governance / disclosure / misconduct risk evidence, but it must not create a rumour-trading, event-chasing, litigation-arbitrage, or short-selling runtime surface.
-
-`hk_regulatory_enforcement_disciplinary_risk_overlay` 已从 snapshot future-research backlog 镜像到策略仓。策略包装必须保持 non-selectable，直到 snapshot 仓库创建新 contract 和 evidence pack。它可以使用公开 HKEX disciplinary sanctions / enforcement materials、SFC enforcement releases、MMT outcomes、restriction notices、false-disclosure cases、issuer/director mapping 与 trading halt / suspension context 作为 governance / disclosure / misconduct risk evidence，但不能创建 rumour-trading、event-chasing、litigation-arbitrage 或 short-selling runtime 入口。
-
-### 2026-06-02 update: mirrored margin financing / collateral forced-selling risk gate
-
-`hk_margin_financing_collateral_forced_selling_risk_overlay` is mirrored from the snapshot future-research backlog. Strategy packaging must keep it non-selectable until the snapshot repository creates a new contract and evidence pack. It may use SFC SMF guidelines / circulars / review evidence, broker marginable-security / haircut / LTV data, share-pledge and forced-sale disclosures, trading-halt/suspension context and liquidity stress as deleveraging / collateral-risk evidence, but it must not create a leveraged margin-trading, forced-liquidation front-running, rumour-trading, or short-selling runtime surface.
-
-`hk_margin_financing_collateral_forced_selling_risk_overlay` 已从 snapshot future-research backlog 镜像到策略仓。策略包装必须保持 non-selectable，直到 snapshot 仓库创建新 contract 和 evidence pack。它可以使用 SFC SMF guidelines / circulars / review evidence、broker marginable-security / haircut / LTV data、share-pledge 和 forced-sale disclosures、trading halt / suspension context 与 liquidity stress 作为 deleveraging / collateral-risk evidence，但不能创建 leveraged margin-trading、forced-liquidation front-running、rumour-trading 或 short-selling runtime 入口。
-
-### 2026-06-02 update: mirrored liquid large-cap weekly reversal cost-aware gate
-
-`hk_liquid_largecap_weekly_reversal_cost_aware_overlay` is mirrored from the snapshot future-research backlog. Strategy packaging must keep it non-selectable until the snapshot repository creates a new contract and evidence pack. It may use point-in-time weekly extreme-return ranks, reversal / continuance labels, liquid-large-cap universe, fee / spread / slippage, bid-ask bounce, VCM/CAS, suspension, momentum interaction and same-universe ablation evidence, but it must not create an intraday, high-turnover, microcap, opening-gap, or pure contrarian runtime surface.
-
-`hk_liquid_largecap_weekly_reversal_cost_aware_overlay` 已从 snapshot future-research backlog 镜像到策略仓。策略包装必须保持 non-selectable，直到 snapshot 仓库创建新 contract 和 evidence pack。它可以使用 point-in-time weekly extreme-return ranks、reversal / continuance labels、liquid-large-cap universe、fee / spread / slippage、bid-ask bounce、VCM/CAS、suspension、momentum interaction 和 same-universe ablation evidence，但不能创建 intraday、高换手、microcap、opening-gap 或纯 contrarian runtime 入口。
-
-
-### 2026-06-02 update: mirrored US ADR / HK secondary-listing lead-lag gate
-
-`hk_us_adr_hk_secondary_listing_lead_lag_overlay` is mirrored from the snapshot future-research backlog. Strategy packaging must keep it non-selectable until the snapshot repository creates a new `cross_market_lead_lag_snapshot_overlay` contract and evidence pack. It may use US ADR overnight / day-session moves, HK secondary-listing close/open alignment, ADR ratio, USD/HKD FX, after-hours / pre-market context and cross-market price-discovery evidence as a confirmation / de-risking overlay, but it must not create cross-market arbitrage, conversion-arbitrage, pair-trading, short-selling, margin or after-hours runtime surfaces.
-
-`hk_us_adr_hk_secondary_listing_lead_lag_overlay` 已从 snapshot future-research backlog 镜像到策略仓。策略包装必须保持 non-selectable，直到 snapshot 仓库创建新的 `cross_market_lead_lag_snapshot_overlay` contract 和 evidence pack。它可以使用 US ADR overnight / day-session moves、HK secondary-listing close / open alignment、ADR ratio、USD/HKD FX、after-hours / pre-market context 与 cross-market price-discovery evidence 作为 confirmation / de-risking overlay，但不能创建 cross-market arbitrage、conversion-arbitrage、pair-trading、short-selling、margin 或 after-hours runtime 入口。
-
-
-### 2026-06-02 update: mirrored smart beta factor-regime rotation gate
-
-`hk_smart_beta_factor_regime_rotation_overlay` is mirrored from the snapshot future-research backlog. Strategy packaging must keep it non-selectable until the snapshot repository creates a new `factor_regime_rotation_snapshot_overlay` contract and evidence pack. It may use point-in-time HK smart-beta factor index, constituent, score, factor-return, market-cycle, volatility, investor-sentiment, liquidity and macro-regime evidence as a low-turnover factor tilt / de-risking overlay, but it must not create black-box market timing, high-turnover factor chasing, leveraged, short, derivative or intraday runtime surfaces.
-
-`hk_smart_beta_factor_regime_rotation_overlay` 已从 snapshot future-research backlog 镜像到策略仓。策略包装必须保持 non-selectable，直到 snapshot 仓库创建新的 `factor_regime_rotation_snapshot_overlay` contract 和 evidence pack。它可以使用 point-in-time HK smart-beta factor index、constituent、score、factor-return、market-cycle、volatility、investor-sentiment、liquidity 和 macro-regime evidence 作为低换手 factor tilt / de-risking overlay，但不能创建黑箱 market timing、高换手 factor chasing、杠杆、做空、衍生品或 intraday runtime 入口。
-
-## HK ESG downside-risk quality overlay
-
-`hk_esg_downside_risk_quality_overlay` is mirrored from the snapshot future-research backlog. Strategy packaging must keep it non-selectable until the snapshot repository creates a new `esg_risk_quality_snapshot_overlay` contract and evidence pack. It may use point-in-time HSI ESG Enhanced methodology, ESG Risk Rating / UNGC / controversial-product screening, constituent exclusions, tilt factors, industry caps, provider-version history and downside-risk evidence as a low-turnover quality / governance / de-risking overlay, but it must not create ESG label-chasing, greenwashing-sensitive marketing, high-turnover controversy trading, short-selling, derivative or standalone ESG-timing runtime surfaces.
-
-`hk_esg_downside_risk_quality_overlay` 已从 snapshot future-research backlog 镜像到策略仓。策略包装必须保持 non-selectable，直到 snapshot 仓库创建新的 `esg_risk_quality_snapshot_overlay` contract 和 evidence pack。它可以使用 point-in-time HSI ESG Enhanced methodology、ESG Risk Rating / UNGC / controversial-product screening、constituent exclusion、tilt factor、industry cap、provider-version history 和 downside-risk evidence 作为低换手 quality / governance / de-risking overlay，但不能创建 ESG label-chasing、greenwashing-sensitive marketing、高换手 controversy trading、做空、衍生品或 standalone ESG-timing runtime 入口。
+- [`../HkEquitySnapshotPipelines`](../HkEquitySnapshotPipelines): snapshot-backed HK equity strategy artifacts and scaffold helpers.
+- [`../QuantPlatformKit`](../QuantPlatformKit): shared strategy contract and component loader.
+- `InteractiveBrokersPlatform` / `LongBridgePlatform`: broker-specific runtime, deployment, order routing, and notification ownership.
