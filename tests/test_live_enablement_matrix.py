@@ -369,6 +369,7 @@ def test_snapshot_future_research_policy_blocks_non_scaffolded_ideas():
         "hk_index_derivatives_futures_options_sentiment_basis_overlay",
         "hk_vcm_cas_microstructure_shock_risk_overlay",
         "hk_reit_dividend_spread_rate_sensitivity_overlay",
+        "hk_regulatory_enforcement_disciplinary_risk_overlay",
     ]
     assert "new_snapshot_profile_name_and_contract_version" in policy["required_pre_scaffold_gates"]
     assert "point_in_time_consensus_estimate_and_revision_history" in policy["required_pre_scaffold_gates"]
@@ -467,6 +468,10 @@ def test_snapshot_future_research_policy_blocks_non_scaffolded_ideas():
     )
     assert (
         "reit_dividend_spread_distribution_nav_gearing_rate_sensitivity_and_ablation_history"
+        in policy["required_pre_scaffold_gates"]
+    )
+    assert (
+        "regulatory_enforcement_disciplinary_sanction_misconduct_and_governance_ablation_history"
         in policy["required_pre_scaffold_gates"]
     )
     assert "mutating_existing_snapshot_contract_in_place" in policy["required_reject_criteria"]
