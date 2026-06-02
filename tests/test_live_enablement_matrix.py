@@ -329,6 +329,7 @@ def test_snapshot_future_research_policy_blocks_non_scaffolded_ideas():
         "hk_ipo_lockup_overhang_event_overlay",
         "hk_audit_opinion_suspension_risk_overlay",
         "hk_share_repurchase_execution_signal_overlay",
+        "hk_liquid_pairs_cointegration_stat_arb_overlay",
     ]
     assert "new_snapshot_profile_name_and_contract_version" in policy["required_pre_scaffold_gates"]
     assert "point_in_time_consensus_estimate_and_revision_history" in policy["required_pre_scaffold_gates"]
@@ -368,6 +369,9 @@ def test_snapshot_future_research_policy_blocks_non_scaffolded_ideas():
         policy["required_pre_scaffold_gates"]
     )
     assert "share_repurchase_execution_treasury_share_resale_mandate_and_undervaluation_history" in (
+        policy["required_pre_scaffold_gates"]
+    )
+    assert "pairs_cointegration_spread_stability_borrow_shorting_tick_rule_and_capacity_history" in (
         policy["required_pre_scaffold_gates"]
     )
     assert "mutating_existing_snapshot_contract_in_place" in policy["required_reject_criteria"]
