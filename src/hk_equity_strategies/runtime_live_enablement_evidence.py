@@ -291,6 +291,15 @@ def _validate_strategy_backtest(
     elif max_drawdown > max_drawdown_limit:
         errors.append(f"{section_name}.max_drawdown exceeds {max_drawdown_limit:.0%}: got {max_drawdown:.2%}")
 
+    rolling_oos_fold_max_drawdown = _drawdown_abs(section.get("rolling_oos_fold_max_drawdown"))
+    if rolling_oos_fold_max_drawdown is None:
+        errors.append(f"{section_name}.rolling_oos_fold_max_drawdown is required")
+    elif rolling_oos_fold_max_drawdown > max_drawdown_limit:
+        errors.append(
+            f"{section_name}.rolling_oos_fold_max_drawdown exceeds {max_drawdown_limit:.0%}: "
+            f"got {rolling_oos_fold_max_drawdown:.2%}"
+        )
+
     max_turnover = float(thresholds["max_allowed_annualized_turnover"])
     annualized_turnover = _number(section.get("annualized_turnover"))
     if annualized_turnover is None:
@@ -536,6 +545,7 @@ def build_runtime_live_enablement_evidence_template(profile: str, *, platform: s
             "period_end": "",
             "annual_return": None,
             "max_drawdown": None,
+            "rolling_oos_fold_max_drawdown": None,
             "annualized_turnover": None,
             "survivorship_bias_controls": False,
             "lookahead_bias_controls": False,
@@ -552,9 +562,13 @@ def build_runtime_live_enablement_evidence_template(profile: str, *, platform: s
             "multiple_period_robustness_checked": False,
             "regime_stress_and_liquidity_shock_controls": False,
             "transaction_cost_slippage_lot_size_and_suspension_model_included": False,
+            "fee_slippage_spread_stress_sensitivity_controls": False,
             "net_return_after_costs_controls": False,
+            "data_vendor_reconciliation_and_missingness_controls": False,
             "corporate_action_delisting_and_stale_price_controls": False,
             "cash_leverage_short_borrow_and_margin_controls": False,
+            "tail_loss_time_underwater_and_recovery_controls": False,
+            "portfolio_correlation_and_aggregate_risk_budget_controls": False,
             "benchmark_symbol": benchmark_symbol,
             "benchmark_annual_return": None,
             "strategy_excess_return": None,

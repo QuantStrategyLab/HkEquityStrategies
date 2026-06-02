@@ -61,7 +61,22 @@ def test_live_enablement_matrix_keeps_selectable_surface_to_runtime_profiles():
     assert "cash_leverage_short_borrow_and_margin_constraints" in (
         matrix["backtest_validation_policy"]["required_risk_constraints"]
     )
+    assert "fee_slippage_spread_sensitivity_stays_profitable" in (
+        matrix["backtest_validation_policy"]["required_risk_constraints"]
+    )
+    assert "cross_strategy_correlation_and_aggregate_drawdown_budget_limits" in (
+        matrix["backtest_validation_policy"]["required_risk_constraints"]
+    )
+    assert "data_vendor_reconciliation_and_missingness_controls" in (
+        matrix["backtest_validation_policy"]["required_boolean_fields"]
+    )
+    assert "tail_loss_time_underwater_and_recovery_controls" in (
+        matrix["backtest_validation_policy"]["required_boolean_fields"]
+    )
     assert "rolling_or_oos_fold_drawdown_above_30_percent" in matrix["backtest_validation_policy"]["reject_criteria"]
+    assert "fee_slippage_spread_stress_turns_excess_return_non_positive" in (
+        matrix["backtest_validation_policy"]["reject_criteria"]
+    )
     assert "per_fold_drawdown_parameter_stability_and_regime_stress_controls" in (
         matrix["common_platform_evidence_requirements"]
     )
@@ -96,6 +111,9 @@ def test_runtime_rows_include_thresholds_evidence_commands_and_sources():
     assert row["evidence_uri_policy"]["required"] is True
     assert row["backtest_validation_policy"]["max_allowed_drawdown"] == 0.30
     assert "transaction_cost_slippage_lot_size_and_suspension_model_included" in (
+        row["backtest_validation_policy"]["required_boolean_fields"]
+    )
+    assert "fee_slippage_spread_stress_sensitivity_controls" in (
         row["backtest_validation_policy"]["required_boolean_fields"]
     )
     assert "signature=" in row["evidence_uri_policy"]["rejected_query_markers"]
@@ -310,6 +328,7 @@ def test_snapshot_future_research_policy_blocks_non_scaffolded_ideas():
         "hk_distribution_ex_date_entitlement_overlay",
         "hk_ipo_lockup_overhang_event_overlay",
         "hk_audit_opinion_suspension_risk_overlay",
+        "hk_share_repurchase_execution_signal_overlay",
     ]
     assert "new_snapshot_profile_name_and_contract_version" in policy["required_pre_scaffold_gates"]
     assert "point_in_time_consensus_estimate_and_revision_history" in policy["required_pre_scaffold_gates"]
@@ -346,6 +365,9 @@ def test_snapshot_future_research_policy_blocks_non_scaffolded_ideas():
         policy["required_pre_scaffold_gates"]
     )
     assert "audit_opinion_disclaimer_adverse_qualified_going_concern_suspension_resumption_history" in (
+        policy["required_pre_scaffold_gates"]
+    )
+    assert "share_repurchase_execution_treasury_share_resale_mandate_and_undervaluation_history" in (
         policy["required_pre_scaffold_gates"]
     )
     assert "mutating_existing_snapshot_contract_in_place" in policy["required_reject_criteria"]

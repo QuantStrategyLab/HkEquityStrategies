@@ -27,6 +27,7 @@ def _evidence(**overrides):
             "period_end": "2026-05-29",
             "annual_return": 0.1716,
             "max_drawdown": -0.0806,
+            "rolling_oos_fold_max_drawdown": -0.092,
             "annualized_turnover": 0.42,
             "survivorship_bias_controls": True,
             "lookahead_bias_controls": True,
@@ -43,9 +44,13 @@ def _evidence(**overrides):
             "multiple_period_robustness_checked": True,
             "regime_stress_and_liquidity_shock_controls": True,
             "transaction_cost_slippage_lot_size_and_suspension_model_included": True,
+            "fee_slippage_spread_stress_sensitivity_controls": True,
             "net_return_after_costs_controls": True,
+            "data_vendor_reconciliation_and_missingness_controls": True,
             "corporate_action_delisting_and_stale_price_controls": True,
             "cash_leverage_short_borrow_and_margin_controls": True,
+            "tail_loss_time_underwater_and_recovery_controls": True,
+            "portfolio_correlation_and_aggregate_risk_budget_controls": True,
             "benchmark_symbol": "03110",
             "benchmark_annual_return": 0.08,
             "strategy_excess_return": 0.0916,
@@ -328,6 +333,7 @@ def test_build_runtime_live_enablement_evidence_template_is_not_preapproved():
     assert template["dry_run_order_preview_policy"]["policy_version"] == "hk_dry_run_order_preview_provenance.v1"
     assert template["validation_as_of"] == "<YYYY-MM-DD>"
     assert template["strategy_backtest"]["annual_return"] is None
+    assert template["strategy_backtest"]["rolling_oos_fold_max_drawdown"] is None
     assert template["strategy_backtest"]["benchmark_symbol"] == "03110"
     assert template["strategy_backtest"]["strategy_excess_return"] is None
     assert template["strategy_backtest"]["point_in_time_inputs_only"] is False
@@ -335,6 +341,10 @@ def test_build_runtime_live_enablement_evidence_template_is_not_preapproved():
     assert template["strategy_backtest"]["rolling_oos_fold_drawdown_controls"] is False
     assert template["strategy_backtest"]["parameter_sensitivity_and_holdout_stability_controls"] is False
     assert template["strategy_backtest"]["regime_stress_and_liquidity_shock_controls"] is False
+    assert template["strategy_backtest"]["fee_slippage_spread_stress_sensitivity_controls"] is False
+    assert template["strategy_backtest"]["data_vendor_reconciliation_and_missingness_controls"] is False
+    assert template["strategy_backtest"]["tail_loss_time_underwater_and_recovery_controls"] is False
+    assert template["strategy_backtest"]["portfolio_correlation_and_aggregate_risk_budget_controls"] is False
     assert template["strategy_backtest"]["net_return_after_costs_controls"] is False
     assert template["strategy_backtest"]["transaction_cost_slippage_lot_size_and_suspension_model_included"] is False
     assert template["platform_dry_run_order_preview"]["liquidity_cap_verified"] is False
@@ -385,6 +395,17 @@ def test_validate_runtime_live_enablement_evidence_rejects_drawdown_above_profil
 
     assert result["live_enablement_allowed"] is False
     assert any("max_drawdown exceeds" in error for error in result["errors"])
+
+
+def test_validate_runtime_live_enablement_evidence_rejects_oos_fold_drawdown_above_profile_limit():
+    payload = _evidence(
+        strategy_backtest={**_evidence()["strategy_backtest"], "rolling_oos_fold_max_drawdown": -0.18}
+    )
+
+    result = validate_runtime_live_enablement_evidence(payload)
+
+    assert result["live_enablement_allowed"] is False
+    assert any("rolling_oos_fold_max_drawdown exceeds" in error for error in result["errors"])
 
 
 def test_validate_runtime_live_enablement_evidence_rejects_excess_turnover():

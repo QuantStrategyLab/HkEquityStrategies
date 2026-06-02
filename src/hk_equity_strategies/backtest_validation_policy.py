@@ -21,9 +21,13 @@ REQUIRED_BACKTEST_VALIDATION_BOOLEAN_FIELDS: tuple[str, ...] = (
     "multiple_period_robustness_checked",
     "regime_stress_and_liquidity_shock_controls",
     "transaction_cost_slippage_lot_size_and_suspension_model_included",
+    "fee_slippage_spread_stress_sensitivity_controls",
     "net_return_after_costs_controls",
+    "data_vendor_reconciliation_and_missingness_controls",
     "corporate_action_delisting_and_stale_price_controls",
     "cash_leverage_short_borrow_and_margin_controls",
+    "tail_loss_time_underwater_and_recovery_controls",
+    "portfolio_correlation_and_aggregate_risk_budget_controls",
 )
 
 REQUIRED_BACKTEST_RISK_CONSTRAINTS: tuple[str, ...] = (
@@ -37,6 +41,10 @@ REQUIRED_BACKTEST_RISK_CONSTRAINTS: tuple[str, ...] = (
     "adv_capacity_spread_board_lot_and_odd_lot_limits",
     "suspension_stale_quote_vcm_cas_and_market_session_controls",
     "hk_fee_levy_stamp_duty_or_etf_exemption_slippage_model",
+    "fee_slippage_spread_sensitivity_stays_profitable",
+    "worst_month_or_worst_rebalance_loss_within_profile_threshold",
+    "time_underwater_and_drawdown_recovery_within_profile_threshold",
+    "cross_strategy_correlation_and_aggregate_drawdown_budget_limits",
     "drawdown_tripwire_kill_switch_and_staged_rollout_limits",
 )
 
@@ -51,6 +59,9 @@ REQUIRED_BACKTEST_VALIDATION_METRICS: tuple[str, ...] = (
     "rolling_oos_fold_max_drawdown",
     "net_annual_return_after_costs",
     "worst_month_or_worst_rebalance_loss",
+    "max_time_underwater_days",
+    "fee_slippage_stress_excess_return",
+    "correlation_to_existing_live_hk_profiles",
     "parameter_sensitivity_summary",
     "capacity_at_target_aum",
 )
@@ -66,6 +77,9 @@ BACKTEST_VALIDATION_REJECT_CRITERIA: tuple[str, ...] = (
     "gross_return_only_backtest_without_net_cost_validation",
     "rolling_or_oos_fold_drawdown_above_30_percent",
     "insufficient_parameter_sensitivity_or_holdout_stability",
+    "fee_slippage_spread_stress_turns_excess_return_non_positive",
+    "time_underwater_or_worst_rebalance_loss_exceeds_profile_limit",
+    "high_correlation_to_existing_live_profiles_without_aggregate_risk_budget",
     "hidden_leverage_or_short_exposure_without_borrow_margin_and_tick_rule_controls",
     "unmodeled_corporate_actions_suspensions_delistings_or_stale_prices",
 )
@@ -88,6 +102,7 @@ def build_backtest_validation_policy() -> dict[str, Any]:
             "Evidence must prove point-in-time inputs, no look-ahead or survivorship bias, pre-registered and small "
             "parameter searches, per-fold drawdown <= 30%, net-of-cost returns, HK cost/slippage/lot-size/suspension "
             "handling, corporate-action / stale-price handling, benchmark alignment, leverage/shorting feasibility, capacity, "
+            "fee/slippage stress, tail loss and time-under-water recovery, cross-strategy correlation, aggregate risk budget, "
             "regime stress, and robustness across multiple periods."
         ),
     }
