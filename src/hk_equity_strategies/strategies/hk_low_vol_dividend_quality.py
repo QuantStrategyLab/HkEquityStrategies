@@ -471,6 +471,9 @@ def compute_signals(
     kwargs.pop("translator", None)
     kwargs.pop("signal_text_fn", None)
     kwargs.pop("execution_cash_reserve_ratio", None)
+    kwargs.pop("run_as_of", None)
+    kwargs.pop("signal_effective_after_trading_days", None)
+    kwargs.pop("runtime_execution_window_trading_days", None)
     managed_symbols = extract_managed_symbols(factor_snapshot, safe_haven=safe_haven)
     weights, ranked, metadata = build_target_weights(
         factor_snapshot,
