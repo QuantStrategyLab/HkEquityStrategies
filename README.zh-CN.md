@@ -111,6 +111,12 @@ python scripts/smoke_hk_global_etf_tactical_rotation_dry_run.py --json
 - 行为改动尽量小，并附上测试或可复现证据命令。
 - 没有通过文档化 evidence gate 前，不要把研究 profile 提升到 live runtime settings。
 
+## 社区和安全
+
+- 贡献前请阅读 [CONTRIBUTING.md](CONTRIBUTING.md)，确认 PR 范围、本地校验和文档要求。
+- 讨论、issue 和 review 请遵守 [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)。
+- 涉及密钥、自动化、券商/交易所或云资源的漏洞请按 [SECURITY.md](SECURITY.md) 私密报告；不要为 secret 或实盘风险开公开 issue。
+
 ## 许可证
 
 详见 [LICENSE](LICENSE)。
