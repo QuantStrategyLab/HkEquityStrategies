@@ -3,7 +3,7 @@
 
 ## 中文摘要
 
-- 用途：本文档记录 `hk_high_dividend_low_vol_trend` 的研究回测、参数和上线边界。
+- 用途：本文档记录 `hk_dividend_gold_defensive_rotation` 的研究回测、参数和上线边界。
 - 主要覆盖：`Scope`、`Data and methodology`、`Selected version`、`Backtest results`、`Decision`。
 - 阅读顺序：先看策略边界和输入，再看回测指标和 runtime enablement 边界。
 - 风险提示：涉及实盘、密钥、权限、Cloud Run、交易所或券商 API 的变更，必须先在测试环境或 dry-run 验证；不要只凭示例直接修改生产。
@@ -12,7 +12,7 @@
 ## Scope
 
 This research evaluates a simple non-snapshot `hk_equity` candidate:
-`hk_high_dividend_low_vol_trend`.
+`hk_dividend_gold_defensive_rotation`.
 
 The strategy rotates between two HK-listed defensive sleeves:
 
@@ -72,7 +72,7 @@ Signal summary:
 
 ## Backtest results
 
-Strategy metrics from `scripts/research_hk_high_dividend_low_vol_trend_backtest.py`:
+Strategy metrics from `scripts/research_hk_dividend_gold_defensive_rotation_backtest.py`:
 
 | Period | Annualized return | Max drawdown | Total return |
 | --- | ---: | ---: | ---: |
@@ -106,7 +106,7 @@ Other diagnostics:
 ## 中文研究结论
 
 - 12% 波动率目标版本全样本年化 17.16%，最大回撤 -8.06%，比未加波动率目标版本牺牲少量收益但明显降低回撤。
-- 训练期 2021-2023 保持正收益 3.18%，比 `hk_etf_regime_rotation` 的训练期表现更稳。
+- 训练期 2021-2023 保持正收益 3.18%，比已删除的 broad ETF baseline 训练期表现更稳。
 - 相比单持 `03110`，它显著降低最大回撤；相比单持黄金，它牺牲部分收益换取更低回撤。
 - 风险是样本仍短，且 2024-2026 对黄金和高股息都非常友好，不能直接推断长期稳定；runtime enablement 不等于直接实盘下单。
 
@@ -120,7 +120,7 @@ Reasons to promote:
 - The 12% volatility target reduced full-sample max drawdown from roughly -11.28% to -8.06%.
 - Turnover is low enough for HK's higher fee/spread environment.
 - The implementation uses the same direct `market_history` and weight-target contract as existing non-snapshot HK runtime profiles.
-- The two-ETF universe is operationally simpler than the broader `hk_etf_regime_rotation` candidate.
+- The two-ETF universe is operationally simpler than the removed broader ETF baseline.
 
 Risks that still require platform validation:
 

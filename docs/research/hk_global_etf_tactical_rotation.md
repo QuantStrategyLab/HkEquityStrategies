@@ -13,7 +13,7 @@
 
 This note evaluates a Hong Kong-listed version of a global ETF rotation strategy. The goal is not to trade US ETFs directly, but to use ETFs listed and tradable on HKEX while still getting exposure to overseas / cross-asset regimes.
 
-This research is implemented as `hk_listed_global_etf_rotation` and is now marked `runtime_enabled` at the strategy-package level. Platform runtimes may select the profile through Cloud Run `RUNTIME_TARGET_JSON` / `STRATEGY_PROFILE`; dry-run versus live execution is controlled by platform environment variables and broker/account permissions.
+This research is implemented as `hk_global_etf_tactical_rotation` and is now marked `runtime_enabled` at the strategy-package level. Platform runtimes may select the profile through Cloud Run `RUNTIME_TARGET_JSON` / `STRATEGY_PROFILE`; dry-run versus live execution is controlled by platform environment variables and broker/account permissions.
 
 ## ETF universe tested
 
@@ -66,7 +66,7 @@ Reference pages:
 ## Methodology
 
 - Price source: Yahoo Finance adjusted daily close via `yfinance`.
-- Backtest script: `scripts/research_hk_listed_global_etf_rotation_backtest.py`.
+- Backtest script: `scripts/research_hk_global_etf_tactical_rotation_backtest.py`.
 - Sample used for scoring: `2021-09-01` to `2026-05-29`, after a 252 trading-day warmup.
 - Cost assumption: 10 bps per 100% turnover.
 - Split discipline:
@@ -103,7 +103,7 @@ Signal summary:
 
 ## Backtest results
 
-Strategy metrics from `scripts/research_hk_listed_global_etf_rotation_backtest.py`:
+Strategy metrics from `scripts/research_hk_global_etf_tactical_rotation_backtest.py`:
 
 | Period | Annualized return | Max drawdown | Total return |
 | --- | ---: | ---: | ---: |
@@ -141,14 +141,14 @@ Other diagnostics:
 | Average daily turnover | 1.81% |
 | Latest target weights on 2026-05-29 | `02834`: 35.43%, `03110`: 54.19% |
 
-## Comparison with current `hk_etf_regime_rotation`
+## Comparison with the removed broad ETF baseline
 
 Current HK/China/gold/high-dividend ETF basket result:
 
 | Strategy | Annualized return | Max drawdown | Train return | OOS return |
 | --- | ---: | ---: | ---: | ---: |
-| Existing `hk_etf_regime_rotation` | 13.55% | -21.56% | -7.24% | 38.18% |
-| `hk_listed_global_etf_rotation` | 18.84% | -20.51% | 3.69% | 35.62% |
+| Removed broad six-ETF baseline | 13.55% | -21.56% | -7.24% | 38.18% |
+| `hk_global_etf_tactical_rotation` | 18.84% | -20.51% | 3.69% | 35.62% |
 
 Interpretation:
 
@@ -159,14 +159,14 @@ Interpretation:
 
 ## Decision
 
-Promote `hk_listed_global_etf_rotation` to `runtime_enabled`.
+Promote `hk_global_etf_tactical_rotation` to `runtime_enabled`.
 
 Recommended status: runtime-enabled in code and deployable through platform Cloud Run runtime configuration.
 
 Reasons:
 
 1. The selected volatility-targeted version keeps full-sample and train max drawdown below 30%.
-2. It improves full-sample annualized return versus the existing HK ETF regime rotation while keeping turnover low.
+2. It improves full-sample annualized return versus the removed broad ETF baseline while keeping turnover low.
 3. Several important global exposures are still either too new (`03195`) or need data cleaning (`03010`).
 4. Broker tradability, ETF spread, lot size, derivative ETF suitability, currency line selection, stamp-duty exemption, official product documents, underlying index/reference-asset sources, NAV/iNAV, tracking error/difference, market-maker/liquidity-provider evidence, distribution policy, and creation/redemption currency must be checked per symbol before any production rollout.
 
@@ -201,4 +201,4 @@ prove product-level evidence for each sleeve:
   and explicit operator suitability review. If any of these fail, remove the
   ETF via universe override and rerun the backtest/readiness pack.
 - `02840` and `03110`: reuse the high-dividend/gold product checks from
-  `hk_high_dividend_low_vol_trend`.
+  `hk_dividend_gold_defensive_rotation`.

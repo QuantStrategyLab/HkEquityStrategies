@@ -1,6 +1,6 @@
 # HK Low-Volatility Dividend Quality live-enable runbook
 
-This runbook is the operational gate for making `hk_low_vol_dividend_quality` truly live-enable capable. The strategy is runtime-enabled in the HK strategy package, but real order submission must remain blocked until every evidence gate below passes.
+This runbook is the operational gate for making `hk_low_vol_dividend_quality_snapshot` truly live-enable capable. The strategy is runtime-enabled in the HK strategy package, but real order submission must remain blocked until every evidence gate below passes.
 
 ## Repository merge order
 
@@ -13,10 +13,10 @@ Do not remove platform dry-run mode only because the package PRs merged.
 
 ## Runtime inputs
 
-`hk_low_vol_dividend_quality` is snapshot-backed and requires these runtime artifacts:
+`hk_low_vol_dividend_quality_snapshot` is snapshot-backed and requires these runtime artifacts:
 
-- `hk_low_vol_dividend_quality_factor_snapshot_latest.csv`
-- `hk_low_vol_dividend_quality_factor_snapshot_latest.csv.manifest.json`
+- `hk_low_vol_dividend_quality_snapshot_factor_snapshot_latest.csv`
+- `hk_low_vol_dividend_quality_snapshot_factor_snapshot_latest.csv.manifest.json`
 - point-in-time lineage / artifact-pack validation evidence from `HkEquitySnapshotPipelines`
 
 Required platform env placeholders before real artifact publication:
@@ -40,8 +40,8 @@ After artifact publication, replace placeholders with stable `gs://`, `s3://`, o
 Render readiness for both platforms:
 
 ```bash
-python scripts/print_hk_runtime_readiness.py --profile hk_low_vol_dividend_quality --platform longbridge --json
-python scripts/print_hk_runtime_readiness.py --profile hk_low_vol_dividend_quality --platform ibkr --json
+python scripts/print_hk_runtime_readiness.py --profile hk_low_vol_dividend_quality_snapshot --platform longbridge --json
+python scripts/print_hk_runtime_readiness.py --profile hk_low_vol_dividend_quality_snapshot --platform ibkr --json
 ```
 
 Generate the evidence template:
@@ -49,13 +49,13 @@ Generate the evidence template:
 ```bash
 python scripts/validate_hk_runtime_live_enablement.py \
   --print-template \
-  --profile hk_low_vol_dividend_quality \
+  --profile hk_low_vol_dividend_quality_snapshot \
   --platform longbridge \
   --json > live-enable-evidence.longbridge.json
 
 python scripts/validate_hk_runtime_live_enablement.py \
   --print-template \
-  --profile hk_low_vol_dividend_quality \
+  --profile hk_low_vol_dividend_quality_snapshot \
   --platform ibkr \
   --json > live-enable-evidence.ibkr.json
 ```
@@ -103,7 +103,7 @@ LongBridge:
 ```bash
 cd ../LongBridgePlatform
 .venv/bin/python scripts/print_strategy_switch_env_plan.py \
-  --profile hk_low_vol_dividend_quality \
+  --profile hk_low_vol_dividend_quality_snapshot \
   --account-region HK \
   --dry-run-only \
   --json
@@ -114,7 +114,7 @@ IBKR:
 ```bash
 cd ../InteractiveBrokersPlatform
 .venv/bin/python scripts/print_strategy_switch_env_plan.py \
-  --profile hk_low_vol_dividend_quality \
+  --profile hk_low_vol_dividend_quality_snapshot \
   --dry-run-only \
   --deployment-selector hk-verify \
   --account-scope HK \
@@ -127,7 +127,7 @@ Both commands must show:
 - `enabled=true`
 - `input_mode=feature_snapshot`
 - required feature snapshot path and manifest path
-- factor snapshot filename hints for `hk_low_vol_dividend_quality_factor_snapshot_latest.csv`
+- factor snapshot filename hints for `hk_low_vol_dividend_quality_snapshot_factor_snapshot_latest.csv`
 
 ## Final dry-run removal gate
 

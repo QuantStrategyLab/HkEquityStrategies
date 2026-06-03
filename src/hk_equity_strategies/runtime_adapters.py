@@ -8,16 +8,16 @@ from quant_platform_kit.strategy_contracts import (
 )
 
 from hk_equity_strategies.catalog import (
-    HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE,
-    HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE,
-    HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE,
+    HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE,
+    HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
+    HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE,
     get_strategy_definition,
     get_strategy_definitions,
     resolve_canonical_profile,
 )
-from hk_equity_strategies.strategies import hk_high_dividend_low_vol_trend as high_dividend_strategy
-from hk_equity_strategies.strategies import hk_listed_global_etf_rotation as global_etf_strategy
-from hk_equity_strategies.strategies import hk_low_vol_dividend_quality as low_vol_dividend_strategy
+from hk_equity_strategies.strategies import hk_dividend_gold_defensive_rotation as high_dividend_strategy
+from hk_equity_strategies.strategies import hk_global_etf_tactical_rotation as global_etf_strategy
+from hk_equity_strategies.strategies import hk_low_vol_dividend_quality_snapshot as low_vol_dividend_strategy
 
 IBKR_PLATFORM = "ibkr"
 LONGBRIDGE_PLATFORM = "longbridge"
@@ -29,15 +29,15 @@ PLATFORM_NATIVE_TARGET_MODES: dict[str, str] = {
 }
 
 BASE_RUNTIME_ADAPTERS: dict[str, StrategyRuntimeAdapter] = {
-    HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE: StrategyRuntimeAdapter(
+    HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE: StrategyRuntimeAdapter(
         status_icon=global_etf_strategy.STATUS_ICON,
         managed_symbols_extractor=global_etf_strategy.extract_managed_symbols,
     ),
-    HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE: StrategyRuntimeAdapter(
+    HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE: StrategyRuntimeAdapter(
         status_icon=high_dividend_strategy.STATUS_ICON,
         managed_symbols_extractor=high_dividend_strategy.extract_managed_symbols,
     ),
-    HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE: StrategyRuntimeAdapter(
+    HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE: StrategyRuntimeAdapter(
         status_icon=low_vol_dividend_strategy.STATUS_ICON,
         available_inputs=frozenset({"feature_snapshot"}),
         required_feature_columns=low_vol_dividend_strategy.REQUIRED_FACTOR_COLUMNS,

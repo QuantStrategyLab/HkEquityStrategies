@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from quant_platform_kit.strategy_contracts import StrategyManifest
 
-from hk_equity_strategies.strategies import hk_high_dividend_low_vol_trend as high_dividend_strategy
-from hk_equity_strategies.strategies import hk_listed_global_etf_rotation as global_etf_strategy
-from hk_equity_strategies.strategies import hk_low_vol_dividend_quality as low_vol_dividend_strategy
+from hk_equity_strategies.strategies import hk_dividend_gold_defensive_rotation as high_dividend_strategy
+from hk_equity_strategies.strategies import hk_global_etf_tactical_rotation as global_etf_strategy
+from hk_equity_strategies.strategies import hk_low_vol_dividend_quality_snapshot as low_vol_dividend_strategy
 
-HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE = global_etf_strategy.PROFILE_NAME
-HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE = high_dividend_strategy.PROFILE_NAME
-HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE = low_vol_dividend_strategy.PROFILE_NAME
+HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE = global_etf_strategy.PROFILE_NAME
+HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE = high_dividend_strategy.PROFILE_NAME
+HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE = low_vol_dividend_strategy.PROFILE_NAME
 
 
 def _manifest(
@@ -31,14 +31,14 @@ def _manifest(
     )
 
 
-hk_listed_global_etf_rotation_manifest = _manifest(
-    profile=HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE,
-    display_name="HK-listed Global ETF Rotation",
+hk_global_etf_tactical_rotation_manifest = _manifest(
+    profile=HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
+    display_name="HK Global ETF Tactical Rotation",
     description=(
         "Monthly volatility-targeted rotation across HK-listed local, global equity, "
         "gold, and crude-oil ETFs using daily market history."
     ),
-    aliases=("hk_global_etf_rotation", "hk_listed_global_rotation"),
+    aliases=(),
     required_inputs=frozenset({"market_history"}),
     default_config={
         "universe_symbols": global_etf_strategy.DEFAULT_UNIVERSE_SYMBOLS,
@@ -56,14 +56,14 @@ hk_listed_global_etf_rotation_manifest = _manifest(
     },
 )
 
-hk_high_dividend_low_vol_trend_manifest = _manifest(
-    profile=HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE,
-    display_name="HK High Dividend Low-Volatility Trend",
+hk_dividend_gold_defensive_rotation_manifest = _manifest(
+    profile=HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE,
+    display_name="HK Dividend-Gold Defensive Rotation",
     description=(
         "Monthly trend rotation between HK-listed high-dividend and gold ETFs "
         "with a 12% annual volatility target."
     ),
-    aliases=("hk_high_dividend_trend", "hk_hd_gold_trend", "hk_high_dividend_low_vol"),
+    aliases=(),
     required_inputs=frozenset({"market_history"}),
     default_config={
         "universe_symbols": high_dividend_strategy.DEFAULT_UNIVERSE_SYMBOLS,
@@ -81,14 +81,14 @@ hk_high_dividend_low_vol_trend_manifest = _manifest(
     },
 )
 
-hk_low_vol_dividend_quality_manifest = _manifest(
-    profile=HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE,
-    display_name="HK Low-Volatility Dividend Quality",
+hk_low_vol_dividend_quality_snapshot_manifest = _manifest(
+    profile=HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE,
+    display_name="HK Low-Vol Dividend Quality Snapshot",
     description=(
         "Snapshot-backed monthly single-name HK equity selector using low-volatility, "
         "sustainable dividend, quality, and trend controls."
     ),
-    aliases=("hk_dividend_quality", "hk_low_vol_dividend", "hk_low_vol_dividend_snapshot"),
+    aliases=(),
     required_inputs=frozenset({"feature_snapshot"}),
     default_config={
         "safe_haven": low_vol_dividend_strategy.SAFE_HAVEN,
@@ -115,9 +115,9 @@ hk_low_vol_dividend_quality_manifest = _manifest(
 )
 
 MANIFESTS = {
-    hk_listed_global_etf_rotation_manifest.profile: hk_listed_global_etf_rotation_manifest,
-    hk_high_dividend_low_vol_trend_manifest.profile: hk_high_dividend_low_vol_trend_manifest,
-    hk_low_vol_dividend_quality_manifest.profile: hk_low_vol_dividend_quality_manifest,
+    hk_global_etf_tactical_rotation_manifest.profile: hk_global_etf_tactical_rotation_manifest,
+    hk_dividend_gold_defensive_rotation_manifest.profile: hk_dividend_gold_defensive_rotation_manifest,
+    hk_low_vol_dividend_quality_snapshot_manifest.profile: hk_low_vol_dividend_quality_snapshot_manifest,
 }
 
 MANIFEST_ALIASES = {
@@ -133,12 +133,12 @@ def get_strategy_manifest(profile: str) -> StrategyManifest:
 
 
 __all__ = [
-    "HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE",
-    "HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE",
-    "HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE",
+    "HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE",
+    "HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE",
+    "HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE",
     "MANIFESTS",
     "get_strategy_manifest",
-    "hk_high_dividend_low_vol_trend_manifest",
-    "hk_listed_global_etf_rotation_manifest",
-    "hk_low_vol_dividend_quality_manifest",
+    "hk_dividend_gold_defensive_rotation_manifest",
+    "hk_global_etf_tactical_rotation_manifest",
+    "hk_low_vol_dividend_quality_snapshot_manifest",
 ]

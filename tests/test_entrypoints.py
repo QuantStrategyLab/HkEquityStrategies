@@ -7,21 +7,21 @@ from quant_platform_kit.strategy_contracts import StrategyContext
 
 from hk_equity_strategies import get_strategy_entrypoint
 from hk_equity_strategies.catalog import (
-    HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE,
-    HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE,
-    HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE,
+    HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE,
+    HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
+    HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE,
 )
-from hk_equity_strategies.strategies.hk_low_vol_dividend_quality import SAFE_HAVEN
-from hk_equity_strategies.strategies.hk_high_dividend_low_vol_trend import (
+from hk_equity_strategies.strategies.hk_low_vol_dividend_quality_snapshot import SAFE_HAVEN
+from hk_equity_strategies.strategies.hk_dividend_gold_defensive_rotation import (
     DEFAULT_UNIVERSE_SYMBOLS as HIGH_DIVIDEND_UNIVERSE_SYMBOLS,
     HIGH_DIVIDEND_ETF_SYMBOL,
 )
-from hk_equity_strategies.strategies.hk_listed_global_etf_rotation import (
+from hk_equity_strategies.strategies.hk_global_etf_tactical_rotation import (
     DEFAULT_UNIVERSE_SYMBOLS as GLOBAL_ETF_UNIVERSE_SYMBOLS,
     HIGH_DIVIDEND_ETF_SYMBOL as GLOBAL_HIGH_DIVIDEND_ETF_SYMBOL,
     NASDAQ100_ETF_SYMBOL,
 )
-from test_hk_low_vol_dividend_quality import sample_factor_snapshot
+from test_hk_low_vol_dividend_quality_snapshot import sample_factor_snapshot
 
 
 def _global_etf_rotation_history() -> pd.DataFrame:
@@ -63,7 +63,7 @@ def _high_dividend_low_vol_history() -> pd.DataFrame:
 
 
 def test_global_etf_rotation_entrypoint_returns_volatility_targeted_weight_targets():
-    entrypoint = get_strategy_entrypoint(HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE)
+    entrypoint = get_strategy_entrypoint(HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE)
 
     decision = entrypoint.evaluate(
         StrategyContext(
@@ -82,7 +82,7 @@ def test_global_etf_rotation_entrypoint_returns_volatility_targeted_weight_targe
 
 
 def test_high_dividend_low_vol_trend_entrypoint_returns_volatility_targeted_weight_targets():
-    entrypoint = get_strategy_entrypoint(HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE)
+    entrypoint = get_strategy_entrypoint(HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE)
 
     decision = entrypoint.evaluate(
         StrategyContext(
@@ -100,7 +100,7 @@ def test_high_dividend_low_vol_trend_entrypoint_returns_volatility_targeted_weig
 
 
 def test_low_vol_dividend_quality_entrypoint_consumes_feature_snapshot():
-    entrypoint = get_strategy_entrypoint(HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE)
+    entrypoint = get_strategy_entrypoint(HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE)
 
     decision = entrypoint.evaluate(
         StrategyContext(
@@ -115,4 +115,4 @@ def test_low_vol_dividend_quality_entrypoint_consumes_feature_snapshot():
     assert sum(weights.values()) == pytest.approx(1.0)
     assert SAFE_HAVEN not in weights
     assert decision.diagnostics["signal_source"] == "factor_snapshot"
-    assert decision.diagnostics["snapshot_contract_version"] == "hk_low_vol_dividend_quality.factor_snapshot.v1"
+    assert decision.diagnostics["snapshot_contract_version"] == "hk_low_vol_dividend_quality_snapshot.factor_snapshot.v1"

@@ -19,9 +19,9 @@ for candidate in (SRC, QPK_SRC):
 from quant_platform_kit.strategy_contracts import StrategyContext  # noqa: E402
 
 from hk_equity_strategies import get_strategy_entrypoint  # noqa: E402
-from hk_equity_strategies.catalog import HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE  # noqa: E402
+from hk_equity_strategies.catalog import HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE  # noqa: E402
 from hk_equity_strategies.runtime_readiness import build_hk_runtime_readiness  # noqa: E402
-from hk_equity_strategies.strategies.hk_listed_global_etf_rotation import (  # noqa: E402
+from hk_equity_strategies.strategies.hk_global_etf_tactical_rotation import (  # noqa: E402
     DEFAULT_UNIVERSE_SYMBOLS,
     HIGH_DIVIDEND_ETF_SYMBOL,
     NASDAQ100_ETF_SYMBOL,
@@ -53,7 +53,7 @@ def build_synthetic_market_history() -> pd.DataFrame:
 
 
 def build_smoke_report() -> dict[str, object]:
-    entrypoint = get_strategy_entrypoint(HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE)
+    entrypoint = get_strategy_entrypoint(HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE)
     decision = entrypoint.evaluate(
         StrategyContext(
             as_of=SYNTHETIC_AS_OF,
@@ -69,7 +69,7 @@ def build_smoke_report() -> dict[str, object]:
     gross_exposure = sum(target_weights.values())
     readiness = {
         platform: build_hk_runtime_readiness(
-            HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE,
+            HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
             platform_id=platform,
             dry_run_only=True,
         )
@@ -90,7 +90,7 @@ def build_smoke_report() -> dict[str, object]:
     status = "pass" if all(checks.values()) else "fail"
     return {
         "status": status,
-        "profile": HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE,
+        "profile": HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
         "as_of": SYNTHETIC_AS_OF,
         "target_weights": target_weights,
         "gross_exposure": gross_exposure,

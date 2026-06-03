@@ -1,6 +1,6 @@
 # 港股低波股息质量策略 live-enable 操作清单
 
-本文档用于把 `hk_low_vol_dividend_quality` 推进到真正可 live-enable 的状态。当前策略已经进入 HK 策略包 runtime catalog，但在所有证据门槛通过前，真实下单必须继续保持 dry-run。
+本文档用于把 `hk_low_vol_dividend_quality_snapshot` 推进到真正可 live-enable 的状态。当前策略已经进入 HK 策略包 runtime catalog，但在所有证据门槛通过前，真实下单必须继续保持 dry-run。
 
 ## 仓库合并顺序
 
@@ -13,10 +13,10 @@
 
 ## 运行时输入
 
-`hk_low_vol_dividend_quality` 是 snapshot-backed 策略，运行时必须提供：
+`hk_low_vol_dividend_quality_snapshot` 是 snapshot-backed 策略，运行时必须提供：
 
-- `hk_low_vol_dividend_quality_factor_snapshot_latest.csv`
-- `hk_low_vol_dividend_quality_factor_snapshot_latest.csv.manifest.json`
+- `hk_low_vol_dividend_quality_snapshot_factor_snapshot_latest.csv`
+- `hk_low_vol_dividend_quality_snapshot_factor_snapshot_latest.csv.manifest.json`
 - `HkEquitySnapshotPipelines` 产出的 point-in-time lineage / artifact-pack validation 证据
 
 真实 artifact 发布前，平台环境变量应保持占位和 dry-run：
@@ -40,8 +40,8 @@ artifact 发布后，只能使用稳定的 `gs://`、`s3://` 或 `https://` URI�
 渲染两个平台的 readiness：
 
 ```bash
-python scripts/print_hk_runtime_readiness.py --profile hk_low_vol_dividend_quality --platform longbridge --json
-python scripts/print_hk_runtime_readiness.py --profile hk_low_vol_dividend_quality --platform ibkr --json
+python scripts/print_hk_runtime_readiness.py --profile hk_low_vol_dividend_quality_snapshot --platform longbridge --json
+python scripts/print_hk_runtime_readiness.py --profile hk_low_vol_dividend_quality_snapshot --platform ibkr --json
 ```
 
 生成 evidence template：
@@ -49,13 +49,13 @@ python scripts/print_hk_runtime_readiness.py --profile hk_low_vol_dividend_quali
 ```bash
 python scripts/validate_hk_runtime_live_enablement.py \
   --print-template \
-  --profile hk_low_vol_dividend_quality \
+  --profile hk_low_vol_dividend_quality_snapshot \
   --platform longbridge \
   --json > live-enable-evidence.longbridge.json
 
 python scripts/validate_hk_runtime_live_enablement.py \
   --print-template \
-  --profile hk_low_vol_dividend_quality \
+  --profile hk_low_vol_dividend_quality_snapshot \
   --platform ibkr \
   --json > live-enable-evidence.ibkr.json
 ```
@@ -103,7 +103,7 @@ LongBridge：
 ```bash
 cd ../LongBridgePlatform
 .venv/bin/python scripts/print_strategy_switch_env_plan.py \
-  --profile hk_low_vol_dividend_quality \
+  --profile hk_low_vol_dividend_quality_snapshot \
   --account-region HK \
   --dry-run-only \
   --json
@@ -114,7 +114,7 @@ IBKR：
 ```bash
 cd ../InteractiveBrokersPlatform
 .venv/bin/python scripts/print_strategy_switch_env_plan.py \
-  --profile hk_low_vol_dividend_quality \
+  --profile hk_low_vol_dividend_quality_snapshot \
   --dry-run-only \
   --deployment-selector hk-verify \
   --account-scope HK \
@@ -127,7 +127,7 @@ cd ../InteractiveBrokersPlatform
 - `enabled=true`
 - `input_mode=feature_snapshot`
 - feature snapshot path 和 manifest path 必填
-- artifact hint 指向 `hk_low_vol_dividend_quality_factor_snapshot_latest.csv`
+- artifact hint 指向 `hk_low_vol_dividend_quality_snapshot_factor_snapshot_latest.csv`
 
 ## 最终 dry-run removal gate
 

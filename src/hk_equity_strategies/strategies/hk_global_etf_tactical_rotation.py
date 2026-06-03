@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from hk_equity_strategies.strategies import hk_etf_regime_rotation as base
+from hk_equity_strategies.strategies import etf_rotation_core as base
 
 HK_EQUITY_DOMAIN = base.HK_EQUITY_DOMAIN
 SIGNAL_SOURCE = base.SIGNAL_SOURCE
 STATUS_ICON = base.STATUS_ICON
-PROFILE_NAME = "hk_listed_global_etf_rotation"
+PROFILE_NAME = "hk_global_etf_tactical_rotation"
 
 HSI_ETF_SYMBOL = base.HSI_ETF_SYMBOL
 A50_ETF_SYMBOL = base.A50_ETF_SYMBOL
