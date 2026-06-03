@@ -452,6 +452,7 @@ def extract_managed_symbols(
     factor_snapshot: Any,
     *,
     safe_haven: str = SAFE_HAVEN,
+    **_kwargs: Any,
 ) -> tuple[str, ...]:
     frame = _to_frame(factor_snapshot)
     safe_haven = normalize_symbol(safe_haven)
