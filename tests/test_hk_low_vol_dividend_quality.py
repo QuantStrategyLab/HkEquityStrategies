@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 
 import pandas as pd
 import pytest
@@ -97,6 +98,19 @@ def test_compute_signals_accepts_feature_snapshot_guard_result_shape():
     assert metadata["signal_source"] == "factor_snapshot"
     assert metadata["snapshot_contract_version"] == strategy.SNAPSHOT_CONTRACT_VERSION
     assert strategy.SAFE_HAVEN in metadata["managed_symbols"]
+
+
+def test_compute_signals_ignores_runtime_only_config_keys():
+    weights, _signal_desc, _has_cash_residual, _status_desc, metadata = strategy.compute_signals(
+        _SnapshotWrapper(sample_factor_snapshot()),
+        current_holdings={"00104"},
+        run_as_of=datetime(2026, 6, 3),
+        signal_effective_after_trading_days=1,
+        runtime_execution_window_trading_days=1,
+    )
+
+    assert weights
+    assert metadata["signal_source"] == "factor_snapshot"
 
 
 def test_low_vol_dividend_quality_rejects_incomplete_snapshot():
