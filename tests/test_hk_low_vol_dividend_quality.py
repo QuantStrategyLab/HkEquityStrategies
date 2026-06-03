@@ -113,6 +113,17 @@ def test_compute_signals_ignores_runtime_only_config_keys():
     assert metadata["signal_source"] == "factor_snapshot"
 
 
+def test_extract_managed_symbols_ignores_runtime_adapter_kwargs():
+    symbols = strategy.extract_managed_symbols(
+        _SnapshotWrapper(sample_factor_snapshot()),
+        benchmark_symbol="02800",
+        safe_haven=strategy.SAFE_HAVEN,
+    )
+
+    assert strategy.SAFE_HAVEN in symbols
+    assert "00100" in symbols
+
+
 def test_low_vol_dividend_quality_rejects_incomplete_snapshot():
     with pytest.raises(ValueError, match="factor_snapshot missing required columns"):
         strategy.build_target_weights(pd.DataFrame({"symbol": ["00001"]}))
