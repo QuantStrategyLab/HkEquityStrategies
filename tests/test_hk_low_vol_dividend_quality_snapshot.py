@@ -6,7 +6,7 @@ from datetime import datetime
 import pandas as pd
 import pytest
 
-from hk_equity_strategies.strategies import hk_low_vol_dividend_quality as strategy
+from hk_equity_strategies.strategies import hk_low_vol_dividend_quality_snapshot as strategy
 
 
 @dataclass(frozen=True)

@@ -15,59 +15,39 @@ from quant_platform_kit.common.strategies import (
     normalize_profile_name as qpk_normalize_profile_name,
 )
 
-from hk_equity_strategies.strategies import hk_high_dividend_low_vol_trend as high_dividend_strategy
-from hk_equity_strategies.strategies import hk_listed_global_etf_rotation as global_etf_strategy
-from hk_equity_strategies.strategies import hk_low_vol_dividend_quality as low_vol_dividend_strategy
+from hk_equity_strategies.strategies import hk_dividend_gold_defensive_rotation as high_dividend_strategy
+from hk_equity_strategies.strategies import hk_global_etf_tactical_rotation as global_etf_strategy
+from hk_equity_strategies.strategies import hk_low_vol_dividend_quality_snapshot as low_vol_dividend_strategy
 
 HK_EQUITY_DOMAIN = global_etf_strategy.HK_EQUITY_DOMAIN
-HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE = global_etf_strategy.PROFILE_NAME
-HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE = high_dividend_strategy.PROFILE_NAME
-HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE = low_vol_dividend_strategy.PROFILE_NAME
+HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE = global_etf_strategy.PROFILE_NAME
+HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE = high_dividend_strategy.PROFILE_NAME
+HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE = low_vol_dividend_strategy.PROFILE_NAME
 
 HK_DIRECT_MARKET_HISTORY_PROFILES = frozenset(
     {
-        HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE,
-        HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE,
+        HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
+        HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE,
     }
 )
-HK_SNAPSHOT_BACKED_PROFILES = frozenset({HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE})
-HK_EXTERNAL_SNAPSHOT_SCAFFOLD_PROFILES = frozenset(
-    {
-        "hk_ah_premium_relative_value",
-        "hk_blue_chip_leader_rotation",
-        "hk_central_soe_value_quality_select",
-        "hk_composite_factor_quality_value_momentum",
-        "hk_factor_mix_qvlm_risk_parity",
-        "hk_free_cash_flow_quality",
-        "hk_index_rebalance_event",
-        "hk_liquid_momentum_quality",
-        "hk_quality_growth_low_volatility",
-        "hk_residual_momentum_quality",
-        "hk_shareholder_yield_quality",
-        "hk_southbound_flow_momentum",
-    }
-)
-HK_RESEARCH_BACKTEST_ONLY_PROFILES = frozenset(
-    {
-        "hk_index_mean_reversion",
-        "hk_etf_regime_rotation",
-    }
-)
+HK_SNAPSHOT_BACKED_PROFILES = frozenset({HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE})
+HK_EXTERNAL_SNAPSHOT_SCAFFOLD_PROFILES = frozenset()
+HK_RESEARCH_BACKTEST_ONLY_PROFILES = frozenset()
 
 STRATEGY_PLATFORM_COMPATIBILITY: dict[str, frozenset[str]] = {
-    HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE: frozenset({"ibkr", "longbridge"}),
-    HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE: frozenset({"ibkr", "longbridge"}),
-    HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE: frozenset({"ibkr", "longbridge"}),
+    HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE: frozenset({"ibkr", "longbridge"}),
+    HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE: frozenset({"ibkr", "longbridge"}),
+    HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE: frozenset({"ibkr", "longbridge"}),
 }
 
 STRATEGY_REQUIRED_INPUTS: dict[str, frozenset[str]] = {
-    HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE: frozenset({"market_history"}),
-    HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE: frozenset({"market_history"}),
-    HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE: frozenset({"feature_snapshot"}),
+    HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE: frozenset({"market_history"}),
+    HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE: frozenset({"market_history"}),
+    HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE: frozenset({"feature_snapshot"}),
 }
 
 STRATEGY_DEFAULT_CONFIG: dict[str, dict[str, object]] = {
-    HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE: {
+    HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE: {
         "universe_symbols": global_etf_strategy.DEFAULT_UNIVERSE_SYMBOLS,
         "momentum_window_days": global_etf_strategy.DEFAULT_MOMENTUM_WINDOW_DAYS,
         "trend_window_days": global_etf_strategy.DEFAULT_TREND_WINDOW_DAYS,
@@ -81,7 +61,7 @@ STRATEGY_DEFAULT_CONFIG: dict[str, dict[str, object]] = {
         "min_history_days": global_etf_strategy.DEFAULT_MIN_HISTORY_DAYS,
         "execution_cash_reserve_ratio": global_etf_strategy.DEFAULT_EXECUTION_CASH_RESERVE_RATIO,
     },
-    HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE: {
+    HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE: {
         "universe_symbols": high_dividend_strategy.DEFAULT_UNIVERSE_SYMBOLS,
         "momentum_window_days": high_dividend_strategy.DEFAULT_MOMENTUM_WINDOW_DAYS,
         "trend_window_days": high_dividend_strategy.DEFAULT_TREND_WINDOW_DAYS,
@@ -95,7 +75,7 @@ STRATEGY_DEFAULT_CONFIG: dict[str, dict[str, object]] = {
         "min_history_days": high_dividend_strategy.DEFAULT_MIN_HISTORY_DAYS,
         "execution_cash_reserve_ratio": high_dividend_strategy.DEFAULT_EXECUTION_CASH_RESERVE_RATIO,
     },
-    HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE: {
+    HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE: {
         "safe_haven": low_vol_dividend_strategy.SAFE_HAVEN,
         "holdings_count": low_vol_dividend_strategy.DEFAULT_HOLDINGS_COUNT,
         "single_name_cap": low_vol_dividend_strategy.DEFAULT_SINGLE_NAME_CAP,
@@ -120,15 +100,15 @@ STRATEGY_DEFAULT_CONFIG: dict[str, dict[str, object]] = {
 }
 
 STRATEGY_ENTRYPOINT_ATTRIBUTES: dict[str, str] = {
-    HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE: "hk_listed_global_etf_rotation_entrypoint",
-    HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE: "hk_high_dividend_low_vol_trend_entrypoint",
-    HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE: "hk_low_vol_dividend_quality_entrypoint",
+    HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE: "hk_global_etf_tactical_rotation_entrypoint",
+    HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE: "hk_dividend_gold_defensive_rotation_entrypoint",
+    HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE: "hk_low_vol_dividend_quality_snapshot_entrypoint",
 }
 
 STRATEGY_TARGET_MODES: dict[str, str] = {
-    HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE: "weight",
-    HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE: "weight",
-    HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE: "weight",
+    HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE: "weight",
+    HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE: "weight",
+    HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE: "weight",
 }
 
 
@@ -161,60 +141,60 @@ def _build_strategy_definition(
 
 
 STRATEGY_DEFINITIONS: dict[str, StrategyDefinition] = {
-    HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE: _build_strategy_definition(
-        HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE,
+    HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE: _build_strategy_definition(
+        HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
         component_name="signal_logic",
-        module_path="hk_equity_strategies.strategies.hk_listed_global_etf_rotation",
+        module_path="hk_equity_strategies.strategies.hk_global_etf_tactical_rotation",
     ),
-    HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE: _build_strategy_definition(
-        HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE,
+    HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE: _build_strategy_definition(
+        HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE,
         component_name="signal_logic",
-        module_path="hk_equity_strategies.strategies.hk_high_dividend_low_vol_trend",
+        module_path="hk_equity_strategies.strategies.hk_dividend_gold_defensive_rotation",
     ),
-    HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE: _build_strategy_definition(
-        HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE,
+    HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE: _build_strategy_definition(
+        HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE,
         component_name="signal_logic",
-        module_path="hk_equity_strategies.strategies.hk_low_vol_dividend_quality",
+        module_path="hk_equity_strategies.strategies.hk_low_vol_dividend_quality_snapshot",
     ),
 }
 
 STRATEGY_METADATA: dict[str, StrategyMetadata] = {
-    HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE: StrategyMetadata(
-        canonical_profile=HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE,
-        display_name="HK-listed Global ETF Rotation",
+    HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE: StrategyMetadata(
+        canonical_profile=HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
+        display_name="HK Global ETF Tactical Rotation",
         description=(
             "Runtime-enabled volatility-targeted rotation across HK-listed local, global equity, "
             "gold, and crude-oil ETFs using daily market history."
         ),
-        aliases=("hk_global_etf_rotation", "hk_listed_global_rotation"),
+        aliases=(),
         cadence="monthly review",
         asset_scope="hk_listed_global_etfs",
         benchmark="02800",
         role="hk_non_snapshot_global_etf_rotation",
         status="runtime_enabled",
     ),
-    HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE: StrategyMetadata(
-        canonical_profile=HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE,
-        display_name="HK High Dividend Low-Volatility Trend",
+    HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE: StrategyMetadata(
+        canonical_profile=HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE,
+        display_name="HK Dividend-Gold Defensive Rotation",
         description=(
             "Runtime-enabled monthly trend rotation between HK-listed high-dividend and gold ETFs "
             "with a 12% annual volatility target."
         ),
-        aliases=("hk_high_dividend_trend", "hk_hd_gold_trend", "hk_high_dividend_low_vol"),
+        aliases=(),
         cadence="monthly review",
         asset_scope="hk_high_dividend_gold_etfs",
         benchmark="03110",
         role="hk_non_snapshot_high_dividend_low_vol_trend",
         status="runtime_enabled",
     ),
-    HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE: StrategyMetadata(
-        canonical_profile=HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE,
-        display_name="HK Low-Volatility Dividend Quality",
+    HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE: StrategyMetadata(
+        canonical_profile=HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE,
+        display_name="HK Low-Vol Dividend Quality Snapshot",
         description=(
             "Runtime-enabled snapshot-backed single-name HK equity selector using production factor snapshots "
             "from HkEquitySnapshotPipelines."
         ),
-        aliases=("hk_dividend_quality", "hk_low_vol_dividend", "hk_low_vol_dividend_snapshot"),
+        aliases=(),
         cadence="monthly review",
         asset_scope="hk_single_name_snapshot_factor",
         benchmark="02800",

@@ -8,9 +8,9 @@ DEFAULT_MAX_SINGLE_ORDER_ADV_FRACTION = 0.025
 DEFAULT_MAX_REBALANCE_ADV_FRACTION = 0.10
 
 MIN_MEDIAN_DAILY_TURNOVER_HKD_BY_PROFILE: dict[str, int] = {
-    "hk_listed_global_etf_rotation": 20_000_000,
-    "hk_high_dividend_low_vol_trend": 10_000_000,
-    "hk_low_vol_dividend_quality": 30_000_000,
+    "hk_global_etf_tactical_rotation": 20_000_000,
+    "hk_dividend_gold_defensive_rotation": 10_000_000,
+    "hk_low_vol_dividend_quality_snapshot": 30_000_000,
 }
 
 REQUIRED_EXECUTION_CAPACITY_FIELDS: tuple[str, ...] = (
@@ -47,13 +47,13 @@ def get_min_median_daily_turnover_hkd(profile: str) -> int:
 
 
 def get_required_execution_capacity_fields(profile: str) -> tuple[str, ...]:
-    if str(profile or "").strip() == "hk_low_vol_dividend_quality":
+    if str(profile or "").strip() == "hk_low_vol_dividend_quality_snapshot":
         return REQUIRED_EQUITY_EXECUTION_CAPACITY_FIELDS
     return REQUIRED_EXECUTION_CAPACITY_FIELDS
 
 
 def build_execution_capacity_policy(profile: str) -> dict[str, Any]:
-    is_equity_profile = str(profile or "").strip() == "hk_low_vol_dividend_quality"
+    is_equity_profile = str(profile or "").strip() == "hk_low_vol_dividend_quality_snapshot"
     return {
         "required": True,
         "min_adv_window_trading_days": DEFAULT_MIN_ADV_WINDOW_TRADING_DAYS,

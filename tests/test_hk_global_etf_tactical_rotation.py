@@ -3,7 +3,7 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
-from hk_equity_strategies.strategies.hk_listed_global_etf_rotation import (
+from hk_equity_strategies.strategies.hk_global_etf_tactical_rotation import (
     DEFAULT_TARGET_ANNUAL_VOLATILITY,
     DEFAULT_UNIVERSE_SYMBOLS,
     HIGH_DIVIDEND_ETF_SYMBOL,

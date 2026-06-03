@@ -6,59 +6,48 @@
 
 ## What this repository is
 
-`HkEquityStrategies` is the Hong Kong equity strategy package for QuantStrategyLab. It provides reusable strategy implementations, catalog metadata, runtime entrypoints, and readiness checks for HK-capable platform runtimes such as Interactive Brokers and LongBridge.
+`HkEquityStrategies` is the Hong Kong equity strategy package for QuantStrategyLab. It contains reusable strategy implementations, manifests, catalog metadata, runtime adapters, and live-enablement checks shared by HK-capable platform repositories.
 
 This repository is a strategy layer, not a broker or deployment layer. It does not store broker credentials, submit orders by itself, publish snapshot artifacts, or decide whether a profile is safe for live trading without external evidence.
 
-## Strategy profiles
+## Current runtime surface
+
+Canonical profile names were simplified in this branch. The old names are not kept as aliases, so platform repositories should reference the canonical names below through `STRATEGY_PROFILE` or `RUNTIME_TARGET_JSON`.
 
 ### Direct runtime strategies
 
-These profiles run from market-history inputs and do not require a separate feature-snapshot artifact before the strategy entrypoint can produce target weights.
+These profiles use platform-provided `market_history` and do not require a separate snapshot artifact before the strategy entrypoint can produce target weights.
 
-| Profile | Name | Input | Current role |
-| --- | --- | --- | --- |
-| `hk_high_dividend_low_vol_trend` | HK High Dividend Low-Volatility Trend | `market_history` | Runtime-enabled preferred HK ETF profile; dry-run and operator evidence are still required before live orders. |
-| `hk_listed_global_etf_rotation` | HK-listed Global ETF Rotation | `market_history` | Runtime-enabled secondary HK ETF profile with broader ETF exposure and product-review requirements. |
+| Profile | Name | Input | Benchmark | Current role |
+| --- | --- | --- | --- | --- |
+| `hk_dividend_gold_defensive_rotation` | HK Dividend-Gold Defensive Rotation | `market_history` | `03110` | Preferred HK ETF runtime profile by current risk-adjusted evidence. |
+| `hk_global_etf_tactical_rotation` | HK Global ETF Tactical Rotation | `market_history` | `02800` | Secondary HK ETF runtime profile with broader ETF exposure and heavier product checks. |
 
-### Snapshot-backed strategies
+### Snapshot-backed runtime strategy
 
-These profiles depend on validated artifacts from `HkEquitySnapshotPipelines`. The strategy package exposes the runtime entrypoint, but the snapshot repository owns the artifact contract, data lineage, and promotion evidence.
+The strategy package exposes one promoted snapshot-backed runtime entrypoint. `HkEquitySnapshotPipelines` owns the artifact contract, production data lineage, and promotion evidence.
 
-| Profile | Name | Input | Current role |
-| --- | --- | --- | --- |
-| `hk_low_vol_dividend_quality` | HK Low-Volatility Dividend Quality | `feature_snapshot` | Runtime-enabled at the strategy-package level; use dry-run only until artifact, broker, notification, and operator evidence pass. |
+| Profile | Name | Input | Benchmark | Current role |
+| --- | --- | --- | --- | --- |
+| `hk_low_vol_dividend_quality_snapshot` | HK Low-Vol Dividend Quality Snapshot | `feature_snapshot` + manifest | `02800` | Retained HK snapshot-backed runtime candidate; production point-in-time evidence is still required. |
 
-### Research-only and external scaffold profiles
+### Removed research profiles
 
-The following profiles are kept for research reproducibility or future review and should not be exposed as current configurable live profiles:
+Rejected prototypes are no longer part of the public catalog, manifests, entrypoints, runtime adapters, or snapshot contracts. Platform repositories should only expose profiles returned by `get_runtime_enabled_profiles()`.
 
-- `hk_index_mean_reversion`
-- `hk_etf_regime_rotation`
-- external snapshot scaffold names such as `hk_shareholder_yield_quality`, `hk_free_cash_flow_quality`, and other candidates tracked by `HkEquitySnapshotPipelines`
+See [`docs/research/hk_strategy_selection_20260603.md`](docs/research/hk_strategy_selection_20260603.md) for retained and rejected strategy notes.
 
-Use `get_runtime_enabled_profiles()` as the source of truth for profiles that downstream platforms may present for runtime configuration.
+## Performance and evidence boundary
 
-## How this connects to execution
-
-Platform repositories consume this package through strategy loaders and runtime metadata. They own broker credentials, market-data access, account state, dry-run/live switches, order submission, notifications, deployment settings, and rollback controls.
-
-Supported HK runtime platforms currently include:
-
-- `InteractiveBrokersPlatform`
-- `LongBridgePlatform`
-
-## Evidence and live enablement
-
-README files are project maps, not fixed performance reports. Before enabling or changing a live profile, rerun the relevant research, snapshot, or readiness tooling and review short, medium, and long windows where applicable:
+The research numbers in this repository are review evidence, not return promises. Before enabling or changing any live profile, rerun the relevant research/readiness commands and review short, medium, and long windows where applicable:
 
 - return and benchmark-relative return
 - maximum drawdown and drawdown stability
 - turnover, costs, lot-size, slippage, suspension, VCM, and CAS behavior
 - data freshness and artifact version
-- dry-run order previews, bilingual notification logs, rollout controls, and operator approval
+- broker dry-run order preview, bilingual notification logs, rollout controls, and operator approval
 
-If evidence is stale, incomplete, or the profile is research-only, keep it out of live runtime settings.
+If evidence is stale, incomplete, or the profile is not returned by `get_runtime_enabled_profiles()`, keep it out of live runtime settings.
 
 ## Quick start
 
@@ -73,16 +62,25 @@ These commands are read-only unless you explicitly pass an evidence file to a va
 
 ```bash
 python scripts/print_hk_live_enablement_matrix.py --json
-python scripts/print_hk_runtime_readiness.py --profile hk_high_dividend_low_vol_trend --platform longbridge --json
-python scripts/print_hk_runtime_readiness.py --profile hk_low_vol_dividend_quality --platform longbridge --json
-python scripts/validate_hk_runtime_live_enablement.py --print-template --profile hk_high_dividend_low_vol_trend --platform longbridge --json
+python scripts/print_hk_runtime_readiness.py --profile hk_dividend_gold_defensive_rotation --platform longbridge --json
+python scripts/print_hk_runtime_readiness.py --profile hk_low_vol_dividend_quality_snapshot --platform longbridge --json
+python scripts/validate_hk_runtime_live_enablement.py --print-template --profile hk_dividend_gold_defensive_rotation --platform longbridge --json
 ```
 
-For local smoke coverage of the ETF rotation path:
+For local smoke coverage of the ordinary ETF rotation path:
 
 ```bash
-python scripts/smoke_hk_listed_global_etf_rotation_dry_run.py --json
+python scripts/smoke_hk_global_etf_tactical_rotation_dry_run.py --json
 ```
+
+## How this connects to execution
+
+Platform repositories consume this package through strategy loaders and runtime metadata. They own broker credentials, market-data access, account state, dry-run/live switches, order submission, notifications, deployment settings, and rollback controls.
+
+Supported HK runtime platforms currently include:
+
+- `InteractiveBrokersPlatform`
+- `LongBridgePlatform`
 
 ## Deploy safely
 
@@ -94,20 +92,18 @@ python scripts/smoke_hk_listed_global_etf_rotation_dry_run.py --json
 
 ## Repository layout
 
-- `src/`: strategy implementations, catalog metadata, entrypoints, and readiness policies.
+- `src/`: strategy implementations, manifests, catalog metadata, runtime adapters, and readiness policies.
 - `tests/`: unit, contract, and regression tests.
-- `docs/`: integration notes and live-enablement evidence guides.
+- `docs/`: integration notes, strategy research, and live-enablement evidence guides.
 - `scripts/`: local research, smoke, readiness, and evidence helpers.
 
 ## Useful docs
 
 - [`docs/platform_integration.md`](docs/platform_integration.md)
-- [`docs/hk_low_vol_dividend_quality_live_enablement.md`](docs/hk_low_vol_dividend_quality_live_enablement.md)
-- [`docs/research/hk_high_dividend_low_vol_trend.md`](docs/research/hk_high_dividend_low_vol_trend.md)
-- [`docs/research/hk_listed_global_etf_rotation.md`](docs/research/hk_listed_global_etf_rotation.md)
-- [`docs/research/hk_index_mean_reversion.md`](docs/research/hk_index_mean_reversion.md)
-- [`docs/research/hk_etf_regime_rotation.md`](docs/research/hk_etf_regime_rotation.md)
-- [`docs/research/hk_quant_strategy_ideas.md`](docs/research/hk_quant_strategy_ideas.md)
+- [`docs/research/hk_strategy_selection_20260603.md`](docs/research/hk_strategy_selection_20260603.md)
+- [`docs/research/hk_dividend_gold_defensive_rotation.md`](docs/research/hk_dividend_gold_defensive_rotation.md)
+- [`docs/research/hk_global_etf_tactical_rotation.md`](docs/research/hk_global_etf_tactical_rotation.md)
+- [`docs/hk_low_vol_dividend_quality_snapshot_live_enablement.md`](docs/hk_low_vol_dividend_quality_snapshot_live_enablement.md)
 
 ## Safety and contribution notes
 

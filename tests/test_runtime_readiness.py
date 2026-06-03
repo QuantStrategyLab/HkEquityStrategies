@@ -6,9 +6,9 @@ import sys
 from pathlib import Path
 
 from hk_equity_strategies.catalog import (
-    HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE,
-    HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE,
-    HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE,
+    HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE,
+    HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
+    HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE,
 )
 from hk_equity_strategies.runtime_readiness import build_hk_runtime_readiness
 
@@ -17,7 +17,7 @@ SCRIPT_PATH = Path(__file__).resolve().parents[1] / "scripts" / "print_hk_runtim
 
 def test_ibkr_global_etf_readiness_uses_hk_market_defaults():
     plan = build_hk_runtime_readiness(
-        HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE,
+        HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
         platform_id="ibkr",
     )
 
@@ -110,11 +110,11 @@ def test_ibkr_global_etf_readiness_uses_hk_market_defaults():
 
 def test_longbridge_global_etf_readiness_requires_portfolio_snapshot_conversion():
     plan = build_hk_runtime_readiness(
-        "hk_global_etf_rotation",
+        HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
         platform_id="longbridge",
     )
 
-    assert plan["canonical_profile"] == HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE
+    assert plan["canonical_profile"] == HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE
     assert plan["platform_dry_run_env"]["ACCOUNT_REGION"] == "HK"
     assert plan["platform_dry_run_env"]["LONGBRIDGE_SYMBOL_SUFFIX"] == ".HK"
     assert plan["target_conversion"] == {
@@ -128,7 +128,7 @@ def test_longbridge_global_etf_readiness_requires_portfolio_snapshot_conversion(
 
 def test_high_dividend_low_vol_trend_readiness_uses_two_managed_symbols():
     plan = build_hk_runtime_readiness(
-        HK_HIGH_DIVIDEND_LOW_VOL_TREND_PROFILE,
+        HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE,
         platform_id="longbridge",
     )
 
@@ -160,7 +160,7 @@ def test_high_dividend_low_vol_trend_readiness_uses_two_managed_symbols():
 
 def test_low_vol_dividend_quality_readiness_requires_snapshot_artifacts():
     plan = build_hk_runtime_readiness(
-        HK_LOW_VOL_DIVIDEND_QUALITY_PROFILE,
+        HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE,
         platform_id="longbridge",
     )
 
@@ -173,7 +173,7 @@ def test_low_vol_dividend_quality_readiness_requires_snapshot_artifacts():
         "input_mode": "feature_snapshot",
         "requires_snapshot_artifacts": True,
         "requires_snapshot_manifest_path": True,
-        "snapshot_contract_version": "hk_low_vol_dividend_quality.factor_snapshot.v1",
+        "snapshot_contract_version": "hk_low_vol_dividend_quality_snapshot.factor_snapshot.v1",
         "requires_strategy_config_path": False,
         "config_source_policy": "none",
         "reconciliation_output_policy": "optional",
@@ -220,7 +220,7 @@ def test_print_hk_runtime_readiness_json():
             sys.executable,
             str(SCRIPT_PATH),
             "--profile",
-            HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE,
+            HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
             "--platform",
             "ibkr",
             "--json",
@@ -232,7 +232,7 @@ def test_print_hk_runtime_readiness_json():
 
     payload = json.loads(completed.stdout)
     assert payload["platform"] == "ibkr"
-    assert payload["canonical_profile"] == HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE
+    assert payload["canonical_profile"] == HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE
     assert payload["platform_dry_run_env"]["IBKR_MARKET_DATA_SYMBOL_SUFFIX"] == ".HK"
     assert payload["live_enablement_thresholds"]["max_allowed_backtest_drawdown"] == 0.30
     assert payload["evidence_uri_policy"]["required"] is True
@@ -246,8 +246,8 @@ def test_print_hk_runtime_readiness_json():
     assert "operator_approval_reference" in payload["required_live_evidence_fields"]
 
 
-def test_smoke_hk_listed_global_etf_rotation_dry_run_json():
-    script = Path(__file__).resolve().parents[1] / "scripts" / "smoke_hk_listed_global_etf_rotation_dry_run.py"
+def test_smoke_hk_global_etf_tactical_rotation_dry_run_json():
+    script = Path(__file__).resolve().parents[1] / "scripts" / "smoke_hk_global_etf_tactical_rotation_dry_run.py"
     completed = subprocess.run(
         [sys.executable, str(script), "--json"],
         check=True,
@@ -257,7 +257,7 @@ def test_smoke_hk_listed_global_etf_rotation_dry_run_json():
 
     payload = json.loads(completed.stdout)
     assert payload["status"] == "pass"
-    assert payload["profile"] == HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE
+    assert payload["profile"] == HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE
     assert payload["checks"] == {
         "strategy_actionable": True,
         "uses_direct_market_history": True,

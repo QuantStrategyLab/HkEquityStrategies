@@ -14,7 +14,7 @@ for candidate in (SRC, QPK_SRC):
     if candidate_str not in sys.path:
         sys.path.insert(0, candidate_str)
 
-from hk_equity_strategies.catalog import HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE  # noqa: E402
+from hk_equity_strategies.catalog import HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE  # noqa: E402
 from hk_equity_strategies.runtime_adapters import SUPPORTED_RUNTIME_PLATFORMS  # noqa: E402
 from hk_equity_strategies.runtime_readiness import build_hk_runtime_readiness  # noqa: E402
 
@@ -44,7 +44,7 @@ def _print_plan(plan: dict[str, object]) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--profile", default=HK_LISTED_GLOBAL_ETF_ROTATION_PROFILE)
+    parser.add_argument("--profile", default=HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE)
     parser.add_argument("--platform", required=True, choices=sorted(SUPPORTED_RUNTIME_PLATFORMS))
     parser.add_argument("--live", action="store_true", help="Render a live-mode checklist; does not deploy anything.")
     parser.add_argument("--json", action="store_true")

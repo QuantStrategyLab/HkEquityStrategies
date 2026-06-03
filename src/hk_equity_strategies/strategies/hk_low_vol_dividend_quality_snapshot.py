@@ -9,7 +9,7 @@ import pandas as pd
 HK_EQUITY_DOMAIN = "hk_equity"
 SIGNAL_SOURCE = "factor_snapshot"
 STATUS_ICON = "🇭🇰"
-PROFILE_NAME = "hk_low_vol_dividend_quality"
+PROFILE_NAME = "hk_low_vol_dividend_quality_snapshot"
 SAFE_HAVEN = "02800"
 DEFAULT_HOLDINGS_COUNT = 10
 DEFAULT_SINGLE_NAME_CAP = 0.10
@@ -29,7 +29,7 @@ DEFAULT_HARD_DEFENSE_EXPOSURE = 0.00
 DEFAULT_SOFT_BREADTH_THRESHOLD = 0.45
 DEFAULT_HARD_BREADTH_THRESHOLD = 0.30
 DEFAULT_EXECUTION_CASH_RESERVE_RATIO = 0.02
-SNAPSHOT_CONTRACT_VERSION = "hk_low_vol_dividend_quality.factor_snapshot.v1"
+SNAPSHOT_CONTRACT_VERSION = "hk_low_vol_dividend_quality_snapshot.factor_snapshot.v1"
 REQUIRE_SNAPSHOT_MANIFEST = True
 
 REQUIRED_FACTOR_COLUMNS = frozenset(

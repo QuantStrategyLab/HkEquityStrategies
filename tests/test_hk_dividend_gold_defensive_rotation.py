@@ -3,7 +3,7 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
-from hk_equity_strategies.strategies.hk_high_dividend_low_vol_trend import (
+from hk_equity_strategies.strategies.hk_dividend_gold_defensive_rotation import (
     DEFAULT_UNIVERSE_SYMBOLS,
     GOLD_ETF_SYMBOL,
     HIGH_DIVIDEND_ETF_SYMBOL,
