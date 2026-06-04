@@ -1,14 +1,5 @@
 # HK High Dividend Low-Volatility Trend Runtime Profile
 
-
-## 中文摘要
-
-- 用途：本文档记录 `hk_dividend_gold_defensive_rotation` 的研究回测、参数和上线边界。
-- 主要覆盖：`Scope`、`Data and methodology`、`Selected version`、`Backtest results`、`Decision`。
-- 阅读顺序：先看策略边界和输入，再看回测指标和 runtime enablement 边界。
-- 风险提示：涉及实盘、密钥、权限、Cloud Run、交易所或券商 API 的变更，必须先在测试环境或 dry-run 验证；不要只凭示例直接修改生产。
-- 英文正文保留更完整的命令、字段名和配置键；如果摘要和正文不一致，以正文中的实际命令和配置为准。
-
 ## Scope
 
 This research evaluates a simple non-snapshot `hk_equity` candidate:
