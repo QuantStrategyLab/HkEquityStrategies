@@ -29,7 +29,7 @@
 
 | Profile | 名称 | 输入 | 基准 | 当前角色 |
 | --- | --- | --- | --- | --- |
-| `hk_low_vol_dividend_quality_snapshot` | HK Low-Vol Dividend Quality Snapshot | `feature_snapshot` + manifest | `02800` | 保留的港股 snapshot-backed runtime 候选；仍需要生产级 point-in-time 证据。 |
+| `hk_low_vol_dividend_quality_snapshot` | HK Low-Vol Dividend Quality Snapshot | `feature_snapshot` + manifest | `02800` | 保留的港股 snapshot-backed runtime 候选；仍需要 point-in-time 数据 lineage 和 promotion 证据。 |
 
 ### 已移除研究 profile
 

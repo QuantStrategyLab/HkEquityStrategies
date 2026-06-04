@@ -1,11 +1,5 @@
 # Platform Integration
 
-## 中文摘要
-
-- 当前 HK strategy package 只暴露 3 个 runtime profile：`hk_dividend_gold_defensive_rotation`、`hk_global_etf_tactical_rotation`、`hk_low_vol_dividend_quality_snapshot`。
-- 其他研究原型和旧 snapshot scaffold 不再作为可选 profile 暴露。
-- 券商仓库仍负责 Cloud Run、行情、账户、订单、通知和 dry-run/live 开关。
-
 ## Supported platforms
 
 Runtime catalog profiles declare structural support for:
