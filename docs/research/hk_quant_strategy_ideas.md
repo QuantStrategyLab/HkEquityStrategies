@@ -10,16 +10,15 @@ Use [`hk_strategy_selection_20260603.md`](./hk_strategy_selection_20260603.md) a
 
 Retained profiles:
 
-1. `hk_dividend_gold_defensive_rotation` - preferred non-snapshot runtime candidate because it has the best current return-to-drawdown profile.
-2. `hk_global_etf_tactical_rotation` - secondary non-snapshot runtime candidate with higher annualized return but more ETF product-complexity risk.
-3. `hk_low_vol_dividend_quality_snapshot` - only retained snapshot-backed candidate; still requires production point-in-time evidence before real orders.
+1. `hk_global_etf_tactical_rotation` - retained non-snapshot runtime candidate with broader ETF exposure and product-complexity risk.
+2. `hk_low_vol_dividend_quality_snapshot` - only retained snapshot-backed candidate; still requires production point-in-time evidence before real orders.
 
 ## Ideas not kept in the package surface
 
 The following ideas should not appear as runtime catalog entries, snapshot contracts, sample builders, or platform-selectable profiles unless a future research PR adds fresh point-in-time data and passes the current gates:
 
 - HSI/HSTECH mean reversion and leveraged mean-reversion variants;
-- broad ETF regime-rotation baseline superseded by the two retained ETF strategies;
+- broad ETF regime-rotation baseline superseded by the retained ETF strategy;
 - shareholder-yield, free-cash-flow, residual/liquid momentum, composite QVM, factor-mix, AH-premium, Southbound-flow, event/rebalance and central-SOE snapshot scaffolds;
 - raw overlay ideas involving short selling, derivatives, margin financing, governance events, connected transactions, suspensions, ESG, analyst dispersion, liquidity premia or macro timing.
 

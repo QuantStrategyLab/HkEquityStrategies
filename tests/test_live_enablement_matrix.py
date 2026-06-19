@@ -8,7 +8,6 @@ from pathlib import Path
 import pytest
 
 from hk_equity_strategies.catalog import (
-    HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE,
     HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
     HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE,
     get_external_snapshot_scaffold_profiles,
@@ -41,8 +40,8 @@ def test_live_enablement_matrix_keeps_only_runtime_profiles_selectable_or_listed
     matrix = build_live_enablement_matrix()
 
     assert set(matrix["selectable_profiles"]) == get_runtime_enabled_profiles()
-    assert matrix["selectable_profile_count"] == 3
-    assert matrix["profile_count"] == 3
+    assert matrix["selectable_profile_count"] == 2
+    assert matrix["profile_count"] == 2
     assert matrix["blocked_profile_count"] == 0
     assert get_external_snapshot_scaffold_profiles() == frozenset()
     assert get_research_backtest_only_profiles() == frozenset()
@@ -56,11 +55,10 @@ def test_live_enablement_matrix_keeps_only_runtime_profiles_selectable_or_listed
     ranking = matrix["curated_live_enablement_strategy_ranking"]
     assert ranking["ranking_version"] == CURATED_LIVE_ENABLEMENT_STRATEGY_RANKING_VERSION
     assert [row["profile"] for row in ranking["ranking"]] == [
-        HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE,
         HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
         HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE,
     ]
-    assert ranking["ranking"][2]["profile_type"] == "runtime_snapshot_backed"
+    assert ranking["ranking"][1]["profile_type"] == "runtime_snapshot_backed"
     assert ranking["future_research_curated_candidate_order"] == []
     assert "hk_index_mean_reversion" in {row["profile"] for row in ranking["deprioritized_profiles"]}
 
@@ -70,32 +68,30 @@ def test_curated_live_enablement_ranking_excludes_weaker_research_profiles():
 
     assert ranking["live_enablement_allowed_without_evidence"] is False
     assert ranking["max_allowed_drawdown"] == 0.30
-    assert ranking["ranking"][0]["profile"] == HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE
-    assert ranking["ranking"][0]["max_drawdown"] == -0.0806
-    assert ranking["ranking"][1]["profile"] == HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE
-    assert ranking["ranking"][1]["max_drawdown"] == -0.2051
-    assert ranking["ranking"][2]["profile"] == HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE
-    assert ranking["ranking"][2]["max_drawdown"] == -0.2305
+    assert ranking["ranking"][0]["profile"] == HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE
+    assert ranking["ranking"][0]["max_drawdown"] == -0.2051
+    assert ranking["ranking"][1]["profile"] == HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE
+    assert ranking["ranking"][1]["max_drawdown"] == -0.2305
     assert all(item["decision"].startswith("exclude") for item in ranking["deprioritized_profiles"])
 
 
 def test_runtime_rows_include_thresholds_evidence_commands_and_sources():
-    row = build_live_enablement_row(HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE)
+    row = build_live_enablement_row(HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE)
 
     assert row["profile_type"] == "runtime_market_history"
     assert row["selectable_by_platform"] is True
     assert row["runtime_enabled"] is True
     assert row["live_enablement_gate"] == RUNTIME_LIVE_GATE
-    assert row["benchmark"] == "03110"
+    assert row["benchmark"] == "02800"
     assert row["supported_platforms"] == ["ibkr", "longbridge"]
-    assert any("max_allowed_backtest_drawdown=0.12" in item for item in row["required_evidence"])
+    assert any("max_allowed_backtest_drawdown=0.3" in item for item in row["required_evidence"])
     assert any("validate_hk_runtime_live_enablement.py" in command for command in row["evidence_commands"])
     assert row["runtime_etf_product_policy"]["required"] is True
     assert row["runtime_market_data_policy"]["required"] is True
     assert "runtime_etf_product_due_diligence_verified" in row["required_evidence"]
     assert "bilingual_notification_delivery_log_verified" in row["required_evidence"]
-    assert any("globalxetfs.com.hk/funds/hang-seng-high-dividend-yield-etf" in url for url in row["research_evidence_urls"])
-    assert any("single-commodity trust" in note for note in row["notes"])
+    assert any("trahk.com.hk" in url for url in row["research_evidence_urls"])
+    assert any("All eight ETF symbols require" in note for note in row["notes"])
 
 
 def test_global_etf_row_mentions_complex_etf_risk():
@@ -144,6 +140,6 @@ def test_print_hk_live_enablement_matrix_json():
     completed = subprocess.run([sys.executable, str(SCRIPT), "--json"], check=True, capture_output=True, text=True)
     payload = json.loads(completed.stdout)
 
-    assert payload["profile_count"] == 3
+    assert payload["profile_count"] == 2
     assert payload["blocked_profile_count"] == 0
     assert set(payload["selectable_profiles"]) == get_runtime_enabled_profiles()

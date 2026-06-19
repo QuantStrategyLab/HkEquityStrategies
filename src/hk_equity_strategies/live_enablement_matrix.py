@@ -10,7 +10,6 @@ from hk_equity_strategies.backtest_validation_policy import (
     build_backtest_validation_policy,
 )
 from hk_equity_strategies.catalog import (
-    HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE,
     HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
     HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE,
     get_direct_market_history_profiles,
@@ -145,32 +144,19 @@ CURATED_LIVE_ENABLEMENT_STRATEGY_RANKING_VERSION = "hk_equity_strategies.curated
 CURATED_LIVE_ENABLEMENT_STRATEGY_RANKING: tuple[dict[str, object], ...] = (
     {
         "rank": 1,
-        "profile": HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE,
-        "profile_type": "runtime_market_history",
-        "decision": "keep_runtime_enabled_preferred",
-        "annualized_return": 0.1716,
-        "max_drawdown": -0.0806,
-        "why": (
-            "Best current risk-adjusted HK runtime candidate: simple 03110/02840 universe, "
-            "12% volatility target, positive train period, and the lowest verified drawdown."
-        ),
-        "next_action": "Keep live-enable capable, but require broker dry-run evidence before real order submission.",
-    },
-    {
-        "rank": 2,
         "profile": HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
         "profile_type": "runtime_market_history",
-        "decision": "keep_runtime_enabled_secondary",
+        "decision": "keep_runtime_enabled_direct_market_history",
         "annualized_return": 0.1884,
         "max_drawdown": -0.2051,
         "why": (
-            "Highest current annualized return among implemented HK strategies while staying below the 30% "
-            "drawdown limit; broader ETF universe improves diversification but adds product-complexity risk."
+            "Remaining direct market-history HK ETF rotation profile; broader ETF universe improves "
+            "diversification but adds product-complexity risk."
         ),
         "next_action": "Use dry-run/paper mode until every ETF sleeve has product, spread, lot-size, and platform checks.",
     },
     {
-        "rank": 3,
+        "rank": 2,
         "profile": HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE,
         "profile_type": "runtime_snapshot_backed",
         "decision": "keep_runtime_enabled_pending_evidence",
@@ -197,7 +183,7 @@ DEPRIORITIZED_LIVE_ENABLEMENT_PROFILES: tuple[dict[str, str], ...] = (
     {
         "profile": "hk_etf_regime_rotation",
         "decision": "exclude_from_live_enablement_shortlist",
-        "reason": "Removed as a public strategy after the 2026-06-03 rerun: the broad baseline had negative train-period annualized return; retained variants are hk_dividend_gold_defensive_rotation and hk_global_etf_tactical_rotation.",
+        "reason": "Removed as a public strategy after the 2026-06-03 rerun: the broad baseline had negative train-period annualized return.",
     },
     {
         "profile": "snapshot_future_research_long_tail",
@@ -350,26 +336,6 @@ BLACKROCK_ISHARES_NASDAQ100_ETF_URL = (
 SAMSUNG_CRUDE_OIL_FUTURES_ETF_URL = "https://www.samsungetfhk.com/en/product/3175/"
 
 RUNTIME_RESEARCH_EVIDENCE_URLS: dict[str, tuple[str, ...]] = {
-    HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE: (
-        "docs/research/hk_dividend_gold_defensive_rotation.md",
-        GLOBAL_X_HANG_SENG_HIGH_DIVIDEND_ETF_URL,
-        HSI_HIGH_DIVIDEND_YIELD_INDEX_URL,
-        HSI_HIGH_DIVIDEND_YIELD_FACTSHEET_URL,
-        HSI_HIGH_DIVIDEND_YIELD_METHODOLOGY_URL,
-        SSGA_SPDR_GOLD_SHARES_2840_URL,
-        SSGA_SPDR_GOLD_SHARES_2840_FACTSHEET_URL,
-        SPDR_GOLD_SHARES_HK_FINANCIAL_INFO_URL,
-        "https://www.hkex.com.hk/products/securities/exchange-traded-products/overview?sc_lang=en",
-        "https://www.hkex.com.hk/Products/Securities/Exchange-Traded-Products/Market-Makers/Overview?sc_lang=en",
-        HKEX_ETF_CONNECT_INCLUSION_URL,
-        HKEX_STOCK_CONNECT_ELIGIBLE_SECURITIES_URL,
-        HKEX_STOCK_CONNECT_STATISTICS_URL,
-        HKEX_STOCK_CONNECT_HISTORICAL_DAILY_URL,
-        "https://www.hkex.com.hk/-/media/HKEX-Market/Mutual-Market/Stock-Connect/Reference-Materials/Inclusion-of-ETFs-in-Stock-Connect/Inclusion_of_ETFs_in_Stock_Connect_Useful_Information_for_Issuers_Eng.pdf",
-        "https://www.ird.gov.hk/eng/faq/ETFs.htm",
-        "https://www.hkex.com.hk/News/Market-Communications/2015/150204news",
-        "https://www.hkex.com.hk/Services/Rules-and-Forms-and-Fees/Fees/Securities-%28Hong-Kong%29/Trading/Transaction?sc_lang=en",
-    ),
     HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE: (
         "docs/research/hk_global_etf_tactical_rotation.md",
         TRAHK_PRODUCT_URL,
@@ -397,13 +363,6 @@ RUNTIME_RESEARCH_EVIDENCE_URLS: dict[str, tuple[str, ...]] = {
 }
 
 RUNTIME_PROFILE_NOTES: dict[str, tuple[str, ...]] = {
-    HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE: (
-        "Preferred lower-drawdown first HK runtime profile; keep dry-run until evidence pack passes.",
-        "Managed symbols are limited to 02840 and 03110, so platform validation should be simpler than broad ETF rotation.",
-        "03110 evidence must include current Global X product documents, Hang Seng High Dividend Yield Index methodology, NAV/iNAV, distribution and capital-distribution risk policy, and high-dividend concentration/yield-trap review.",
-        "02840 evidence must include current SSGA/SPDR Gold Shares product documents, NAV/iNAV, tracking difference, multi-counter currency, USD creation/redemption, and single-commodity trust/storage-risk review.",
-        "If either ETF is routed through Stock Connect / Southbound ETF paths, evidence must include ETF Connect eligibility or sell-only status, Southbound turnover/fund-flow trend, broker route availability, and cross-boundary settlement/holiday review.",
-    ),
     HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE: (
         "Broader ETF rotation candidate with higher universe complexity; start with reduced capital if promoted after evidence.",
         "03175 is a crude-oil futures ETF and must be removed if product permission, spread, or suitability checks fail.",

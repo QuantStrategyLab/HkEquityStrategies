@@ -20,8 +20,7 @@ These profiles use platform-provided `market_history` and do not require a separ
 
 | Profile | Name | Input | Benchmark | Current role |
 | --- | --- | --- | --- | --- |
-| `hk_dividend_gold_defensive_rotation` | HK Dividend-Gold Defensive Rotation | `market_history` | `03110` | Preferred HK ETF runtime profile by current risk-adjusted evidence. |
-| `hk_global_etf_tactical_rotation` | HK Global ETF Tactical Rotation | `market_history` | `02800` | Secondary HK ETF runtime profile with broader ETF exposure and heavier product checks. |
+| `hk_global_etf_tactical_rotation` | HK Global ETF Tactical Rotation | `market_history` | `02800` | Retained HK ETF runtime profile with broader ETF exposure and heavier product checks. |
 
 ### Snapshot-backed runtime strategy
 
@@ -62,9 +61,9 @@ These commands are read-only unless you explicitly pass an evidence file to a va
 
 ```bash
 python scripts/print_hk_live_enablement_matrix.py --json
-python scripts/print_hk_runtime_readiness.py --profile hk_dividend_gold_defensive_rotation --platform longbridge --json
+python scripts/print_hk_runtime_readiness.py --profile hk_global_etf_tactical_rotation --platform longbridge --json
 python scripts/print_hk_runtime_readiness.py --profile hk_low_vol_dividend_quality_snapshot --platform longbridge --json
-python scripts/validate_hk_runtime_live_enablement.py --print-template --profile hk_dividend_gold_defensive_rotation --platform longbridge --json
+python scripts/validate_hk_runtime_live_enablement.py --print-template --profile hk_global_etf_tactical_rotation --platform longbridge --json
 ```
 
 For local smoke coverage of the ordinary ETF rotation path:
@@ -101,7 +100,6 @@ Supported HK runtime platforms currently include:
 
 - [`docs/platform_integration.md`](docs/platform_integration.md)
 - [`docs/research/hk_strategy_selection_20260603.md`](docs/research/hk_strategy_selection_20260603.md)
-- [`docs/research/hk_dividend_gold_defensive_rotation.md`](docs/research/hk_dividend_gold_defensive_rotation.md)
 - [`docs/research/hk_global_etf_tactical_rotation.md`](docs/research/hk_global_etf_tactical_rotation.md)
 - [`docs/hk_low_vol_dividend_quality_snapshot_live_enablement.md`](docs/hk_low_vol_dividend_quality_snapshot_live_enablement.md)
 

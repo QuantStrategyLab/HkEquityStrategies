@@ -20,8 +20,7 @@
 
 | Profile | 名称 | 输入 | 基准 | 当前角色 |
 | --- | --- | --- | --- | --- |
-| `hk_dividend_gold_defensive_rotation` | HK Dividend-Gold Defensive Rotation | `market_history` | `03110` | 当前证据下风险收益比较好的港股 ETF runtime profile。 |
-| `hk_global_etf_tactical_rotation` | HK Global ETF Tactical Rotation | `market_history` | `02800` | 第二港股 ETF runtime profile，覆盖更宽 ETF 范围，产品检查也更重。 |
+| `hk_global_etf_tactical_rotation` | HK Global ETF Tactical Rotation | `market_history` | `02800` | 保留的港股 ETF runtime profile，覆盖更宽 ETF 范围，产品检查也更重。 |
 
 ### Snapshot-backed runtime 策略
 
@@ -62,9 +61,9 @@ python -m pytest -q
 
 ```bash
 python scripts/print_hk_live_enablement_matrix.py --json
-python scripts/print_hk_runtime_readiness.py --profile hk_dividend_gold_defensive_rotation --platform longbridge --json
+python scripts/print_hk_runtime_readiness.py --profile hk_global_etf_tactical_rotation --platform longbridge --json
 python scripts/print_hk_runtime_readiness.py --profile hk_low_vol_dividend_quality_snapshot --platform longbridge --json
-python scripts/validate_hk_runtime_live_enablement.py --print-template --profile hk_dividend_gold_defensive_rotation --platform longbridge --json
+python scripts/validate_hk_runtime_live_enablement.py --print-template --profile hk_global_etf_tactical_rotation --platform longbridge --json
 ```
 
 普通 ETF 轮动路径的本地 smoke：
@@ -101,7 +100,6 @@ python scripts/smoke_hk_global_etf_tactical_rotation_dry_run.py --json
 
 - [`docs/platform_integration.md`](docs/platform_integration.md)
 - [`docs/research/hk_strategy_selection_20260603.md`](docs/research/hk_strategy_selection_20260603.md)
-- [`docs/research/hk_dividend_gold_defensive_rotation.md`](docs/research/hk_dividend_gold_defensive_rotation.md)
 - [`docs/research/hk_global_etf_tactical_rotation.md`](docs/research/hk_global_etf_tactical_rotation.md)
 - [`docs/hk_low_vol_dividend_quality_snapshot_live_enablement.zh-CN.md`](docs/hk_low_vol_dividend_quality_snapshot_live_enablement.zh-CN.md)
 

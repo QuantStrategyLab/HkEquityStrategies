@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 from hk_equity_strategies.catalog import (
-    HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE,
+    HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
     HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE,
 )
 from hk_equity_strategies.runtime_live_enablement_evidence import (
@@ -20,7 +20,7 @@ SCRIPT_PATH = Path(__file__).resolve().parents[1] / "scripts" / "validate_hk_run
 def _evidence(**overrides):
     payload = {
         "evidence_type": "hk_runtime_live_enablement",
-        "profile": HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE,
+        "profile": HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
         "platform": "longbridge",
         "validation_as_of": "2026-06-02",
         "strategy_backtest": {
@@ -28,9 +28,9 @@ def _evidence(**overrides):
             "out_of_sample": True,
             "period_start": "2021-09-01",
             "period_end": "2026-05-29",
-            "annual_return": 0.1716,
-            "max_drawdown": -0.0806,
-            "rolling_oos_fold_max_drawdown": -0.092,
+            "annual_return": 0.1884,
+            "max_drawdown": -0.2051,
+            "rolling_oos_fold_max_drawdown": -0.2051,
             "oos_fold_count": 4,
             "max_single_period_return_contribution": 0.35,
             "annual_return_to_max_drawdown_ratio": 2.13,
@@ -57,15 +57,15 @@ def _evidence(**overrides):
             "cash_leverage_short_borrow_and_margin_controls": True,
             "tail_loss_time_underwater_and_recovery_controls": True,
             "portfolio_correlation_and_aggregate_risk_budget_controls": True,
-            "benchmark_symbol": "03110",
+            "benchmark_symbol": "02800",
             "benchmark_annual_return": 0.08,
-            "strategy_excess_return": 0.0916,
+            "strategy_excess_return": 0.1084,
             "evidence_generated_at": "2026-04-15",
-            "evidence_uri": "gs://qsl-hk-evidence/runtime/hk-dividend-gold-defensive-rotation/backtest.json",
+            "evidence_uri": "gs://qsl-hk-evidence/runtime/hk-global-etf-tactical-rotation/backtest.json",
         },
         "runtime_readiness": {
             "status": "passed",
-            "profile": HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE,
+            "profile": HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
             "platform": "longbridge",
             "market_history_feed_verified": True,
             "managed_symbols_verified": True,
@@ -75,13 +75,13 @@ def _evidence(**overrides):
             "market_history_coverage_start": "2021-09-01",
             "market_history_coverage_end": "2026-05-29",
             "market_history_source_uri": (
-                "gs://qsl-hk-prod-sources/runtime/hk-dividend-gold-defensive-rotation/20260601/market-history.parquet"
+                "gs://qsl-hk-prod-sources/runtime/hk-global-etf-tactical-rotation/20260601/market-history.parquet"
             ),
             "market_history_quality_report_uri": (
-                "gs://qsl-hk-prod-sources/runtime/hk-dividend-gold-defensive-rotation/20260601/market-history-quality.json"
+                "gs://qsl-hk-prod-sources/runtime/hk-global-etf-tactical-rotation/20260601/market-history-quality.json"
             ),
             "point_in_time_data_dictionary_uri": (
-                "gs://qsl-hk-prod-sources/runtime/hk-dividend-gold-defensive-rotation/20260601/data-dictionary.json"
+                "gs://qsl-hk-prod-sources/runtime/hk-global-etf-tactical-rotation/20260601/data-dictionary.json"
             ),
             "point_in_time_market_history": True,
             "adjusted_price_history": True,
@@ -94,7 +94,7 @@ def _evidence(**overrides):
             "etf_nav_or_inav_source_verified": True,
             "stamp_duty_or_etf_exemption_source_verified": True,
             "evidence_generated_at": "2026-05-25",
-            "evidence_uri": "gs://qsl-hk-evidence/runtime/hk-dividend-gold-defensive-rotation/readiness.json",
+            "evidence_uri": "gs://qsl-hk-evidence/runtime/hk-global-etf-tactical-rotation/readiness.json",
         },
         "platform_dry_run_order_preview": {
             "status": "passed",
@@ -108,7 +108,7 @@ def _evidence(**overrides):
             "notification_sent": True,
             "notification_schema_version": "hk_live_enablement_notification.v1",
             "notification_event_type": "hk_runtime_live_enablement_dry_run",
-            "notification_correlation_id": "hk-runtime-hd-lv-20260602-dryrun-001",
+            "notification_correlation_id": "hk-runtime-global-etf-20260602-dryrun-001",
             "notification_locale_en": True,
             "notification_locale_zh_hans": True,
             "notification_contains_profile": True,
@@ -117,21 +117,21 @@ def _evidence(**overrides):
             "notification_contains_order_preview_summary": True,
             "notification_redacts_sensitive_fields": True,
             "notification_delivery_log_uri": (
-                "gs://qsl-hk-evidence/runtime/hk-dividend-gold-defensive-rotation/notifications/"
+                "gs://qsl-hk-evidence/runtime/hk-global-etf-tactical-rotation/notifications/"
                 "20260602-dryrun.json"
             ),
-            "dry_run_session_id": "hk-runtime-hd-lv-longbridge-20260602-dryrun-001",
+            "dry_run_session_id": "hk-runtime-global-etf-longbridge-20260602-dryrun-001",
             "raw_order_preview_uri": (
-                "gs://qsl-hk-evidence/runtime/hk-dividend-gold-defensive-rotation/order-preview/"
+                "gs://qsl-hk-evidence/runtime/hk-global-etf-tactical-rotation/order-preview/"
                 "raw-order-preview.json"
             ),
             "raw_order_preview_sha256": "b" * 64,
             "quote_snapshot_uri": (
-                "gs://qsl-hk-evidence/runtime/hk-dividend-gold-defensive-rotation/order-preview/quote-snapshot.json"
+                "gs://qsl-hk-evidence/runtime/hk-global-etf-tactical-rotation/order-preview/quote-snapshot.json"
             ),
             "quote_snapshot_sha256": "c" * 64,
             "fee_breakdown_uri": (
-                "gs://qsl-hk-evidence/runtime/hk-dividend-gold-defensive-rotation/order-preview/fee-breakdown.json"
+                "gs://qsl-hk-evidence/runtime/hk-global-etf-tactical-rotation/order-preview/fee-breakdown.json"
             ),
             "fee_breakdown_sha256": "d" * 64,
             "order_preview_artifact_not_sample": True,
@@ -151,7 +151,7 @@ def _evidence(**overrides):
             "vcm_price_band_controls_verified": True,
             "etf_nav_or_spread_guard_verified": True,
             "evidence_generated_at": "2026-05-28",
-            "evidence_uri": "gs://qsl-hk-evidence/runtime/hk-dividend-gold-defensive-rotation/order-preview.json",
+            "evidence_uri": "gs://qsl-hk-evidence/runtime/hk-global-etf-tactical-rotation/order-preview.json",
         },
         "broker_permission_and_fee_verification": {
             "status": "passed",
@@ -161,42 +161,42 @@ def _evidence(**overrides):
             "fees_levies_verified": True,
             "stamp_duty_or_etf_exemption_verified": True,
             "etf_product_permission_verified": True,
-            "etf_product_audit_id": "hk-runtime-hd-lv-longbridge-20260602-etf-product-audit-001",
-            "managed_etf_symbols_audited_count": 2,
+            "etf_product_audit_id": "hk-runtime-global-etf-longbridge-20260602-etf-product-audit-001",
+            "managed_etf_symbols_audited_count": 8,
             "etf_product_universe_audit_uri": (
-                "gs://qsl-hk-evidence/runtime/hk-dividend-gold-defensive-rotation/etf-product/product-universe.json"
+                "gs://qsl-hk-evidence/runtime/hk-global-etf-tactical-rotation/etf-product/product-universe.json"
             ),
             "official_product_document_uri": (
-                "gs://qsl-hk-evidence/runtime/hk-dividend-gold-defensive-rotation/etf-product/product-documents.json"
+                "gs://qsl-hk-evidence/runtime/hk-global-etf-tactical-rotation/etf-product/product-documents.json"
             ),
             "underlying_index_or_reference_asset_source_uri": (
-                "gs://qsl-hk-evidence/runtime/hk-dividend-gold-defensive-rotation/etf-product/"
+                "gs://qsl-hk-evidence/runtime/hk-global-etf-tactical-rotation/etf-product/"
                 "underlying-index-reference-asset.json"
             ),
             "nav_or_inav_source_uri": (
-                "gs://qsl-hk-evidence/runtime/hk-dividend-gold-defensive-rotation/etf-product/nav-inav.json"
+                "gs://qsl-hk-evidence/runtime/hk-global-etf-tactical-rotation/etf-product/nav-inav.json"
             ),
             "market_maker_or_liquidity_provider_source_uri": (
-                "gs://qsl-hk-evidence/runtime/hk-dividend-gold-defensive-rotation/etf-product/"
+                "gs://qsl-hk-evidence/runtime/hk-global-etf-tactical-rotation/etf-product/"
                 "market-maker-liquidity-provider.json"
             ),
             "stock_connect_etf_eligibility_source_uri": (
-                "gs://qsl-hk-evidence/runtime/hk-dividend-gold-defensive-rotation/etf-product/"
+                "gs://qsl-hk-evidence/runtime/hk-global-etf-tactical-rotation/etf-product/"
                 "stock-connect-etf-eligibility.json"
             ),
             "southbound_etf_turnover_and_fund_flow_source_uri": (
-                "gs://qsl-hk-evidence/runtime/hk-dividend-gold-defensive-rotation/etf-product/"
+                "gs://qsl-hk-evidence/runtime/hk-global-etf-tactical-rotation/etf-product/"
                 "southbound-etf-turnover-flow.json"
             ),
             "distribution_tax_and_fee_treatment_source_uri": (
-                "gs://qsl-hk-evidence/runtime/hk-dividend-gold-defensive-rotation/etf-product/"
+                "gs://qsl-hk-evidence/runtime/hk-global-etf-tactical-rotation/etf-product/"
                 "distribution-tax-fees.json"
             ),
             "etf_fee_and_stamp_duty_audit_uri": (
-                "gs://qsl-hk-evidence/runtime/hk-dividend-gold-defensive-rotation/etf-product/fees-stamp-duty.json"
+                "gs://qsl-hk-evidence/runtime/hk-global-etf-tactical-rotation/etf-product/fees-stamp-duty.json"
             ),
             "broker_product_permission_audit_uri": (
-                "gs://qsl-hk-evidence/runtime/hk-dividend-gold-defensive-rotation/etf-product/broker-permission.json"
+                "gs://qsl-hk-evidence/runtime/hk-global-etf-tactical-rotation/etf-product/broker-permission.json"
             ),
             "all_managed_symbols_confirmed_etp": True,
             "leveraged_inverse_or_synthetic_flags_audited": True,
@@ -223,7 +223,7 @@ def _evidence(**overrides):
             "currency_and_board_lot_per_symbol_verified": True,
             "distribution_and_corporate_action_treatment_verified": True,
             "evidence_generated_at": "2026-05-20",
-            "evidence_uri": "gs://qsl-hk-evidence/runtime/hk-dividend-gold-defensive-rotation/broker-fees.json",
+            "evidence_uri": "gs://qsl-hk-evidence/runtime/hk-global-etf-tactical-rotation/broker-fees.json",
         },
         "runtime_switch_plan": {
             "status": "passed",
@@ -249,7 +249,7 @@ def _evidence(**overrides):
             "operator_approved": True,
             "live_rollout_approved": True,
             "dry_run_removal_approved": True,
-            "approval_reference": "ops-review-2026-06-hk-hd-lv",
+            "approval_reference": "ops-review-2026-06-hk-global-etf",
         },
     }
     payload.update(overrides)
@@ -262,9 +262,9 @@ def test_validate_runtime_live_enablement_evidence_accepts_complete_pack():
     assert result["validation_status"] == "passed"
     assert result["live_enablement_allowed"] is True
     assert result["live_enablement_thresholds"] == {
-        "max_allowed_backtest_drawdown": 0.12,
+        "max_allowed_backtest_drawdown": 0.30,
         "min_required_return_to_drawdown_ratio": 0.5,
-        "max_allowed_annualized_turnover": 1.0,
+        "max_allowed_annualized_turnover": 1.5,
         "min_required_annual_return": 0.0,
         "min_required_walk_forward_years": 3.0,
         "min_required_oos_fold_count": 3,
@@ -274,7 +274,7 @@ def test_validate_runtime_live_enablement_evidence_accepts_complete_pack():
     assert "token=" in result["evidence_uri_policy"]["rejected_query_markers"]
     assert result["validation_as_of"] == "2026-06-02"
     assert result["evidence_freshness_policy"]["required_field"] == "evidence_generated_at"
-    assert result["execution_capacity_policy"]["min_median_daily_turnover_hkd"] == 10_000_000
+    assert result["execution_capacity_policy"]["min_median_daily_turnover_hkd"] == 20_000_000
     assert result["rollout_risk_policy"]["max_initial_capital_fraction"] == 0.25
     assert result["runtime_etf_product_policy"]["policy_version"] == "hk_runtime_etf_product_due_diligence.v2"
     assert "etf_product_universe_audit_uri" in result["runtime_etf_product_policy"]["required_uri_fields"]
@@ -317,13 +317,22 @@ def test_validate_runtime_live_enablement_evidence_accepts_complete_pack():
 
 
 def test_build_runtime_live_enablement_evidence_template_is_not_preapproved():
-    template = build_runtime_live_enablement_evidence_template(HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE, platform="ibkr")
+    template = build_runtime_live_enablement_evidence_template(HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE, platform="ibkr")
 
     assert template["evidence_type"] == "hk_runtime_live_enablement"
     assert template["template_status"] == "pending_operator_evidence"
-    assert template["profile"] == HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE
+    assert template["profile"] == HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE
     assert template["platform"] == "ibkr"
-    assert template["runtime_readiness"]["managed_symbols"] == ["02840", "03110"]
+    assert template["runtime_readiness"]["managed_symbols"] == [
+        "02800",
+        "02822",
+        "03188",
+        "03033",
+        "02834",
+        "02840",
+        "03175",
+        "03110",
+    ]
     assert template["evidence_uri_policy"]["required"] is True
     assert template["evidence_uri_policy"]["allowed_schemes"] == ["gs://", "https://", "s3://"]
     assert template["evidence_freshness_policy"]["required_field"] == "evidence_generated_at"
@@ -346,7 +355,7 @@ def test_build_runtime_live_enablement_evidence_template_is_not_preapproved():
     assert template["strategy_backtest"]["oos_fold_count"] is None
     assert template["strategy_backtest"]["max_single_period_return_contribution"] is None
     assert template["strategy_backtest"]["annual_return_to_max_drawdown_ratio"] is None
-    assert template["strategy_backtest"]["benchmark_symbol"] == "03110"
+    assert template["strategy_backtest"]["benchmark_symbol"] == "02800"
     assert template["strategy_backtest"]["strategy_excess_return"] is None
     assert template["strategy_backtest"]["point_in_time_inputs_only"] is False
     assert template["strategy_backtest"]["no_full_sample_parameter_selection"] is False
@@ -509,7 +518,7 @@ def test_build_low_vol_dividend_evidence_template_requires_snapshot_artifact_lin
 
 
 def test_validate_runtime_live_enablement_evidence_rejects_drawdown_above_profile_limit():
-    payload = _evidence(strategy_backtest={**_evidence()["strategy_backtest"], "max_drawdown": -0.18})
+    payload = _evidence(strategy_backtest={**_evidence()["strategy_backtest"], "max_drawdown": -0.35})
 
     result = validate_runtime_live_enablement_evidence(payload)
 
@@ -519,7 +528,7 @@ def test_validate_runtime_live_enablement_evidence_rejects_drawdown_above_profil
 
 def test_validate_runtime_live_enablement_evidence_rejects_oos_fold_drawdown_above_profile_limit():
     payload = _evidence(
-        strategy_backtest={**_evidence()["strategy_backtest"], "rolling_oos_fold_max_drawdown": -0.18}
+        strategy_backtest={**_evidence()["strategy_backtest"], "rolling_oos_fold_max_drawdown": -0.35}
     )
 
     result = validate_runtime_live_enablement_evidence(payload)
@@ -579,7 +588,7 @@ def test_validate_runtime_live_enablement_evidence_rejects_low_computed_return_t
 
 
 def test_validate_runtime_live_enablement_evidence_rejects_excess_turnover():
-    payload = _evidence(strategy_backtest={**_evidence()["strategy_backtest"], "annualized_turnover": 1.25})
+    payload = _evidence(strategy_backtest={**_evidence()["strategy_backtest"], "annualized_turnover": 1.75})
 
     result = validate_runtime_live_enablement_evidence(payload)
 
@@ -677,12 +686,12 @@ def test_validate_runtime_live_enablement_evidence_rejects_non_positive_excess_r
 
 
 def test_validate_runtime_live_enablement_evidence_rejects_wrong_benchmark():
-    payload = _evidence(strategy_backtest={**_evidence()["strategy_backtest"], "benchmark_symbol": "02800"})
+    payload = _evidence(strategy_backtest={**_evidence()["strategy_backtest"], "benchmark_symbol": "03110"})
 
     result = validate_runtime_live_enablement_evidence(payload)
 
     assert result["live_enablement_allowed"] is False
-    assert any("benchmark_symbol must be '03110'" in error for error in result["errors"])
+    assert any("benchmark_symbol must be '02800'" in error for error in result["errors"])
 
 
 def test_validate_runtime_live_enablement_evidence_rejects_short_oos_period():
@@ -841,7 +850,7 @@ def test_validate_runtime_live_enablement_evidence_requires_all_managed_etfs_aud
     result = validate_runtime_live_enablement_evidence(payload)
 
     assert result["live_enablement_allowed"] is False
-    assert any("managed_etf_symbols_audited_count must be >= 2" in error for error in result["errors"])
+    assert any("managed_etf_symbols_audited_count must be >= 8" in error for error in result["errors"])
 
 
 def test_validate_runtime_live_enablement_evidence_requires_complex_product_review():
@@ -1066,7 +1075,7 @@ def test_print_runtime_live_enablement_evidence_template_cli():
             "hk_equity_strategies.runtime_live_enablement_evidence",
             "--print-template",
             "--profile",
-            HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE,
+            HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
             "--platform",
             "longbridge",
             "--json",
@@ -1077,7 +1086,7 @@ def test_print_runtime_live_enablement_evidence_template_cli():
     )
     payload = json.loads(completed.stdout)
 
-    assert payload["profile"] == HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE
+    assert payload["profile"] == HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE
     assert payload["template_status"] == "pending_operator_evidence"
     assert payload["evidence_uri_policy"]["required"] is True
     assert payload["evidence_freshness_policy"]["required"] is True
