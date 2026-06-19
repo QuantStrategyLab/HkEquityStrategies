@@ -191,5 +191,4 @@ prove product-level evidence for each sleeve:
   margin, curve / contango / backwardation risk, non-correlation with spot oil,
   and explicit operator suitability review. If any of these fail, remove the
   ETF via universe override and rerun the backtest/readiness pack.
-- `02840` and `03110`: reuse the high-dividend/gold product checks from
-  `hk_dividend_gold_defensive_rotation`.
+- `02840` and `03110`: require current gold ETF and high-dividend ETF product checks, including issuer documents, NAV/iNAV, tracking quality, distribution treatment, spread/depth, lot size, market-maker/liquidity evidence, ETF Connect / Southbound route status, broker permissions, and product-document freshness.

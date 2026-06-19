@@ -3,7 +3,6 @@ from __future__ import annotations
 import pytest
 
 from hk_equity_strategies.catalog import (
-    HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE,
     HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
     HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE,
 )
@@ -39,21 +38,6 @@ def test_global_etf_rotation_runtime_requirements_are_direct_inputs():
     assert requirements["requires_snapshot_artifacts"] is False
     assert requirements["requires_snapshot_manifest_path"] is False
     assert requirements["snapshot_contract_version"] is None
-
-
-def test_high_dividend_low_vol_trend_runtime_adapter_uses_market_history():
-    adapter = get_platform_runtime_adapter(HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE, platform_id="ibkr")
-
-    assert adapter.available_inputs == frozenset({"market_history"})
-    assert adapter.available_capabilities == frozenset({"broker_client"})
-    assert adapter.require_snapshot_manifest is False
-
-
-def test_high_dividend_low_vol_trend_longbridge_adapter_adds_portfolio_for_value_native_platform():
-    adapter = get_platform_runtime_adapter(HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE, platform_id="longbridge")
-
-    assert adapter.available_inputs == frozenset({"market_history", "portfolio_snapshot"})
-    assert adapter.portfolio_input_name == "portfolio_snapshot"
 
 
 def test_low_vol_dividend_quality_runtime_adapter_requires_feature_snapshot_manifest():
@@ -93,6 +77,7 @@ def test_low_vol_dividend_quality_runtime_requirements_are_snapshot_backed():
         "hk_blue_chip_leader_rotation",
         "hk_index_mean_reversion",
         "hk_etf_regime_rotation",
+        "hk_dividend_gold_defensive_rotation",
     ],
 )
 def test_research_and_snapshot_scaffold_profiles_have_no_runtime_adapter(profile: str):

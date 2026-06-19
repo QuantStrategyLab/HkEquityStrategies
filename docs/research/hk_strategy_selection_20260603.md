@@ -18,19 +18,18 @@ A strategy can stay in the runtime or snapshot package surface only when it has 
 
 | Rank | Profile | Type | Full annualized return | Full max drawdown | Train annualized return | OOS annualized return | Decision |
 | ---: | --- | --- | ---: | ---: | ---: | ---: | --- |
-| 1 | `hk_dividend_gold_defensive_rotation` | non-snapshot runtime | 17.16% | -8.06% | 3.18% | 32.54% | Keep as preferred risk-adjusted runtime candidate. |
-| 2 | `hk_global_etf_tactical_rotation` | non-snapshot runtime | 18.84% | -20.51% | 3.69% | 35.62% | Keep as higher-return secondary runtime candidate; product checks are heavier. |
-| 3 | `hk_low_vol_dividend_quality_snapshot` | snapshot-backed runtime | 13.34% | -23.05% | needs production PIT rerun | needs production PIT rerun | Keep as the only retained snapshot profile; artifact evidence remains mandatory. |
+| 1 | `hk_global_etf_tactical_rotation` | non-snapshot runtime | 18.84% | -20.51% | 3.69% | 35.62% | Keep as the retained direct market-history runtime candidate; product checks are heavier. |
+| 2 | `hk_low_vol_dividend_quality_snapshot` | snapshot-backed runtime | 13.34% | -23.05% | needs production PIT rerun | needs production PIT rerun | Keep as the only retained snapshot profile; artifact evidence remains mandatory. |
 
-Why rank `hk_dividend_gold_defensive_rotation` above `hk_global_etf_tactical_rotation`: the global ETF strategy has higher annualized return, but the high-dividend/gold strategy has much lower drawdown and a better return-to-drawdown ratio. That makes it the safer first live-enable candidate.
+`hk_dividend_gold_defensive_rotation` was removed after review because its strong result was heavily dependent on the 2024-2026 gold/high-dividend regime and the fixed two-ETF universe looked too hindsight-selected for live promotion.
 
 ## Rejected ordinary-strategy candidates
 
 | Candidate | Latest evidence | Decision |
 | --- | --- | --- |
 | HSI/HSTECH mean reversion | Full annualized return 0.72%, max drawdown -47.58%; the leveraged relative-pair variants had negative full/OOS annualized returns. | Removed from the package surface and source tree. |
-| Broad six-ETF regime rotation baseline | Full annualized return 13.55%, max drawdown -21.56%, but train annualized return -7.24%. | Removed as a public profile. Its useful ETF-rotation primitives were retained internally for the two promoted ETF strategies. |
-| Unscaled high-dividend/gold pair variant | Full annualized return 17.94%, max drawdown -11.28%. | Not promoted separately; the 12% volatility-targeted implementation gives a better return-to-drawdown ratio with only a small return sacrifice. |
+| Broad six-ETF regime rotation baseline | Full annualized return 13.55%, max drawdown -21.56%, but train annualized return -7.24%. | Removed as a public profile; reusable ETF-rotation primitives remain in `hk_global_etf_tactical_rotation`. |
+| High-dividend/gold pair variants | Full-sample metrics looked strong, but train-period return was weak and OOS performance concentrated in the favorable 2024-2026 gold/high-dividend regime. | Removed from runtime surface and source tree to avoid hindsight-selected two-ETF overfit. |
 
 ## Rejected snapshot candidates
 
@@ -43,11 +42,10 @@ Why rank `hk_dividend_gold_defensive_rotation` above `hk_global_etf_tactical_rot
 ## Verification commands used
 
 ```bash
-PYTHONPATH=src .venv/bin/python scripts/research_hk_dividend_gold_defensive_rotation_backtest.py --json-output data/output/hk_strategy_selection_20260603/high_dividend_low_vol_trend.json
 PYTHONPATH=src .venv/bin/python scripts/research_hk_global_etf_tactical_rotation_backtest.py --json-output data/output/hk_strategy_selection_20260603/listed_global_etf_rotation.json
 ```
 
-The rejected mean-reversion and broad-baseline metrics were captured in this pruning run before deleting those research entrypoints. The retained backtest scripts remain in this repository for future reruns.
+The rejected mean-reversion, broad-baseline, and high-dividend/gold metrics were captured before deleting those research entrypoints. The retained backtest scripts remain in this repository for future reruns.
 
 ## Operational status
 

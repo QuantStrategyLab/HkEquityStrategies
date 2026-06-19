@@ -6,7 +6,6 @@ import sys
 from pathlib import Path
 
 from hk_equity_strategies.catalog import (
-    HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE,
     HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
     HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE,
 )
@@ -124,38 +123,6 @@ def test_longbridge_global_etf_readiness_requires_portfolio_snapshot_conversion(
         "portfolio_input_name": "portfolio_snapshot",
     }
     assert "portfolio_snapshot" in plan["available_inputs"]
-
-
-def test_high_dividend_low_vol_trend_readiness_uses_two_managed_symbols():
-    plan = build_hk_runtime_readiness(
-        HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE,
-        platform_id="longbridge",
-    )
-
-    assert plan["runtime_enabled"] is True
-    assert plan["managed_symbols"] == ["02840", "03110"]
-    assert plan["target_conversion"] == {
-        "strategy_target_mode": "weight",
-        "platform_native_target_mode": "value",
-        "requires_portfolio_snapshot": True,
-        "portfolio_input_name": "portfolio_snapshot",
-    }
-    assert any("preferred lower-drawdown" in check for check in plan["profile_live_optimization_checks"])
-    assert plan["live_enablement_thresholds"] == {
-        "max_allowed_backtest_drawdown": 0.12,
-        "min_required_return_to_drawdown_ratio": 0.50,
-        "max_allowed_annualized_turnover": 1.00,
-        "min_required_annual_return": 0.0,
-        "min_required_walk_forward_years": 3.0,
-        "min_required_oos_fold_count": 3,
-        "max_single_period_return_contribution": 0.60,
-    }
-    assert plan["execution_capacity_policy"]["min_median_daily_turnover_hkd"] == 10_000_000
-    assert plan["rollout_risk_policy"]["min_observation_trading_days_before_scale_up"] == 20
-    assert plan["runtime_market_data_policy"]["required"] is True
-    assert any("Hang Seng High Dividend Yield Index methodology" in check for check in plan["profile_live_optimization_checks"])
-    assert any("SPDR Gold Shares trust structure" in check for check in plan["profile_live_optimization_checks"])
-    assert any("02840/03110" in note for note in plan["risk_notes"])
 
 
 def test_low_vol_dividend_quality_readiness_requires_snapshot_artifacts():

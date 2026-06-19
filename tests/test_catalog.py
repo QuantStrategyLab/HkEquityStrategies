@@ -7,7 +7,6 @@ from quant_platform_kit.common.strategies import get_strategy_component_map
 from hk_equity_strategies import get_strategy_definitions
 from hk_equity_strategies.catalog import (
     HK_EQUITY_DOMAIN,
-    HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE,
     HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
     HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE,
     get_compatible_platforms,
@@ -27,7 +26,6 @@ def test_catalog_declares_runtime_enabled_hk_direct_strategies():
     catalog = get_strategy_definitions()
     assert set(catalog) == {
         HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
-        HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE,
         HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE,
     }
     definition = catalog[HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE]
@@ -42,19 +40,6 @@ def test_catalog_declares_runtime_enabled_hk_direct_strategies():
     component_map = get_strategy_component_map(definition)
     assert component_map["signal_logic"].module_path == (
         "hk_equity_strategies.strategies.hk_global_etf_tactical_rotation"
-    )
-
-    high_dividend_definition = catalog[HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE]
-    assert high_dividend_definition.domain == HK_EQUITY_DOMAIN
-    assert high_dividend_definition.required_inputs == frozenset({"market_history"})
-    assert high_dividend_definition.target_mode == "weight"
-    assert get_compatible_platforms(HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE) == frozenset({"ibkr", "longbridge"})
-    assert get_strategy_metadata(HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE).status == "runtime_enabled"
-    assert HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE in get_runtime_enabled_profiles()
-
-    high_dividend_component_map = get_strategy_component_map(high_dividend_definition)
-    assert high_dividend_component_map["signal_logic"].module_path == (
-        "hk_equity_strategies.strategies.hk_dividend_gold_defensive_rotation"
     )
 
     low_vol_definition = catalog[HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE]
@@ -75,7 +60,6 @@ def test_profile_groups_keep_runtime_research_and_snapshot_scaffolds_separate():
     assert get_direct_market_history_profiles() == frozenset(
         {
             HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
-            HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE,
         }
     )
     assert get_snapshot_backed_profiles() == frozenset({HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE})
@@ -84,7 +68,6 @@ def test_profile_groups_keep_runtime_research_and_snapshot_scaffolds_separate():
     assert get_runtime_enabled_profiles() == frozenset(
         {
             HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
-            HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE,
             HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE,
         }
     )
@@ -112,6 +95,7 @@ def test_profile_groups_keep_runtime_research_and_snapshot_scaffolds_separate():
         "hk_blue_chip_snapshot",
         "hk_index_reversion",
         "hk_etf_rotation",
+        "hk_dividend_gold_defensive_rotation",
     ],
 )
 def test_research_and_snapshot_scaffold_profiles_are_not_runtime_catalog_profiles(profile: str):
@@ -122,7 +106,6 @@ def test_research_and_snapshot_scaffold_profiles_are_not_runtime_catalog_profile
 def test_canonical_profiles_resolve_without_legacy_aliases():
     assert get_profile_aliases() == {}
     assert resolve_canonical_profile("hk-global-etf-tactical-rotation") == HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE
-    assert resolve_canonical_profile("hk-dividend-gold-defensive-rotation") == HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE
     assert resolve_canonical_profile("hk-low-vol-dividend-quality-snapshot") == (
         HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE
     )
@@ -134,6 +117,8 @@ def test_canonical_profiles_resolve_without_legacy_aliases():
         "hk_global_etf_rotation",
         "hk_listed_global_rotation",
         "hk_hd_gold_trend",
+        "hk_dividend_gold_defensive_rotation",
+        "hk-dividend-gold-defensive-rotation",
         "hk_high_dividend_low_vol",
         "hk_low_vol_dividend_snapshot",
         "hk_dividend_quality",

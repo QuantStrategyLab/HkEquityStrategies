@@ -20,7 +20,6 @@ from hk_equity_strategies.runtime_etf_product_policy import build_runtime_etf_pr
 from hk_equity_strategies.runtime_market_data_policy import build_runtime_market_data_policy
 from hk_equity_strategies.catalog import (
     HK_EQUITY_DOMAIN,
-    HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE,
     HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
     HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE,
     get_runtime_enabled_profiles,
@@ -165,7 +164,6 @@ def get_required_live_evidence_fields(profile: str) -> tuple[str, ...]:
     return tuple(dict.fromkeys(fields))
 
 HK_DERIVATIVE_OR_COMPLEX_ETF_SYMBOLS = frozenset({"03175"})
-HK_DEFENSIVE_ETF_SYMBOLS = frozenset({"02840", "03110"})
 MIN_REQUIRED_WALK_FORWARD_YEARS = 3.0
 
 PROFILE_LIVE_ENABLEMENT_THRESHOLDS: dict[str, dict[str, float]] = {
@@ -173,15 +171,6 @@ PROFILE_LIVE_ENABLEMENT_THRESHOLDS: dict[str, dict[str, float]] = {
         "max_allowed_backtest_drawdown": 0.30,
         "min_required_return_to_drawdown_ratio": 0.50,
         "max_allowed_annualized_turnover": 1.50,
-        "min_required_annual_return": 0.0,
-        "min_required_walk_forward_years": MIN_REQUIRED_WALK_FORWARD_YEARS,
-        "min_required_oos_fold_count": MIN_REQUIRED_OOS_FOLD_COUNT,
-        "max_single_period_return_contribution": MAX_SINGLE_PERIOD_RETURN_CONTRIBUTION,
-    },
-    HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE: {
-        "max_allowed_backtest_drawdown": 0.12,
-        "min_required_return_to_drawdown_ratio": 0.50,
-        "max_allowed_annualized_turnover": 1.00,
         "min_required_annual_return": 0.0,
         "min_required_walk_forward_years": MIN_REQUIRED_WALK_FORWARD_YEARS,
         "min_required_oos_fold_count": MIN_REQUIRED_OOS_FOLD_COUNT,
@@ -200,7 +189,7 @@ PROFILE_LIVE_ENABLEMENT_THRESHOLDS: dict[str, dict[str, float]] = {
 
 PROFILE_LIVE_OPTIMIZATION_CHECKS: dict[str, tuple[str, ...]] = {
     HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE: (
-        "Treat this as the higher-return but broader ETF-rotation candidate; start with reduced capital versus the two-ETF defensive profile.",
+        "Treat this as the remaining direct market-history ETF-rotation candidate; start in dry-run/paper mode until product and execution evidence passes.",
         "03175 is a crude-oil futures ETF; if platform product permission, liquidity, or spread checks fail, remove it via universe override and re-run backtests/readiness.",
         "Verify all eight ETF symbols are supported by the selected platform feed before relying on cross-sectional ranking.",
         "Capture issuer factsheet/KFS/prospectus, NAV/iNAV, underlying index/reference-asset, and market-maker/liquidity-provider evidence for every ETF in the broader universe.",
@@ -209,13 +198,6 @@ PROFILE_LIVE_OPTIMIZATION_CHECKS: dict[str, tuple[str, ...]] = {
         "For 03033, audit Hang Seng TECH concentration, platform-regulation drawdown risk, NAV/iNAV, and HK technology-sector liquidity.",
         "For 02834, audit Nasdaq trading-hour gap, US-market FX, premium/discount, capital-distribution risk, and multi-counter currency handling.",
         "For 03175, audit futures-based complex-product status, WTI futures roll schedule, margin, curve/contango/backwardation, non-correlation with spot oil, and operator suitability; remove it if any check fails.",
-    ),
-    HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE: (
-        "Treat this as the preferred lower-drawdown first live HK profile because the managed universe is only 02840 and 03110.",
-        "Keep the documented 12% annual volatility target until a new walk-forward backtest and paper-trading window are reviewed.",
-        "Verify 02840 and 03110 dividend/distribution treatment, lot sizes, and bid/ask spreads before increasing exposure.",
-        "For 03110, audit Hang Seng High Dividend Yield Index methodology, distribution policy, capital-distribution risk, and high-dividend concentration/yield-trap risk.",
-        "For 02840, audit SPDR Gold Shares trust structure, physical-gold single-asset risk, NAV/iNAV, tracking difference, multi-counter currency, and USD creation/redemption handling.",
     ),
     HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE: (
         "Treat this as the first snapshot-backed HK runtime profile; the strategy package consumes snapshots but does not generate them.",
@@ -254,8 +236,6 @@ def _build_risk_notes(profile: str, symbols: tuple[str, ...], *, runtime_enabled
         notes.append("The profile is not runtime_enabled, so live order submission must remain disabled.")
     if HK_DERIVATIVE_OR_COMPLEX_ETF_SYMBOLS.intersection(symbols):
         notes.append("03175 is a crude-oil futures ETF; confirm suitability, spread, and product permission before live use.")
-    if profile == HK_DIVIDEND_GOLD_DEFENSIVE_ROTATION_PROFILE and HK_DEFENSIVE_ETF_SYMBOLS.issubset(symbols):
-        notes.append("02840/03110 is the lower-drawdown live candidate, but it still requires ETF fee, spread, and distribution checks.")
     if profile == HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE:
         notes.append(
             "This snapshot-backed profile requires a validated factor snapshot artifact and manifest at runtime."
