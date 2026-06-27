@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hk-equity-strategies"
-version = "0.4.6"
+version = "0.4.7"
 description = "Hong Kong equity non-snapshot strategies for QuantStrategyLab platform runtimes"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
   "pandas>=2.0",
-  "quant-platform-kit @ git+https://github.com/QuantStrategyLab/QuantPlatformKit.git@7b6e3ce33e6563db4794fa7b865db9ec428dc478",
+  "quant-platform-kit @ git+https://github.com/QuantStrategyLab/QuantPlatformKit.git@dfdbef6b58ab46f357d67800510bb9e8c4a01182",
 ]
 
 [project.optional-dependencies]
