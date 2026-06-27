@@ -1,5 +1,7 @@
 # 港股低波股息质量策略 live-enable 操作清单
 
+[English](hk_low_vol_dividend_quality_snapshot_live_enablement.md)
+
 本文档用于把 `hk_low_vol_dividend_quality_snapshot` 推进到真正可 live-enable 的状态。当前策略已经进入 HK 策略包 runtime catalog，但在所有证据门槛通过前，真实下单必须继续保持 dry-run。
 
 ## 仓库合并顺序
