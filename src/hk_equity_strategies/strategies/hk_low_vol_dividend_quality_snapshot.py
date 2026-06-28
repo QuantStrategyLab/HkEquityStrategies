@@ -363,6 +363,7 @@ def build_target_weights(
     hard_defense_exposure: float = DEFAULT_HARD_DEFENSE_EXPOSURE,
     soft_breadth_threshold: float = DEFAULT_SOFT_BREADTH_THRESHOLD,
     hard_breadth_threshold: float = DEFAULT_HARD_BREADTH_THRESHOLD,
+    **kwargs: object,
 ) -> tuple[dict[str, float], pd.DataFrame, dict[str, object]]:
     if holdings_count <= 0:
         raise ValueError("holdings_count must be positive")
