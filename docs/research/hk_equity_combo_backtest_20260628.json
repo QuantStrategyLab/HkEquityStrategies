@@ -1,0 +1,645 @@
+{
+  "combo_config": {
+    "cost_bps": 10.0,
+    "dividend_weight": 0.4,
+    "dynamic_dividend_weights": {
+      "hard_defense": 0.0,
+      "risk_on": 0.4,
+      "soft_defense": 0.2
+    },
+    "etf_weight": 0.6,
+    "rebalance_frequency": "monthly"
+  },
+  "comparison": {
+    "2021": {
+      "diff_annual_return": 0.02655107661930045,
+      "diff_annual_volatility": -0.05116779594733774,
+      "diff_max_drawdown": 0.03297701577672674
+    },
+    "2022": {
+      "diff_annual_return": 0.02336882870160284,
+      "diff_annual_volatility": -0.07537497307012246,
+      "diff_max_drawdown": 0.12295529657527193
+    },
+    "2023": {
+      "diff_annual_return": 0.04304160621211417,
+      "diff_annual_volatility": 0.019300698320448464,
+      "diff_max_drawdown": 0.014426203158392936
+    },
+    "2024": {
+      "diff_annual_return": -0.04403376757640576,
+      "diff_annual_volatility": 0.0056177603962227485,
+      "diff_max_drawdown": -0.006204087224753296
+    },
+    "2025": {
+      "diff_annual_return": 0.017978637287568544,
+      "diff_annual_volatility": 0.010003137979357146,
+      "diff_max_drawdown": 0.02054076288619866
+    },
+    "2026_ytd": {
+      "diff_annual_return": 0.08716737283709164,
+      "diff_annual_volatility": 0.038376026773831284,
+      "diff_max_drawdown": -0.02277427221115047
+    },
+    "bear_market": {
+      "diff_annual_return": 0.015296546540713107,
+      "diff_annual_volatility": 0.001205524956471471,
+      "diff_max_drawdown": 0.01442620315839338
+    },
+    "full": {
+      "diff_annual_return": 0.018485218021555783,
+      "diff_annual_volatility": 0.007009059186630612,
+      "diff_max_drawdown": 0.012125220760804911
+    },
+    "oos_2024_2026": {
+      "diff_annual_return": 0.0018763520032905046,
+      "diff_annual_volatility": 0.014425387437054349,
+      "diff_max_drawdown": -0.02277427221115047
+    },
+    "recent": {
+      "diff_annual_return": 0.0214793976486094,
+      "diff_annual_volatility": 0.022760379000018177,
+      "diff_max_drawdown": -0.022774272211151136
+    },
+    "trailing_1y": {
+      "diff_annual_return": 0.024051827039059948,
+      "diff_annual_volatility": 0.022670398631369937,
+      "diff_max_drawdown": -0.02277427221115058
+    },
+    "trailing_3y": {
+      "diff_annual_return": 0.02201754348574103,
+      "diff_annual_volatility": 0.013604280216584358,
+      "diff_max_drawdown": -0.022774272211150803
+    },
+    "train_2021_2023": {
+      "diff_annual_return": 0.03188986277643746,
+      "diff_annual_volatility": -0.00459699604256289,
+      "diff_max_drawdown": 0.01850918907742094
+    }
+  },
+  "config": {
+    "analysis_start": "2021-09-01",
+    "data_end": "2026-05-29",
+    "end": "2026-06-01",
+    "oos_start": "2024-01-01",
+    "start": "2020-08-27",
+    "train_end": "2023-12-29"
+  },
+  "data": {
+    "end": "2026-05-29",
+    "last_weights": {
+      "02800": 0.0,
+      "02822": 0.0,
+      "02834": 0.0,
+      "02840": 0.0,
+      "03033": 0.0,
+      "03110": 0.7135275635832518,
+      "03175": 0.0,
+      "03188": 0.28647243641674824
+    },
+    "rows": 1162,
+    "start": "2021-09-01"
+  },
+  "metrics": {
+    "combo_dynamic": {
+      "2021": {
+        "annual_return": 0.0,
+        "annual_volatility": 0.0,
+        "days": 83,
+        "max_drawdown": 0.0,
+        "total_return": 0.0
+      },
+      "2022": {
+        "annual_return": 0.0,
+        "annual_volatility": 0.0,
+        "days": 246,
+        "max_drawdown": 0.0,
+        "total_return": 0.0
+      },
+      "2023": {
+        "annual_return": 0.08031247162842181,
+        "annual_volatility": 0.13205875297013842,
+        "days": 243,
+        "max_drawdown": -0.10444610749785177,
+        "total_return": 0.07733606190614739
+      },
+      "2024": {
+        "annual_return": 0.18482528725258374,
+        "annual_volatility": 0.1341917460808949,
+        "days": 246,
+        "max_drawdown": -0.07532954456180319,
+        "total_return": 0.18005062821974027
+      },
+      "2025": {
+        "annual_return": 0.3555632474001884,
+        "annual_volatility": 0.13634022431055187,
+        "days": 246,
+        "max_drawdown": -0.06367153667873005,
+        "total_return": 0.3457800202160286
+      },
+      "2026_ytd": {
+        "annual_return": 0.34673340631661653,
+        "annual_volatility": 0.20567916759112254,
+        "days": 98,
+        "max_drawdown": -0.11083007581446769,
+        "total_return": 0.12273223167485847
+      },
+      "bear_market": {
+        "annual_return": 0.1083958640486602,
+        "annual_volatility": 0.11760719677367094,
+        "days": 754,
+        "max_drawdown": -0.10444610749785177,
+        "total_return": 0.3605984386808476
+      },
+      "full": {
+        "annual_return": 0.1520793282953239,
+        "annual_volatility": 0.1225716458017225,
+        "days": 1162,
+        "max_drawdown": -0.1108300758144678,
+        "total_return": 0.9208882711959046
+      },
+      "oos_2024_2026": {
+        "annual_return": 0.28018058080252994,
+        "annual_volatility": 0.14934350483112857,
+        "days": 590,
+        "max_drawdown": -0.1108300758144678,
+        "total_return": 0.7829982111591489
+      },
+      "recent": {
+        "annual_return": 0.31163663847250844,
+        "annual_volatility": 0.15663387013634406,
+        "days": 245,
+        "max_drawdown": -0.11083007581446813,
+        "total_return": 0.3017900302270924
+      },
+      "trailing_1y": {
+        "annual_return": 0.30927467975387013,
+        "annual_volatility": 0.1563258614349159,
+        "days": 246,
+        "max_drawdown": -0.11083007581446791,
+        "total_return": 0.3009012236513311
+      },
+      "trailing_3y": {
+        "annual_return": 0.2483386645038239,
+        "annual_volatility": 0.14450317109374536,
+        "days": 736,
+        "max_drawdown": -0.11083007581446791,
+        "total_return": 0.9114011182359956
+      },
+      "train_2021_2023": {
+        "annual_return": 0.03336232901748115,
+        "annual_volatility": 0.0861156777825766,
+        "days": 572,
+        "max_drawdown": -0.10444610749785177,
+        "total_return": 0.07733606190614739
+      }
+    },
+    "combo_static": {
+      "2021": {
+        "annual_return": -0.02655107661930045,
+        "annual_volatility": 0.05116779594733774,
+        "days": 83,
+        "max_drawdown": -0.03297701577672674,
+        "total_return": -0.008824026502076143
+      },
+      "2022": {
+        "annual_return": -0.02336882870160284,
+        "annual_volatility": 0.07537497307012246,
+        "days": 246,
+        "max_drawdown": -0.12295529657527193,
+        "total_return": -0.022818825663745823
+      },
+      "2023": {
+        "annual_return": 0.03727086541630764,
+        "annual_volatility": 0.11275805464968995,
+        "days": 243,
+        "max_drawdown": -0.1188723106562447,
+        "total_return": 0.03591614540265442
+      },
+      "2024": {
+        "annual_return": 0.2288590548289895,
+        "annual_volatility": 0.12857398568467215,
+        "days": 246,
+        "max_drawdown": -0.06912545733704989,
+        "total_return": 0.22284404272202618
+      },
+      "2025": {
+        "annual_return": 0.33758461011261987,
+        "annual_volatility": 0.12633708633119473,
+        "days": 246,
+        "max_drawdown": -0.0842122995649287,
+        "total_return": 0.3283533462474888
+      },
+      "2026_ytd": {
+        "annual_return": 0.2595660334795249,
+        "annual_volatility": 0.16730314081729125,
+        "days": 98,
+        "max_drawdown": -0.08805580360331722,
+        "total_return": 0.0938929168847158
+      },
+      "bear_market": {
+        "annual_return": 0.09309931750794709,
+        "annual_volatility": 0.11640167181719947,
+        "days": 754,
+        "max_drawdown": -0.11887231065624515,
+        "total_return": 0.3051849190570721
+      },
+      "full": {
+        "annual_return": 0.1335941102737681,
+        "annual_volatility": 0.11556258661509189,
+        "days": 1162,
+        "max_drawdown": -0.12295529657527271,
+        "total_return": 0.7828300925926288
+      },
+      "oos_2024_2026": {
+        "annual_return": 0.27830422879923944,
+        "annual_volatility": 0.13491811739407422,
+        "days": 590,
+        "max_drawdown": -0.08805580360331733,
+        "total_return": 0.7768857173506121
+      },
+      "recent": {
+        "annual_return": 0.29015724082389904,
+        "annual_volatility": 0.13387349113632588,
+        "days": 245,
+        "max_drawdown": -0.088055803603317,
+        "total_return": 0.2810593110348618
+      },
+      "trailing_1y": {
+        "annual_return": 0.2852228527148102,
+        "annual_volatility": 0.13365546280354595,
+        "days": 246,
+        "max_drawdown": -0.08805580360331733,
+        "total_return": 0.27756708576350086
+      },
+      "trailing_3y": {
+        "annual_return": 0.22632112101808288,
+        "annual_volatility": 0.130898890877161,
+        "days": 736,
+        "max_drawdown": -0.0880558036033171,
+        "total_return": 0.8145984878005026
+      },
+      "train_2021_2023": {
+        "annual_return": 0.0014724662410436906,
+        "annual_volatility": 0.09071267382513949,
+        "days": 572,
+        "max_drawdown": -0.12295529657527271,
+        "total_return": 0.0033453897366457763
+      }
+    },
+    "dividend_proxy_standalone": {
+      "2021": {
+        "annual_return": -0.10933028541437873,
+        "annual_volatility": 0.1855842785206384,
+        "days": 83,
+        "max_drawdown": -0.10955233759596283,
+        "total_return": -0.03741645777944147
+      },
+      "2022": {
+        "annual_return": -0.06737686641394469,
+        "annual_volatility": 0.18843743267530613,
+        "days": 246,
+        "max_drawdown": -0.2847498003976866,
+        "total_return": -0.06582666810812554
+      },
+      "2023": {
+        "annual_return": -0.03241587309059857,
+        "annual_volatility": 0.15093962581909218,
+        "days": 243,
+        "max_drawdown": -0.16671248353720536,
+        "total_return": -0.03127646317825761
+      },
+      "2024": {
+        "annual_return": 0.28059580412540996,
+        "annual_volatility": 0.20264563297888172,
+        "days": 246,
+        "max_drawdown": -0.14047471930417155,
+        "total_return": 0.27307691830781633
+      },
+      "2025": {
+        "annual_return": 0.30566429834817477,
+        "annual_volatility": 0.14224002159939494,
+        "days": 246,
+        "max_drawdown": -0.11617341326142616,
+        "total_return": 0.2973992290405383
+      },
+      "2026_ytd": {
+        "annual_return": 0.13383072405225271,
+        "annual_volatility": 0.12580261338300636,
+        "days": 98,
+        "max_drawdown": -0.05848450432543606,
+        "total_return": 0.050057780221762105
+      },
+      "bear_market": {
+        "annual_return": 0.059119925653652095,
+        "annual_volatility": 0.18584605658437683,
+        "days": 754,
+        "max_drawdown": -0.26495810104271145,
+        "total_return": 0.18751044632547575
+      },
+      "full": {
+        "annual_return": 0.09361439384157766,
+        "annual_volatility": 0.17072422748892893,
+        "days": 1162,
+        "max_drawdown": -0.28474980039768594,
+        "total_return": 0.5108008686817294
+      },
+      "oos_2024_2026": {
+        "annual_return": 0.26514931100919714,
+        "annual_volatility": 0.1679208390432916,
+        "days": 590,
+        "max_drawdown": -0.14047471930417155,
+        "total_return": 0.73436889789537
+      },
+      "recent": {
+        "annual_return": 0.2551548468457632,
+        "annual_volatility": 0.11577299013904291,
+        "days": 245,
+        "max_drawdown": -0.05848450432543595,
+        "total_return": 0.24725632678332432
+      },
+      "trailing_1y": {
+        "annual_return": 0.24655739634375218,
+        "annual_volatility": 0.1157366371210398,
+        "days": 246,
+        "max_drawdown": -0.05848450432543595,
+        "total_return": 0.240033494683483
+      },
+      "trailing_3y": {
+        "annual_return": 0.18473881508867263,
+        "annual_volatility": 0.16432922103367703,
+        "days": 736,
+        "max_drawdown": -0.1431434140852459,
+        "total_return": 0.6406834112344573
+      },
+      "train_2021_2023": {
+        "annual_return": -0.05898748376995877,
+        "annual_volatility": 0.17306123762856487,
+        "days": 572,
+        "max_drawdown": -0.28474980039768594,
+        "total_return": -0.1289045424447689
+      }
+    },
+    "etf_rotation_standalone": {
+      "2021": {
+        "annual_return": 0.0,
+        "annual_volatility": 0.0,
+        "days": 83,
+        "max_drawdown": 0.0,
+        "total_return": 0.0
+      },
+      "2022": {
+        "annual_return": 0.0,
+        "annual_volatility": 0.0,
+        "days": 246,
+        "max_drawdown": 0.0,
+        "total_return": 0.0
+      },
+      "2023": {
+        "annual_return": 0.018807466697736475,
+        "annual_volatility": 0.11680865277817655,
+        "days": 243,
+        "max_drawdown": -0.13727373700383882,
+        "total_return": 0.018129719776838416
+      },
+      "2024": {
+        "annual_return": 0.21321844732869155,
+        "annual_volatility": 0.14434116482400358,
+        "days": 246,
+        "max_drawdown": -0.07433804407534561,
+        "total_return": 0.20764825320125557
+      },
+      "2025": {
+        "annual_return": 0.4623494042613747,
+        "annual_volatility": 0.13884934520138534,
+        "days": 246,
+        "max_drawdown": -0.07118705672202075,
+        "total_return": 0.44917676802020656
+      },
+      "2026_ytd": {
+        "annual_return": 0.4849841260735257,
+        "annual_volatility": 0.18900428879313574,
+        "days": 98,
+        "max_drawdown": -0.08066088167755137,
+        "total_return": 0.16622058894300995
+      },
+      "bear_market": {
+        "annual_return": 0.10725151492248886,
+        "annual_volatility": 0.1172464681344376,
+        "days": 754,
+        "max_drawdown": -0.13727373700383882,
+        "total_return": 0.35639971069838117
+      },
+      "full": {
+        "annual_return": 0.17189042613017014,
+        "annual_volatility": 0.12028931975983966,
+        "days": 1162,
+        "max_drawdown": -0.13727373700383882,
+        "total_return": 1.0780004630087863
+      },
+      "oos_2024_2026": {
+        "annual_return": 0.3562492754441746,
+        "annual_volatility": 0.1506488471019742,
+        "days": 590,
+        "max_drawdown": -0.08066088167755148,
+        "total_return": 1.0409977458120547
+      },
+      "recent": {
+        "annual_return": 0.42062605556071486,
+        "annual_volatility": 0.15029874014845906,
+        "days": 245,
+        "max_drawdown": -0.08066088167755148,
+        "total_return": 0.40683844033917094
+      },
+      "trailing_1y": {
+        "annual_return": 0.4168658957375553,
+        "annual_volatility": 0.15001651058649293,
+        "days": 246,
+        "max_drawdown": -0.08066088167755148,
+        "total_return": 0.40515968619646037
+      },
+      "trailing_3y": {
+        "annual_return": 0.29322180862515257,
+        "annual_volatility": 0.1441699898099868,
+        "days": 736,
+        "max_drawdown": -0.103746790311388,
+        "total_return": 1.1191227869272513
+      },
+      "train_2021_2023": {
+        "annual_return": 0.007947091366766301,
+        "annual_volatility": 0.07613838591478195,
+        "days": 572,
+        "max_drawdown": -0.13727373700383882,
+        "total_return": 0.018129719776838416
+      }
+    },
+    "static_buy_and_hold_6040": {
+      "2021": {
+        "annual_return": -0.0431960681386907,
+        "annual_volatility": 0.1405584240616132,
+        "days": 83,
+        "max_drawdown": -0.0631013524013182,
+        "total_return": -0.014438454657997313
+      },
+      "2022": {
+        "annual_return": -0.10257535839381338,
+        "annual_volatility": 0.21015317704209138,
+        "days": 246,
+        "max_drawdown": -0.26932304780612826,
+        "total_return": -0.10025988132433628
+      },
+      "2023": {
+        "annual_return": -0.0012410613996043374,
+        "annual_volatility": 0.148200937993061,
+        "days": 243,
+        "max_drawdown": -0.1310970867134309,
+        "total_return": -0.001196764311436782
+      },
+      "2024": {
+        "annual_return": 0.24747257876787998,
+        "annual_volatility": 0.18478121033710457,
+        "days": 246,
+        "max_drawdown": -0.13310994343012583,
+        "total_return": 0.24092220368422623
+      },
+      "2025": {
+        "annual_return": 0.28744108498959076,
+        "annual_volatility": 0.15543853316929482,
+        "days": 246,
+        "max_drawdown": -0.13606382446335563,
+        "total_return": 0.27971955990674413
+      },
+      "2026_ytd": {
+        "annual_return": 0.27758341613297466,
+        "annual_volatility": 0.12781571834755823,
+        "days": 98,
+        "max_drawdown": -0.048375357068358715,
+        "total_return": 0.09995166981001558
+      },
+      "bear_market": {
+        "annual_return": 0.05786574695031099,
+        "annual_volatility": 0.1901745719208923,
+        "days": 754,
+        "max_drawdown": -0.25286045625965214,
+        "total_return": 0.18330792246778982
+      },
+      "full": {
+        "annual_return": 0.09925731911933244,
+        "annual_volatility": 0.1707712356379726,
+        "days": 1162,
+        "max_drawdown": -0.2693230478061287,
+        "total_return": 0.5470834595221441
+      },
+      "oos_2024_2026": {
+        "annual_return": 0.2690017362690795,
+        "annual_volatility": 0.164391289046347,
+        "days": 590,
+        "max_drawdown": -0.14555802306550147,
+        "total_return": 0.7467589081066304
+      },
+      "recent": {
+        "annual_return": 0.3057623816039745,
+        "annual_volatility": 0.1146694549561821,
+        "days": 245,
+        "max_drawdown": -0.05048628494148755,
+        "total_return": 0.2961214678046564
+      },
+      "trailing_1y": {
+        "annual_return": 0.29217138407446064,
+        "annual_volatility": 0.1148988789249866,
+        "days": 246,
+        "max_drawdown": -0.05048628494148766,
+        "total_return": 0.2843093374652368
+      },
+      "trailing_3y": {
+        "annual_return": 0.20258213620269272,
+        "annual_volatility": 0.16070551420408502,
+        "days": 736,
+        "max_drawdown": -0.14555802306550192,
+        "total_return": 0.7139017869591249
+      },
+      "train_2021_2023": {
+        "annual_return": -0.05207484499632142,
+        "annual_volatility": 0.17663243865642797,
+        "days": 572,
+        "max_drawdown": -0.2693230478061287,
+        "total_return": -0.11431196810149336
+      }
+    }
+  },
+  "periods": {
+    "2021": [
+      "2021-01-01",
+      "2021-12-31"
+    ],
+    "2022": [
+      "2022-01-01",
+      "2022-12-31"
+    ],
+    "2023": [
+      "2023-01-01",
+      "2023-12-31"
+    ],
+    "2024": [
+      "2024-01-01",
+      "2024-12-31"
+    ],
+    "2025": [
+      "2025-01-01",
+      "2025-12-31"
+    ],
+    "2026_ytd": [
+      "2026-01-01",
+      "2026-05-29"
+    ],
+    "bear_market": [
+      "2022-03-15",
+      "2025-04-10"
+    ],
+    "full": [
+      null,
+      null
+    ],
+    "oos_2024_2026": [
+      "2024-01-01",
+      "2026-05-29"
+    ],
+    "recent": [
+      "2025-06-01",
+      "2026-05-29"
+    ],
+    "trailing_1y": [
+      "2025-05-30",
+      "2026-05-29"
+    ],
+    "trailing_3y": [
+      "2023-05-30",
+      "2026-05-29"
+    ],
+    "train_2021_2023": [
+      "2021-09-01",
+      "2023-12-29"
+    ]
+  },
+  "regimes": {
+    "counts": {
+      "hard_defense": 56
+    },
+    "pct": {
+      "hard_defense": 100.0
+    }
+  },
+  "rotation_config": {
+    "cost_bps": 10.0,
+    "max_gross_exposure": 1.0,
+    "min_history_days": 260,
+    "min_momentum": 0.0,
+    "momentum_window_days": 252,
+    "rebalance_frequency": "monthly",
+    "target_annual_volatility": 0.16,
+    "top_n": 2,
+    "trend_window_days": 200,
+    "volatility_window_days": 63,
+    "weighting_mode": "inverse_volatility"
+  }
+}
