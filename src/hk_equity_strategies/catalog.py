@@ -136,6 +136,7 @@ STRATEGY_METADATA: dict[str, StrategyMetadata] = {
     HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE: StrategyMetadata(
         canonical_profile=HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
         display_name="HK Global ETF Tactical Rotation",
+        localized_display_names={"zh": "港股ETF战术轮动"},
         description=(
             "Runtime-enabled volatility-targeted rotation across HK-listed local, global equity, "
             "gold, and crude-oil ETFs using daily market history."
@@ -150,6 +151,7 @@ STRATEGY_METADATA: dict[str, StrategyMetadata] = {
     HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE: StrategyMetadata(
         canonical_profile=HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE,
         display_name="HK Low-Vol Dividend Quality Snapshot",
+        localized_display_names={"zh": "港股红利质量"},
         description=(
             "Runtime-enabled snapshot-backed single-name HK equity selector using production factor snapshots "
             "from HkEquitySnapshotPipelines."
