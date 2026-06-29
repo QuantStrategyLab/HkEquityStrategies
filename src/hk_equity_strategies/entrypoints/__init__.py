@@ -76,9 +76,29 @@ hk_low_vol_dividend_quality_snapshot_entrypoint = CallableStrategyEntrypoint(
 )
 
 
+# ---------------------------------------------------------------------------
+# HK Equity Combo entrypoint — delegates to combo_entrypoints
+# ---------------------------------------------------------------------------
+
+
+def evaluate_hk_equity_combo(ctx: StrategyContext) -> StrategyDecision:
+    from hk_equity_strategies.combo_entrypoints import evaluate_hk_equity_combo as _eval
+    return _eval(ctx)
+
+
+from hk_equity_strategies.combo_manifests import hk_equity_combo_manifest  # noqa: E402 — intentional late import
+
+hk_equity_combo_entrypoint = CallableStrategyEntrypoint(
+    manifest=hk_equity_combo_manifest,
+    _evaluate=evaluate_hk_equity_combo,
+)
+
+
 __all__ = [
     "evaluate_hk_global_etf_tactical_rotation",
     "evaluate_hk_low_vol_dividend_quality_snapshot",
+    "evaluate_hk_equity_combo",
     "hk_global_etf_tactical_rotation_entrypoint",
     "hk_low_vol_dividend_quality_snapshot_entrypoint",
+    "hk_equity_combo_entrypoint",
 ]

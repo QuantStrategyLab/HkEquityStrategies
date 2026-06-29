@@ -18,9 +18,12 @@ from quant_platform_kit.common.strategies import (
 from hk_equity_strategies.strategies import hk_global_etf_tactical_rotation as global_etf_strategy
 from hk_equity_strategies.strategies import hk_low_vol_dividend_quality_snapshot as low_vol_dividend_strategy
 
+from hk_equity_strategies.strategies import hk_equity_combo as hk_combo_strategy
+
 HK_EQUITY_DOMAIN = global_etf_strategy.HK_EQUITY_DOMAIN
 HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE = global_etf_strategy.PROFILE_NAME
 HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE = low_vol_dividend_strategy.PROFILE_NAME
+HK_EQUITY_COMBO_PROFILE = hk_combo_strategy.PROFILE_NAME
 
 HK_DIRECT_MARKET_HISTORY_PROFILES = frozenset(
     {
@@ -34,11 +37,13 @@ HK_RESEARCH_BACKTEST_ONLY_PROFILES = frozenset()
 STRATEGY_PLATFORM_COMPATIBILITY: dict[str, frozenset[str]] = {
     HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE: frozenset({"ibkr", "longbridge"}),
     HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE: frozenset({"ibkr", "longbridge"}),
+    HK_EQUITY_COMBO_PROFILE: frozenset({"manual"}),
 }
 
 STRATEGY_REQUIRED_INPUTS: dict[str, frozenset[str]] = {
     HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE: frozenset({"market_history"}),
     HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE: frozenset({"feature_snapshot"}),
+    HK_EQUITY_COMBO_PROFILE: frozenset({"market_history", "dividend_snapshot"}),
 }
 
 STRATEGY_DEFAULT_CONFIG: dict[str, dict[str, object]] = {
@@ -78,16 +83,24 @@ STRATEGY_DEFAULT_CONFIG: dict[str, dict[str, object]] = {
         "execution_cash_reserve_ratio": low_vol_dividend_strategy.DEFAULT_EXECUTION_CASH_RESERVE_RATIO,
         "rebalance_frequency": "monthly",
     },
+    HK_EQUITY_COMBO_PROFILE: {
+        "etf_weight": 0.60,
+        "dividend_weight": 0.40,
+        "execution_cash_reserve_ratio": 0.02,
+        "rebalance_frequency": "monthly",
+    },
 }
 
 STRATEGY_ENTRYPOINT_ATTRIBUTES: dict[str, str] = {
     HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE: "hk_global_etf_tactical_rotation_entrypoint",
     HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE: "hk_low_vol_dividend_quality_snapshot_entrypoint",
+    HK_EQUITY_COMBO_PROFILE: "hk_equity_combo_entrypoint",
 }
 
 STRATEGY_TARGET_MODES: dict[str, str] = {
     HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE: "weight",
     HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE: "weight",
+    HK_EQUITY_COMBO_PROFILE: "weight",
 }
 
 
@@ -130,6 +143,11 @@ STRATEGY_DEFINITIONS: dict[str, StrategyDefinition] = {
         component_name="signal_logic",
         module_path="hk_equity_strategies.strategies.hk_low_vol_dividend_quality_snapshot",
     ),
+    HK_EQUITY_COMBO_PROFILE: _build_strategy_definition(
+        HK_EQUITY_COMBO_PROFILE,
+        component_name="signal_logic",
+        module_path="hk_equity_strategies.strategies.hk_equity_combo",
+    ),
 }
 
 STRATEGY_METADATA: dict[str, StrategyMetadata] = {
@@ -161,6 +179,17 @@ STRATEGY_METADATA: dict[str, StrategyMetadata] = {
         asset_scope="hk_single_name_snapshot_factor",
         benchmark="02800",
         role="hk_snapshot_low_vol_dividend_quality",
+        status="runtime_enabled",
+    ),
+    HK_EQUITY_COMBO_PROFILE: StrategyMetadata(
+        canonical_profile=HK_EQUITY_COMBO_PROFILE,
+        display_name="HK Equity Combo",
+        description="Combined HK equity strategy: Global ETF tactical rotation (60%) + low-vol dividend quality (40%) blended portfolio.",
+        aliases=(),
+        cadence="monthly review",
+        asset_scope="hk_equity_combo",
+        benchmark="2800",
+        role="hk_equity_combo",
         status="runtime_enabled",
     ),
 }
