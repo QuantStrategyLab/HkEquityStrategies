@@ -611,7 +611,7 @@ def build_live_enablement_row(profile: str) -> dict[str, Any]:
 
 
 def build_live_enablement_matrix() -> dict[str, Any]:
-    runtime_profiles = set(get_direct_market_history_profiles()) | set(get_snapshot_backed_profiles())
+    runtime_profiles = set(get_runtime_enabled_profiles())
     runtime_rows = [_runtime_row(profile).as_dict() for profile in sorted(runtime_profiles)]
     research_rows = [_research_only_row(profile).as_dict() for profile in sorted(get_research_backtest_only_profiles())]
     snapshot_rows = [
