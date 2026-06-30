@@ -19,6 +19,7 @@ from hk_equity_strategies.runtime_equity_product_policy import build_runtime_equ
 from hk_equity_strategies.runtime_etf_product_policy import build_runtime_etf_product_policy
 from hk_equity_strategies.runtime_market_data_policy import build_runtime_market_data_policy
 from hk_equity_strategies.catalog import (
+    HK_EQUITY_COMBO_PROFILE,
     HK_EQUITY_DOMAIN,
     HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
     HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE,
@@ -180,6 +181,15 @@ PROFILE_LIVE_ENABLEMENT_THRESHOLDS: dict[str, dict[str, float]] = {
         "max_allowed_backtest_drawdown": 0.30,
         "min_required_return_to_drawdown_ratio": 0.50,
         "max_allowed_annualized_turnover": 1.00,
+        "min_required_annual_return": 0.0,
+        "min_required_walk_forward_years": MIN_REQUIRED_WALK_FORWARD_YEARS,
+        "min_required_oos_fold_count": MIN_REQUIRED_OOS_FOLD_COUNT,
+        "max_single_period_return_contribution": MAX_SINGLE_PERIOD_RETURN_CONTRIBUTION,
+    },
+    HK_EQUITY_COMBO_PROFILE: {
+        "max_allowed_backtest_drawdown": 0.30,
+        "min_required_return_to_drawdown_ratio": 0.50,
+        "max_allowed_annualized_turnover": 1.50,
         "min_required_annual_return": 0.0,
         "min_required_walk_forward_years": MIN_REQUIRED_WALK_FORWARD_YEARS,
         "min_required_oos_fold_count": MIN_REQUIRED_OOS_FOLD_COUNT,

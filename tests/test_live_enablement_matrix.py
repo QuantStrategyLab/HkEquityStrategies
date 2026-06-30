@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from hk_equity_strategies.catalog import (
+    HK_EQUITY_COMBO_PROFILE,
     HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
     HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE,
     get_external_snapshot_scaffold_profiles,
@@ -40,8 +41,8 @@ def test_live_enablement_matrix_keeps_only_runtime_profiles_selectable_or_listed
     matrix = build_live_enablement_matrix()
 
     assert set(matrix["selectable_profiles"]) == get_runtime_enabled_profiles()
-    assert matrix["selectable_profile_count"] == 2
-    assert matrix["profile_count"] == 2
+    assert matrix["selectable_profile_count"] == 3
+    assert matrix["profile_count"] == 3
     assert matrix["blocked_profile_count"] == 0
     assert get_external_snapshot_scaffold_profiles() == frozenset()
     assert get_research_backtest_only_profiles() == frozenset()
@@ -140,6 +141,6 @@ def test_print_hk_live_enablement_matrix_json():
     completed = subprocess.run([sys.executable, str(SCRIPT), "--json"], check=True, capture_output=True, text=True)
     payload = json.loads(completed.stdout)
 
-    assert payload["profile_count"] == 2
+    assert payload["profile_count"] == 3
     assert payload["blocked_profile_count"] == 0
     assert set(payload["selectable_profiles"]) == get_runtime_enabled_profiles()

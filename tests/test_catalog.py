@@ -6,6 +6,7 @@ from quant_platform_kit.common.strategies import get_strategy_component_map
 
 from hk_equity_strategies import get_strategy_definitions
 from hk_equity_strategies.catalog import (
+    HK_EQUITY_COMBO_PROFILE,
     HK_EQUITY_DOMAIN,
     HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
     HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE,
@@ -25,6 +26,7 @@ from hk_equity_strategies.catalog import (
 def test_catalog_declares_runtime_enabled_hk_direct_strategies():
     catalog = get_strategy_definitions()
     assert set(catalog) == {
+        HK_EQUITY_COMBO_PROFILE,
         HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
         HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE,
     }
@@ -67,6 +69,7 @@ def test_profile_groups_keep_runtime_research_and_snapshot_scaffolds_separate():
     assert get_research_backtest_only_profiles() == frozenset()
     assert get_runtime_enabled_profiles() == frozenset(
         {
+            HK_EQUITY_COMBO_PROFILE,
             HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
             HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE,
         }
