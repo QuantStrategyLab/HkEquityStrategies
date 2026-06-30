@@ -19,7 +19,7 @@ def _require_market_data(ctx: StrategyContext, key: str) -> Any:
 
 
 def evaluate_hk_equity_combo(ctx: StrategyContext) -> StrategyDecision:
-    config = {**hk_equity_combo_manifest.default_config, **ctx.runtime_config or {}}
+    config = {**hk_equity_combo_manifest.default_config, **(ctx.runtime_config or {})}
     config.pop("execution_cash_reserve_ratio", None)
     config.pop("rebalance_frequency", None)
     combined, metadata = hk_equity_combo.build_target_weights(
