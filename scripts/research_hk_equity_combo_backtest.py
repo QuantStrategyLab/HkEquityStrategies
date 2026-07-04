@@ -58,8 +58,8 @@ DIVIDEND_WEIGHT = 0.40
 
 DYNAMIC_WEIGHT_MAP: dict[str, float] = {
     "risk_on": 0.40,
-    "soft_defense": 0.20,
-    "hard_defense": 0.00,
+    "soft_defense": 0.49,
+    "hard_defense": 0.70,
 }
 
 # Dividend-style simulation parameters applied to the ETF-eligible universe.
@@ -68,11 +68,6 @@ DYNAMIC_WEIGHT_MAP: dict[str, float] = {
 # Yield ETF) or a blended basket.
 DIVIDEND_SYMBOL = "03110"  # High-dividend proxy from the ETF universe
 DIVIDEND_ANNUAL_VOL_SCALE = 0.85  # Dividend stocks are ~15 % less volatile
-
-# Period definitions for the regime signal (uses the same date range as the
-# ETF backtest config by default).
-BREADTH_REGIME_WINDOW_DAYS = 63
-
 
 # ---------------------------------------------------------------------------
 # Dividend-leg simulation helpers
@@ -122,9 +117,8 @@ def _breadth_regime(close: pd.DataFrame, as_of: pd.Timestamp) -> str:
       - soft_defense  : 0.30 <= breadth < 0.45
       - hard_defense  : breadth <  0.30
     """
-    window_start = close.index[close.index.searchsorted(as_of - pd.Timedelta(days=BREADTH_REGIME_WINDOW_DAYS))]
-    window = close.loc[window_start:as_of]
-    if window.empty:
+    window = close.loc[:as_of]
+    if len(window) < 100:
         return "risk_on"
 
     sma200 = window.rolling(200, min_periods=100).mean()
@@ -137,6 +131,17 @@ def _breadth_regime(close: pd.DataFrame, as_of: pd.Timestamp) -> str:
     if breadth < 0.45:
         return "soft_defense"
     return "risk_on"
+
+
+def _dynamic_leg_weights(combo: "ComboConfig", regime: str) -> tuple[float, float]:
+    """Mirror production combo regime semantics for ETF/dividend weights."""
+    if regime == "soft_defense":
+        etf_target_weight = min(combo.etf_weight * 0.85, 1.0)
+    elif regime == "hard_defense":
+        etf_target_weight = min(combo.etf_weight * 0.50, 1.0)
+    else:
+        etf_target_weight = combo.etf_weight
+    return etf_target_weight, 1.0 - etf_target_weight
 
 
 # ---------------------------------------------------------------------------
@@ -200,8 +205,7 @@ def _combo_strategy_returns(
             regime = "static"
         else:
             regime = _breadth_regime(close, as_of)
-            div_target_weight = DYNAMIC_WEIGHT_MAP.get(regime, 0.0)
-            etf_target_weight = 1.0 - div_target_weight
+            etf_target_weight, div_target_weight = _dynamic_leg_weights(combo, regime)
 
         regime_history.append({"date": as_of, "regime": regime, "div_weight": div_target_weight})
 
