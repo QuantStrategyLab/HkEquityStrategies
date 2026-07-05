@@ -18,6 +18,8 @@ Canonical profile names were simplified in this branch. The old names are not ke
 
 These profiles use platform-provided `market_history` and do not require a separate snapshot artifact before the strategy entrypoint can produce target weights.
 
+The combo wrapper `hk_equity_combo` is retained for research/orchestration only and should not be treated as a runtime-enabled profile.
+
 | Profile | Name | Input | Benchmark | Current role |
 | --- | --- | --- | --- | --- |
 | `hk_global_etf_tactical_rotation` | HK Global ETF Tactical Rotation | `market_history` | `02800` | Retained HK ETF runtime profile with broader ETF exposure and heavier product checks. |

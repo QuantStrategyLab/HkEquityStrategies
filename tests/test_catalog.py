@@ -66,10 +66,9 @@ def test_profile_groups_keep_runtime_research_and_snapshot_scaffolds_separate():
     )
     assert get_snapshot_backed_profiles() == frozenset({HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE})
     assert get_external_snapshot_scaffold_profiles() == frozenset()
-    assert get_research_backtest_only_profiles() == frozenset()
+    assert get_research_backtest_only_profiles() == frozenset({HK_EQUITY_COMBO_PROFILE})
     assert get_runtime_enabled_profiles() == frozenset(
         {
-            HK_EQUITY_COMBO_PROFILE,
             HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
             HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE,
         }

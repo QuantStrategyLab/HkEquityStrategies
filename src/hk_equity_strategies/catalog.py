@@ -32,7 +32,7 @@ HK_DIRECT_MARKET_HISTORY_PROFILES = frozenset(
 )
 HK_SNAPSHOT_BACKED_PROFILES = frozenset({HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE})
 HK_EXTERNAL_SNAPSHOT_SCAFFOLD_PROFILES = frozenset()
-HK_RESEARCH_BACKTEST_ONLY_PROFILES = frozenset()
+HK_RESEARCH_BACKTEST_ONLY_PROFILES = frozenset({HK_EQUITY_COMBO_PROFILE})
 
 STRATEGY_PLATFORM_COMPATIBILITY: dict[str, frozenset[str]] = {
     HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE: frozenset({"ibkr", "longbridge"}),
@@ -190,7 +190,7 @@ STRATEGY_METADATA: dict[str, StrategyMetadata] = {
         asset_scope="hk_equity_combo",
         benchmark="2800",
         role="hk_equity_combo",
-        status="runtime_enabled",
+        status="research_backtest_only",
     ),
 }
 
