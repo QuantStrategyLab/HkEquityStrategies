@@ -41,11 +41,11 @@ def test_live_enablement_matrix_keeps_only_runtime_profiles_selectable_or_listed
     matrix = build_live_enablement_matrix()
 
     assert set(matrix["selectable_profiles"]) == get_runtime_enabled_profiles()
-    assert matrix["selectable_profile_count"] == 3
+    assert matrix["selectable_profile_count"] == 2
     assert matrix["profile_count"] == 3
-    assert matrix["blocked_profile_count"] == 0
+    assert matrix["blocked_profile_count"] == 1
     assert get_external_snapshot_scaffold_profiles() == frozenset()
-    assert get_research_backtest_only_profiles() == frozenset()
+    assert get_research_backtest_only_profiles() == frozenset({HK_EQUITY_COMBO_PROFILE})
     assert matrix["first_snapshot_candidates"] == [HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE]
     assert matrix["snapshot_required_repository_policies"] == ["quality_yield_live_enablement_policy"]
     assert matrix["backtest_validation_policy"]["policy_version"] == "hk_backtest_validation_policy.v1"
@@ -142,5 +142,5 @@ def test_print_hk_live_enablement_matrix_json():
     payload = json.loads(completed.stdout)
 
     assert payload["profile_count"] == 3
-    assert payload["blocked_profile_count"] == 0
+    assert payload["blocked_profile_count"] == 1
     assert set(payload["selectable_profiles"]) == get_runtime_enabled_profiles()

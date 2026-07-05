@@ -374,7 +374,23 @@ RUNTIME_PROFILE_NOTES: dict[str, tuple[str, ...]] = {
     ),
 }
 
-RESEARCH_ONLY_PROFILES: dict[str, dict[str, object]] = {}
+RESEARCH_ONLY_PROFILES: dict[str, dict[str, object]] = {
+    "hk_equity_combo": {
+        "display_name": "HK Equity Combo",
+        "profile_type": "research_backtest_only",
+        "reason": "Retained combo wrapper for research comparison only; not part of the HK runtime allowlist.",
+        "required_next_evidence": (
+            "long_history_backtest_replay",
+            "platform_dry_run_order_preview",
+            "live_enablement_review_pack",
+        ),
+        "research_evidence_urls": (
+            "docs/research/hk_equity_combo_backtest_20260628.json",
+            "docs/research/hk_strategy_selection_20260603.md",
+            "docs/research/hk_quant_strategy_ideas.md",
+        ),
+    },
+}
 
 
 
