@@ -1,5 +1,14 @@
 # HkEquityStrategies
 
+
+## QSL architecture role
+
+- **Layer**: `strategy-library`.
+- **Responsibility**: Hong Kong equity strategy implementation package.
+- **Owns**: HK strategy code, manifests, runtime adapters, live-readiness checks.
+- **Consumes**: QuantPlatformKit and validated HK snapshot artifacts.
+- **Must not**: own broker credentials or deployment switches.
+
 [Chinese README](README.zh-CN.md)
 
 > Investing involves risk. This project does not provide investment advice and is for education, research, and engineering review only.
