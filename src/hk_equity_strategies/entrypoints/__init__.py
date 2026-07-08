@@ -43,7 +43,7 @@ def evaluate_hk_global_etf_tactical_rotation(ctx: StrategyContext) -> StrategyDe
         risk_flags=risk_flags,
         diagnostics=diagnostics,
     )
-    decision = apply_risk_gate(decision)
+    decision = apply_risk_gate(decision, ctx=ctx)
     record_strategy_decision(
         ctx,
         decision,
@@ -83,7 +83,7 @@ def evaluate_hk_low_vol_dividend_quality_snapshot(ctx: StrategyContext) -> Strat
         risk_flags=risk_flags,
         diagnostics=diagnostics,
     )
-    decision = apply_risk_gate(decision)
+    decision = apply_risk_gate(decision, ctx=ctx)
     record_strategy_decision(
         ctx,
         decision,
@@ -106,7 +106,7 @@ hk_low_vol_dividend_quality_snapshot_entrypoint = CallableStrategyEntrypoint(
 
 def evaluate_hk_equity_combo(ctx: StrategyContext) -> StrategyDecision:
     from hk_equity_strategies.combo_entrypoints import evaluate_hk_equity_combo as _eval
-    decision = apply_risk_gate(_eval(ctx))
+    decision = apply_risk_gate(_eval(ctx), ctx=ctx)
     record_strategy_decision(
         ctx,
         decision,
