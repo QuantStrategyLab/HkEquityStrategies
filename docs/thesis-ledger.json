@@ -1,0 +1,28 @@
+{
+  "strategies": {
+    "hk_global_etf_tactical_rotation": {
+      "thesis": "港股通全球ETF存在可交易的战术动量/风险切换效应",
+      "falsification_conditions": [
+        "滚动12个月相对等权基准超额 < 0",
+        "最大回撤超过回测基线 1.5 倍"
+      ],
+      "created": "2025-09-01",
+      "last_verified": "2026-07-08",
+      "verdict": "active",
+      "hit_rate": null,
+      "status_note": "runtime_enabled"
+    },
+    "hk_low_vol_dividend_quality_snapshot": {
+      "thesis": "港股低波+红利质量快照组合在风险调整后优于等权港股",
+      "falsification_conditions": [
+        "滚动12个月 Sharpe < 基准",
+        "红利因子 IC 连续3个月 < 0"
+      ],
+      "created": "2025-10-01",
+      "last_verified": "2026-07-08",
+      "verdict": "active",
+      "hit_rate": null,
+      "status_note": "runtime_enabled"
+    }
+  }
+}
