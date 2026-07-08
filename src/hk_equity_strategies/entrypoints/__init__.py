@@ -9,7 +9,14 @@ from hk_equity_strategies.manifests import (
 from hk_equity_strategies.strategies import hk_global_etf_tactical_rotation as global_etf_strategy
 from hk_equity_strategies.strategies import hk_low_vol_dividend_quality_snapshot as low_vol_dividend_strategy
 
-from ._common import apply_risk_gate, get_current_holdings, merge_runtime_config, require_market_data, weights_to_positions
+from ._common import (
+    apply_risk_gate,
+    get_current_holdings,
+    merge_runtime_config,
+    record_strategy_decision,
+    require_market_data,
+    weights_to_positions,
+)
 
 
 def evaluate_hk_global_etf_tactical_rotation(ctx: StrategyContext) -> StrategyDecision:
@@ -36,7 +43,14 @@ def evaluate_hk_global_etf_tactical_rotation(ctx: StrategyContext) -> StrategyDe
         risk_flags=risk_flags,
         diagnostics=diagnostics,
     )
-    return apply_risk_gate(decision)
+    decision = apply_risk_gate(decision)
+    record_strategy_decision(
+        ctx,
+        decision,
+        profile_id=hk_global_etf_tactical_rotation_manifest.profile,
+        domain=hk_global_etf_tactical_rotation_manifest.domain,
+    )
+    return decision
 
 
 hk_global_etf_tactical_rotation_entrypoint = CallableStrategyEntrypoint(
@@ -69,7 +83,14 @@ def evaluate_hk_low_vol_dividend_quality_snapshot(ctx: StrategyContext) -> Strat
         risk_flags=risk_flags,
         diagnostics=diagnostics,
     )
-    return apply_risk_gate(decision)
+    decision = apply_risk_gate(decision)
+    record_strategy_decision(
+        ctx,
+        decision,
+        profile_id=hk_low_vol_dividend_quality_snapshot_manifest.profile,
+        domain=hk_low_vol_dividend_quality_snapshot_manifest.domain,
+    )
+    return decision
 
 
 hk_low_vol_dividend_quality_snapshot_entrypoint = CallableStrategyEntrypoint(
@@ -85,7 +106,14 @@ hk_low_vol_dividend_quality_snapshot_entrypoint = CallableStrategyEntrypoint(
 
 def evaluate_hk_equity_combo(ctx: StrategyContext) -> StrategyDecision:
     from hk_equity_strategies.combo_entrypoints import evaluate_hk_equity_combo as _eval
-    return apply_risk_gate(_eval(ctx))
+    decision = apply_risk_gate(_eval(ctx))
+    record_strategy_decision(
+        ctx,
+        decision,
+        profile_id=hk_equity_combo_manifest.profile,
+        domain=hk_equity_combo_manifest.domain,
+    )
+    return decision
 
 
 from hk_equity_strategies.combo_manifests import hk_equity_combo_manifest  # noqa: E402 — intentional late import
