@@ -10,28 +10,14 @@ from typing import Any, Literal
 
 import pandas as pd
 
-
-YAHOO_SYMBOLS = {
-    "02800": "2800.HK",  # Tracker Fund of Hong Kong, HSI exposure
-    "02822": "2822.HK",  # CSOP FTSE China A50 ETF
-    "03188": "3188.HK",  # ChinaAMC CSI 300 ETF
-    "03033": "3033.HK",  # CSOP Hang Seng TECH Index ETF
-    "02834": "2834.HK",  # iShares NASDAQ 100 ETF
-    "02840": "2840.HK",  # SPDR Gold Shares
-    "03175": "3175.HK",  # Samsung S&P GSCI Crude Oil ER Futures ETF
-    "03110": "3110.HK",  # Global X Hang Seng High Dividend Yield ETF
-}
-
-ETF_DESCRIPTIONS = {
-    "02800": "Tracker Fund of Hong Kong / HSI",
-    "02822": "CSOP FTSE China A50 ETF",
-    "03188": "ChinaAMC CSI 300 ETF",
-    "03033": "CSOP Hang Seng TECH Index ETF",
-    "02834": "iShares NASDAQ 100 ETF",
-    "02840": "SPDR Gold Shares",
-    "03175": "Samsung S&P GSCI Crude Oil ER Futures ETF",
-    "03110": "Global X Hang Seng High Dividend Yield ETF",
-}
+from hk_equity_strategies.backtest.orchestrator_research import run_etf_rotation_profile_backtest
+from hk_equity_strategies.backtest.yfinance_market_data import (
+    ETF_DESCRIPTIONS,
+    YAHOO_SYMBOLS,
+    download_close_matrix,
+    download_market_history,
+)
+from hk_equity_strategies.strategies.hk_global_etf_tactical_rotation import DEFAULT_MIN_HISTORY_DAYS
 
 WATCHLIST_SYMBOLS = {
     "03010": "iShares Core MSCI AC Asia ex Japan Index ETF; yfinance adjusted series had a large discontinuity in this run.",
@@ -70,22 +56,7 @@ class RotationConfig:
 
 
 def _download_close(config: BacktestConfig) -> pd.DataFrame:
-    try:
-        import yfinance as yf
-    except Exception as exc:  # pragma: no cover - research helper only
-        raise SystemExit("yfinance is required for this research script; install it outside production deps") from exc
-
-    raw = yf.download(
-        list(YAHOO_SYMBOLS.values()),
-        start=config.start,
-        end=config.end,
-        auto_adjust=True,
-        progress=False,
-        threads=False,
-    )
-    close = raw["Close"].rename(columns={yahoo: symbol for symbol, yahoo in YAHOO_SYMBOLS.items()})
-    close = close.loc[:, list(YAHOO_SYMBOLS)].ffill().dropna(how="any")
-    return close
+    return download_close_matrix(start=config.start, end=config.end)
 
 
 def _eligible_scores(
@@ -230,7 +201,23 @@ def _slice(series: pd.Series, start: str | None, end: str | None) -> pd.Series:
     return output
 
 
-def run(config: BacktestConfig, rotation: RotationConfig) -> dict[str, Any]:
+def run(config: BacktestConfig, rotation: RotationConfig, *, orchestrator: bool = False) -> dict[str, Any]:
+    if orchestrator:
+        market_history = download_market_history(start=config.start, end=config.end)
+        payload = run_etf_rotation_profile_backtest(
+            "hk_global_etf_tactical_rotation",
+            market_history=market_history,
+            params={"min_history_days": DEFAULT_MIN_HISTORY_DAYS},
+        )
+        return {
+            "config": asdict(config),
+            "orchestrator": True,
+            "profile": payload["profile"],
+            "metrics": payload["metrics"],
+            "source": payload["source"],
+            "data_rows": int(len(market_history)),
+        }
+
     close = _download_close(config)
     strategy_returns, targets = _strategy_returns(close, rotation)
     strategy_returns = strategy_returns.loc[pd.Timestamp(config.analysis_start) :]
@@ -282,9 +269,14 @@ def run(config: BacktestConfig, rotation: RotationConfig) -> dict[str, Any]:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Backtest a HK-listed global ETF rotation research candidate.")
     parser.add_argument("--json-output", type=Path)
+    parser.add_argument(
+        "--orchestrator",
+        action="store_true",
+        help="Run strategy leg via HkEtfRotationBacktestRunner (BacktestOrchestrator path).",
+    )
     args = parser.parse_args()
-    payload = run(BacktestConfig(), RotationConfig())
-    text = json.dumps(payload, indent=2, sort_keys=True)
+    payload = run(BacktestConfig(), RotationConfig(), orchestrator=args.orchestrator)
+    text = json.dumps(payload, indent=2, sort_keys=True, default=str)
     if args.json_output:
         args.json_output.write_text(text + "\n")
     print(text)
