@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 from datetime import date, datetime, timezone
-from typing import Any, Mapping
+from typing import Any, Mapping, cast
 
 import pandas as pd
 
+from hk_equity_strategies.backtest.combo_simulator import ComboMode, HkComboBacktestConfig, run_combo_backtest
 from hk_equity_strategies.backtest.etf_rotation_simulator import HkRotationBacktestConfig, run_etf_rotation_backtest
+from hk_equity_strategies.strategies.hk_equity_combo import PROFILE_NAME as HK_EQUITY_COMBO_PROFILE
 from hk_equity_strategies.strategies.hk_global_etf_tactical_rotation import (
     DEFAULT_MIN_HISTORY_DAYS,
     DEFAULT_UNIVERSE_SYMBOLS,
@@ -22,7 +24,7 @@ except ImportError:  # pragma: no cover
     BacktestResult = None  # type: ignore[misc, assignment]
 
 
-SUPPORTED_PROFILES = frozenset({HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE})
+SUPPORTED_PROFILES = frozenset({HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE, HK_EQUITY_COMBO_PROFILE})
 
 
 def _synthetic_market_history(*, days: int = 900, start: str = "2022-01-03") -> pd.DataFrame:
@@ -154,4 +156,93 @@ class HkEtfRotationBacktestRunner:
         )
 
 
-__all__ = ["SUPPORTED_PROFILES", "HkEtfRotationBacktestRunner"]
+class HkEquityComboBacktestRunner:
+    """Protocol-compatible BacktestRunner for HK equity combo research."""
+
+    def __init__(
+        self,
+        *,
+        market_history: pd.DataFrame | None = None,
+        synthetic_days: int = 700,
+    ) -> None:
+        self._market_history = market_history
+        self._synthetic_days = int(synthetic_days)
+
+    def run(
+        self,
+        strategy_profile: str,
+        params: Mapping[str, Any],
+        start_date: date | None = None,
+        end_date: date | None = None,
+    ) -> Any:
+        if strategy_profile != HK_EQUITY_COMBO_PROFILE:
+            raise ValueError(
+                f"Unsupported strategy_profile={strategy_profile!r}; "
+                f"supported={HK_EQUITY_COMBO_PROFILE!r}"
+            )
+
+        min_history_days = int(params.get("min_history_days", DEFAULT_MIN_HISTORY_DAYS))
+        combo_mode = str(params.get("combo_mode", "dynamic"))
+        if combo_mode not in {"static", "dynamic"}:
+            raise ValueError("combo_mode must be 'static' or 'dynamic'")
+
+        history = self._market_history
+        if history is None:
+            history = _synthetic_market_history(days=max(self._synthetic_days, min_history_days + 400))
+        sliced = _slice_history(
+            history,
+            start_date=start_date,
+            end_date=end_date,
+            lookback_days=min_history_days + 5,
+        )
+        if sliced.empty:
+            raise ValueError("No market history rows for requested window")
+
+        started = datetime.now(timezone.utc)
+        result = run_combo_backtest(
+            sliced,
+            _signal_fn,
+            combo_config=HkComboBacktestConfig(
+                combo_mode=cast(ComboMode, combo_mode),
+                min_history_days=min_history_days,
+            ),
+            rotation_config=HkRotationBacktestConfig(min_history_days=min_history_days),
+            strategy_kwargs={"min_history_days": min_history_days},
+        )
+        elapsed = (datetime.now(timezone.utc) - started).total_seconds()
+        eval_frame = sliced
+        if start_date is not None:
+            eval_frame = sliced[sliced["date"] >= pd.Timestamp(start_date)]
+        return _metrics_to_backtest_result(
+            strategy_profile=strategy_profile,
+            params=params,
+            metrics=result.metrics,
+            start_date=start_date or (eval_frame["date"].min().date() if not eval_frame.empty else None),
+            end_date=end_date or (eval_frame["date"].max().date() if not eval_frame.empty else None),
+            run_duration_seconds=elapsed,
+        )
+
+
+def build_backtest_runner(
+    strategy_profile: str,
+    *,
+    market_history: pd.DataFrame | None = None,
+    synthetic_days: int = 700,
+) -> HkEtfRotationBacktestRunner | HkEquityComboBacktestRunner:
+    if strategy_profile == HK_EQUITY_COMBO_PROFILE:
+        return HkEquityComboBacktestRunner(
+            market_history=market_history,
+            synthetic_days=synthetic_days,
+        )
+    return HkEtfRotationBacktestRunner(
+        market_history=market_history,
+        synthetic_days=synthetic_days,
+    )
+
+
+__all__ = [
+    "SUPPORTED_PROFILES",
+    "HkEquityComboBacktestRunner",
+    "HkEtfRotationBacktestRunner",
+    "build_backtest_runner",
+]

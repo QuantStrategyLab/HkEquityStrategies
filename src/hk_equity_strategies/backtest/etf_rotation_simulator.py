@@ -124,9 +124,15 @@ def run_etf_rotation_backtest(
     return HkRotationBacktestResult(daily_returns=net, metrics=metrics)
 
 
+build_rotation_target_weights = _target_weights
+build_rebalance_dates = _rebalance_dates
+
 __all__ = [
     "HkRotationBacktestConfig",
     "HkRotationBacktestResult",
+    "StrategySignalFn",
+    "build_rebalance_dates",
+    "build_rotation_target_weights",
     "compute_backtest_metrics",
     "normalize_symbol",
     "run_etf_rotation_backtest",

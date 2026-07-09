@@ -249,6 +249,8 @@ def run_combo(
     config: BacktestConfig | None = None,
     rotation: RotationConfig | None = None,
     combo: ComboConfig | None = None,
+    *,
+    orchestrator: bool = False,
 ) -> dict[str, Any]:
     """Run static and dynamic combo backtests and return full results.
 
@@ -265,6 +267,26 @@ def run_combo(
     config = config or BacktestConfig()
     rotation = rotation or RotationConfig()
     combo = combo or ComboConfig()
+
+    if orchestrator:
+        from hk_equity_strategies.backtest.orchestrator_research import run_combo_profile_backtest
+        from hk_equity_strategies.backtest.yfinance_market_data import download_market_history
+        from hk_equity_strategies.strategies.hk_equity_combo import PROFILE_NAME
+
+        market_history = download_market_history(start=config.start, end=config.end)
+        payload = run_combo_profile_backtest(
+            PROFILE_NAME,
+            market_history=market_history,
+            params={"combo_mode": "dynamic"},
+        )
+        return {
+            "config": asdict(config),
+            "orchestrator": True,
+            "profile": payload["profile"],
+            "metrics": payload["metrics"],
+            "source": payload["source"],
+            "data_rows": int(len(market_history)),
+        }
 
     # -- Fetch data (shared) ----------------------------------------------
     close = _download_close(config)
@@ -386,9 +408,14 @@ def main() -> None:
         description="Backtest HK equity combo (ETF rotation + dividend snapshot)."
     )
     parser.add_argument("--json-output", type=Path)
+    parser.add_argument(
+        "--orchestrator",
+        action="store_true",
+        help="Run combo via HkEquityComboBacktestRunner (BacktestOrchestrator path).",
+    )
     args = parser.parse_args()
 
-    payload = run_combo()
+    payload = run_combo(orchestrator=args.orchestrator)
     text = json.dumps(payload, indent=2, sort_keys=True)
 
     if args.json_output:

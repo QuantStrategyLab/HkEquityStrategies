@@ -9,7 +9,8 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-from hk_equity_strategies.backtest.orchestrator_runner import HkEtfRotationBacktestRunner, SUPPORTED_PROFILES
+from hk_equity_strategies.backtest.orchestrator_runner import SUPPORTED_PROFILES, build_backtest_runner
+from hk_equity_strategies.strategies.hk_equity_combo import PROFILE_NAME as HK_EQUITY_COMBO_PROFILE
 from hk_equity_strategies.strategies.hk_global_etf_tactical_rotation import DEFAULT_MIN_HISTORY_DAYS
 
 DEFAULT_WINDOWS: tuple[tuple[date, date], ...] = (
@@ -19,6 +20,10 @@ DEFAULT_WINDOWS: tuple[tuple[date, date], ...] = (
 
 PROFILE_DEFAULTS: dict[str, dict[str, Any]] = {
     "hk_global_etf_tactical_rotation": {"min_history_days": DEFAULT_MIN_HISTORY_DAYS},
+    HK_EQUITY_COMBO_PROFILE: {
+        "min_history_days": DEFAULT_MIN_HISTORY_DAYS,
+        "combo_mode": "dynamic",
+    },
 }
 
 
@@ -50,7 +55,8 @@ def run_walk_forward(
         raise ValueError(f"unsupported profile={profile!r}; supported={sorted(SUPPORTED_PROFILES)}")
 
     params = dict(PROFILE_DEFAULTS.get(profile, {"min_history_days": DEFAULT_MIN_HISTORY_DAYS}))
-    runner = HkEtfRotationBacktestRunner(
+    runner = build_backtest_runner(
+        profile,
         market_history=market_history,
         synthetic_days=synthetic_days,
     )

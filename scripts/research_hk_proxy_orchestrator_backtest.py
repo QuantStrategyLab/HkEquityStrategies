@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from hk_equity_strategies.backtest.orchestrator_runner import HkEtfRotationBacktestRunner, SUPPORTED_PROFILES  # noqa: E402
+from hk_equity_strategies.backtest.orchestrator_runner import SUPPORTED_PROFILES, build_backtest_runner  # noqa: E402
 from scripts.run_walk_forward_backtest import run_walk_forward  # noqa: E402
 
 
@@ -45,11 +45,14 @@ def main() -> int:
             market_history=market_history,
         )
     else:
-        runner = HkEtfRotationBacktestRunner(
+        runner = build_backtest_runner(
+            args.profile,
             market_history=market_history,
             synthetic_days=args.synthetic_days,
         )
         params = {"min_history_days": 200}
+        if args.profile == "hk_equity_combo":
+            params["combo_mode"] = "dynamic"
         result = runner.run(args.profile, params)
         payload = {
             "profile": args.profile,
@@ -58,7 +61,7 @@ def main() -> int:
                 "max_drawdown": result.max_drawdown,
                 "cagr": result.cagr,
             },
-            "source": "HkEtfRotationBacktestRunner",
+            "source": type(runner).__name__,
         }
 
     text = json.dumps(payload, indent=2, sort_keys=True, default=str)
