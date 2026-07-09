@@ -41,6 +41,7 @@ def run_walk_forward(
     windows: tuple[tuple[date, date], ...] = DEFAULT_WINDOWS,
     synthetic_days: int = 700,
     store_root: Path | None = None,
+    market_history: Any = None,
 ) -> dict[str, Any]:
     from quant_platform_kit.strategy_lifecycle.backtest_orchestrator import BacktestOrchestrator
     from quant_platform_kit.strategy_lifecycle.performance_store import PerformanceStore
@@ -49,7 +50,10 @@ def run_walk_forward(
         raise ValueError(f"unsupported profile={profile!r}; supported={sorted(SUPPORTED_PROFILES)}")
 
     params = dict(PROFILE_DEFAULTS.get(profile, {"min_history_days": DEFAULT_MIN_HISTORY_DAYS}))
-    runner = HkEtfRotationBacktestRunner(synthetic_days=synthetic_days)
+    runner = HkEtfRotationBacktestRunner(
+        market_history=market_history,
+        synthetic_days=synthetic_days,
+    )
     store = PerformanceStore(local_root=store_root or Path("/tmp/hk_equity_wf_store"))
     orchestrator = BacktestOrchestrator(store=store)
     orchestrator.register_runner("hk_equity", runner)
@@ -78,16 +82,26 @@ def main() -> int:
     parser.add_argument("--json-output", type=Path)
     parser.add_argument("--synthetic-days", type=int, default=700)
     parser.add_argument("--store-root", type=Path)
+    parser.add_argument("--use-yfinance", action="store_true", help="Load live ETF history via yfinance.")
+    parser.add_argument("--start", default="2020-08-27", help="yfinance start date (YYYY-MM-DD).")
+    parser.add_argument("--end", default="2026-06-01", help="yfinance end date (YYYY-MM-DD).")
     args = parser.parse_args()
 
     if args.list_profiles:
         print(json.dumps({"profiles": sorted(SUPPORTED_PROFILES)}, indent=2))
         return 0
 
+    market_history = None
+    if args.use_yfinance:
+        from hk_equity_strategies.backtest.yfinance_market_data import download_market_history
+
+        market_history = download_market_history(start=args.start, end=args.end)
+
     payload = run_walk_forward(
         profile=args.profile,
         synthetic_days=args.synthetic_days,
         store_root=args.store_root,
+        market_history=market_history,
     )
     text = json.dumps(payload, indent=2, sort_keys=True, default=str)
     if args.json_output:
