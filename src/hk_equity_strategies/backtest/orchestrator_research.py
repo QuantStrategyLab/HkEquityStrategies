@@ -7,7 +7,11 @@ from typing import Any, Mapping
 
 import pandas as pd
 
-from hk_equity_strategies.backtest.orchestrator_runner import HkEtfRotationBacktestRunner
+from hk_equity_strategies.backtest.orchestrator_runner import (
+    HkEquityComboBacktestRunner,
+    HkEtfRotationBacktestRunner,
+)
+from hk_equity_strategies.strategies.hk_equity_combo import PROFILE_NAME as HK_EQUITY_COMBO_PROFILE
 from hk_equity_strategies.strategies.hk_global_etf_tactical_rotation import (
     DEFAULT_MIN_HISTORY_DAYS,
     PROFILE_NAME,
@@ -57,4 +61,39 @@ def run_etf_rotation_profile_backtest(
     }
 
 
-__all__ = ["run_etf_rotation_profile_backtest"]
+def run_combo_profile_backtest(
+    profile: str,
+    *,
+    market_history: pd.DataFrame | None = None,
+    synthetic_days: int = 700,
+    start_date: date | None = None,
+    end_date: date | None = None,
+    params: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Run a single-window HK equity combo backtest through HkEquityComboBacktestRunner."""
+    if profile != HK_EQUITY_COMBO_PROFILE:
+        raise ValueError(f"unsupported profile={profile!r}")
+
+    runner = HkEquityComboBacktestRunner(
+        market_history=market_history,
+        synthetic_days=synthetic_days,
+    )
+    merged_params = {
+        "min_history_days": DEFAULT_MIN_HISTORY_DAYS,
+        "combo_mode": "dynamic",
+    }
+    if params:
+        merged_params.update(dict(params))
+    result = runner.run(profile, merged_params, start_date=start_date, end_date=end_date)
+    return {
+        "profile": profile,
+        "params": merged_params,
+        "start_date": result.start_date.isoformat() if result.start_date else None,
+        "end_date": result.end_date.isoformat() if result.end_date else None,
+        "metrics": _result_to_metrics(result),
+        "source": "HkEquityComboBacktestRunner",
+        "run_id": getattr(result, "run_id", None),
+    }
+
+
+__all__ = ["run_combo_profile_backtest", "run_etf_rotation_profile_backtest"]
