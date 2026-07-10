@@ -251,6 +251,7 @@ def run_combo(
     combo: ComboConfig | None = None,
     *,
     legacy: bool = False,
+    orchestrator: bool = False,
 ) -> dict[str, Any]:
     """Run static and dynamic combo backtests and return full results.
 
