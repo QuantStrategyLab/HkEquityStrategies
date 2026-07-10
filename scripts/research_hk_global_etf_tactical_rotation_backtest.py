@@ -201,8 +201,8 @@ def _slice(series: pd.Series, start: str | None, end: str | None) -> pd.Series:
     return output
 
 
-def run(config: BacktestConfig, rotation: RotationConfig, *, orchestrator: bool = False) -> dict[str, Any]:
-    if orchestrator:
+def run(config: BacktestConfig, rotation: RotationConfig, *, legacy: bool = False) -> dict[str, Any]:
+    if not legacy:
         market_history = download_market_history(start=config.start, end=config.end)
         payload = run_etf_rotation_profile_backtest(
             "hk_global_etf_tactical_rotation",
@@ -269,13 +269,14 @@ def run(config: BacktestConfig, rotation: RotationConfig, *, orchestrator: bool 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Backtest a HK-listed global ETF rotation research candidate.")
     parser.add_argument("--json-output", type=Path)
+    parser.add_argument("--legacy", "--analysis", dest="legacy", action="store_true", help="Run the legacy research-analysis path instead of BacktestOrchestrator.")
     parser.add_argument(
         "--orchestrator",
         action="store_true",
-        help="Run strategy leg via HkEtfRotationBacktestRunner (BacktestOrchestrator path).",
+        help="Deprecated compatibility flag; default path already uses BacktestOrchestrator.",
     )
     args = parser.parse_args()
-    payload = run(BacktestConfig(), RotationConfig(), orchestrator=args.orchestrator)
+    payload = run(BacktestConfig(), RotationConfig(), legacy=args.legacy)
     text = json.dumps(payload, indent=2, sort_keys=True, default=str)
     if args.json_output:
         args.json_output.write_text(text + "\n")

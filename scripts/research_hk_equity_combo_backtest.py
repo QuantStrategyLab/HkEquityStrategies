@@ -250,6 +250,7 @@ def run_combo(
     rotation: RotationConfig | None = None,
     combo: ComboConfig | None = None,
     *,
+    legacy: bool = False,
     orchestrator: bool = False,
 ) -> dict[str, Any]:
     """Run static and dynamic combo backtests and return full results.
@@ -268,7 +269,7 @@ def run_combo(
     rotation = rotation or RotationConfig()
     combo = combo or ComboConfig()
 
-    if orchestrator:
+    if not legacy:
         from hk_equity_strategies.backtest.orchestrator_research import run_combo_profile_backtest
         from hk_equity_strategies.backtest.yfinance_market_data import download_market_history
         from hk_equity_strategies.strategies.hk_equity_combo import PROFILE_NAME
@@ -408,14 +409,15 @@ def main() -> None:
         description="Backtest HK equity combo (ETF rotation + dividend snapshot)."
     )
     parser.add_argument("--json-output", type=Path)
+    parser.add_argument("--legacy", "--analysis", dest="legacy", action="store_true", help="Run the legacy research-analysis path instead of BacktestOrchestrator.")
     parser.add_argument(
         "--orchestrator",
         action="store_true",
-        help="Run combo via HkEquityComboBacktestRunner (BacktestOrchestrator path).",
+        help="Deprecated compatibility flag; default path already uses BacktestOrchestrator.",
     )
     args = parser.parse_args()
 
-    payload = run_combo(orchestrator=args.orchestrator)
+    payload = run_combo(legacy=args.legacy)
     text = json.dumps(payload, indent=2, sort_keys=True)
 
     if args.json_output:
