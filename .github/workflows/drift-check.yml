@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   drift:
-    uses: QuantStrategyLab/QuantPlatformKit/.github/workflows/reusable-drift-check.yml@335c7a22bc3f570bd5705427ccc40172eda6b289
+    uses: QuantStrategyLab/QuantPlatformKit/.github/workflows/reusable-drift-check.yml@9039d592f10ca3e646ac7c42b872adcdbc1050d0
     with:
       strategy_domain: hk_equity
       caller_event_name: ${{ github.event_name }}
