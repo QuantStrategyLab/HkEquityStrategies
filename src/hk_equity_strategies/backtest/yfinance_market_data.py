@@ -60,7 +60,9 @@ def download_close_matrix(
         close = close.to_frame()
     close = close.rename(columns={yahoo: symbol for symbol, yahoo in YAHOO_SYMBOLS.items()})
     ordered = [symbol for symbol in universe if symbol in close.columns]
-    close = close.loc[:, ordered].ffill().dropna(how="any")
+    # Keep only dates with real observations for the whole configured universe.
+    # Forward-filling here would hide a ticker that stopped publishing quotes.
+    close = close.loc[:, ordered].dropna(how="any")
     return close
 
 

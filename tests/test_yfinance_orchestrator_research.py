@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import unittest
+import sys
+import types
 from unittest.mock import patch
 
 import pandas as pd
@@ -10,7 +12,10 @@ from hk_equity_strategies.backtest.orchestrator_research import (
     run_etf_rotation_profile_backtest,
 )
 from hk_equity_strategies.strategies.hk_equity_combo import PROFILE_NAME as HK_EQUITY_COMBO_PROFILE
-from hk_equity_strategies.backtest.yfinance_market_data import download_market_history
+from hk_equity_strategies.backtest.yfinance_market_data import (
+    download_close_matrix,
+    download_market_history,
+)
 from hk_equity_strategies.strategies.hk_global_etf_tactical_rotation import (
     DEFAULT_MIN_HISTORY_DAYS,
     DEFAULT_UNIVERSE_SYMBOLS,
@@ -19,6 +24,32 @@ from hk_equity_strategies.strategies.hk_global_etf_tactical_rotation import (
 
 
 class YfinanceMarketDataTests(unittest.TestCase):
+    def test_download_close_matrix_does_not_forward_fill_missing_quotes(self) -> None:
+        index = pd.bdate_range("2026-07-27", periods=3)
+        columns = pd.MultiIndex.from_product(
+            [["Close"], ["2800.HK", "2822.HK"]]
+        )
+        raw = pd.DataFrame(
+            [
+                [20.0, 10.0],
+                [20.1, None],
+                [20.2, None],
+            ],
+            index=index,
+            columns=columns,
+        )
+        fake_yfinance = types.SimpleNamespace(download=lambda *_args, **_kwargs: raw)
+
+        with patch.dict(sys.modules, {"yfinance": fake_yfinance}):
+            close = download_close_matrix(
+                start="2026-07-27",
+                end="2026-07-31",
+                symbols=("02800", "02822"),
+            )
+
+        self.assertEqual(len(close), 1)
+        self.assertEqual(close.index[-1], index[0])
+
     def test_download_market_history_returns_long_format(self) -> None:
         index = pd.bdate_range("2023-01-03", periods=300)
         wide = pd.DataFrame(

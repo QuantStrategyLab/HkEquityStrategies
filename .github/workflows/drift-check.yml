@@ -10,18 +10,101 @@ on:
 permissions:
   contents: read
   issues: write
-  id-token: write
 
 jobs:
+  preflight_backtests:
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      snapshot_repository_ref: ${{ steps.snapshot-input.outputs.snapshot_repository_ref }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Checkout QuantPlatformKit
+        uses: actions/checkout@v6
+        with:
+          repository: QuantStrategyLab/QuantPlatformKit
+          ref: 92458590a463e7219f0369a3505031ee74414135
+          path: external/QuantPlatformKit
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install pandas yfinance==1.2.2
+          python -m pip install --no-deps -e .
+          python -m pip install --no-deps -e external/QuantPlatformKit
+
+      - name: Resolve snapshot repository ref
+        id: snapshot-input
+        run: |
+          set -euo pipefail
+          snapshot_repository_ref="$(
+            git ls-remote \
+              https://github.com/QuantStrategyLab/HkEquitySnapshotPipelines.git \
+              refs/heads/main \
+              | awk '{print $1}'
+          )"
+          if [[ ! "$snapshot_repository_ref" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::Unable to resolve the public snapshot repository main SHA"
+            exit 1
+          fi
+          echo "snapshot_repository_ref=$snapshot_repository_ref" >> "$GITHUB_OUTPUT"
+
+      - name: Build lifecycle preflight bundle
+        env:
+          LIFECYCLE_PREFLIGHT_BUNDLE_ROOT: ${{ runner.temp }}/lifecycle-preflight-bundle
+          INPUT_ARTIFACT_ROOT: ${{ runner.temp }}/hk-lifecycle-inputs
+        run: |
+          set -euo pipefail
+          end_date="$(date -u -d 'tomorrow' '+%Y-%m-%d')"
+          python scripts/build_lifecycle_preflight.py \
+            --bundle-root "$LIFECYCLE_PREFLIGHT_BUNDLE_ROOT" \
+            --input-artifact-root "$INPUT_ARTIFACT_ROOT" \
+            --start 2020-08-27 \
+            --end "$end_date"
+
+      - name: Upload lifecycle preflight artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lifecycle-preflight-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/lifecycle-preflight-bundle
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload normalized market input artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hk-lifecycle-inputs-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/hk-lifecycle-inputs
+          if-no-files-found: error
+          retention-days: 14
+
   drift:
-    uses: QuantStrategyLab/QuantPlatformKit/.github/workflows/reusable-drift-check.yml@335c7a22bc3f570bd5705427ccc40172eda6b289
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    needs: preflight_backtests
+    permissions:
+      contents: read
+      issues: write
+      id-token: write
+    uses: QuantStrategyLab/QuantPlatformKit/.github/workflows/reusable-drift-check.yml@92458590a463e7219f0369a3505031ee74414135
     with:
       strategy_domain: hk_equity
       caller_event_name: ${{ github.event_name }}
       caller_pr_head_repository: ${{ github.event.pull_request.head.repo.full_name || '' }}
       snapshot_repository: QuantStrategyLab/HkEquitySnapshotPipelines
       snapshot_checkout_path: external/HkEquitySnapshotPipelines
+      snapshot_repository_ref: ${{ needs.preflight_backtests.outputs.snapshot_repository_ref }}
       ai_gateway_service_url: ${{ vars.AI_GATEWAY_SERVICE_URL }}
+      quant_platform_kit_ref: 92458590a463e7219f0369a3505031ee74414135
+      lifecycle_preflight_artifact: lifecycle-preflight-${{ github.run_id }}-${{ github.run_attempt }}
     secrets:
       codex_audit_service_url: ${{ secrets.CODEX_AUDIT_SERVICE_URL }}
-      snapshot_repository_token: ${{ secrets.SNAPSHOT_REPOSITORY_TOKEN }}
+      snapshot_repository_token: ${{ secrets.SNAPSHOT_REPOSITORY_TOKEN || secrets.QSL_REPO_SYNC_TOKEN || github.token }}
