@@ -88,11 +88,11 @@ def validate_market_history(
         raise ValueError(
             f"market history is missing required symbols: {', '.join(missing_symbols)}"
         )
+    required_frame = frame.loc[frame["symbol"].isin(required_symbols)]
+    latest_by_symbol = required_frame.groupby("symbol")["date"].max()
     overlap = (
-        frame.loc[frame["symbol"].isin(required_symbols)]
-        .pivot(index="date", columns="symbol", values="close")
+        required_frame.pivot(index="date", columns="symbol", values="close")
         .loc[:, list(DEFAULT_UNIVERSE_SYMBOLS)]
-        .ffill()
         .dropna(how="any")
     )
     if len(overlap) < DEFAULT_MIN_HISTORY_DAYS:
@@ -101,15 +101,28 @@ def validate_market_history(
             "overlapping trading days"
         )
     if reference_date is not None:
-        latest = pd.Timestamp(overlap.index.max()).date()
-        age = reference_date - latest
-        if age < timedelta(0):
-            raise ValueError("market history contains a future trading date")
-        if age > timedelta(days=MAX_INPUT_AGE_DAYS):
+        stale_symbols: list[str] = []
+        future_symbols: list[str] = []
+        for symbol, latest_timestamp in latest_by_symbol.items():
+            age = reference_date - pd.Timestamp(latest_timestamp).date()
+            if age < timedelta(0):
+                future_symbols.append(str(symbol))
+            elif age > timedelta(days=MAX_INPUT_AGE_DAYS):
+                stale_symbols.append(str(symbol))
+        if future_symbols:
             raise ValueError(
-                f"market history is stale: latest={latest.isoformat()} age_days={age.days}"
+                "market history contains future dates for symbols: "
+                f"{', '.join(sorted(future_symbols))}"
             )
-    return frame
+        if stale_symbols:
+            raise ValueError(
+                "market history is stale for symbols: "
+                f"{', '.join(sorted(stale_symbols))}"
+            )
+    complete_dates = set(pd.DatetimeIndex(overlap.index))
+    return required_frame.loc[required_frame["date"].isin(complete_dates)].reset_index(
+        drop=True
+    )
 
 
 def _signal_fn(history: Any, **kwargs: Any):

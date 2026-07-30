@@ -133,3 +133,22 @@ def test_rejects_stale_or_incomplete_market_input() -> None:
         assert "stale" in str(exc)
     else:
         raise AssertionError("stale market input must fail closed")
+
+    stale_symbol = history.loc[
+        ~(
+            (history["symbol"] == "02822")
+            & (
+                pd.to_datetime(history["date"])
+                > pd.Timestamp(latest) - pd.Timedelta(days=11)
+            )
+        )
+    ]
+    try:
+        lifecycle.validate_market_history(
+            stale_symbol,
+            reference_date=latest,
+        )
+    except ValueError as exc:
+        assert "02822" in str(exc)
+    else:
+        raise AssertionError("a stale individual symbol must fail closed")
