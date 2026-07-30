@@ -97,12 +97,14 @@ def test_writes_auditable_normalized_market_input(tmp_path: Path) -> None:
         requested_start="2020-08-27",
         requested_end="2026-07-31",
         retrieved_at="2026-07-30T07:00:00+00:00",
+        yfinance_version="1.2.2",
     )
 
     data_path = tmp_path / "market_history.csv.gz"
     assert data_path.is_file()
     assert manifest["schema_version"] == "hk_lifecycle_market_input.v1"
     assert manifest["source"] == "yfinance"
+    assert manifest["yfinance_version"] == "1.2.2"
     assert manifest["sha256"] == hashlib.sha256(data_path.read_bytes()).hexdigest()
     assert manifest["profiles"] == sorted(SUPPORTED_PROFILES)
     assert json.loads((tmp_path / "manifest.json").read_text(encoding="utf-8")) == manifest

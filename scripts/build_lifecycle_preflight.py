@@ -216,6 +216,7 @@ def write_market_input_artifact(
     requested_start: str,
     requested_end: str,
     retrieved_at: str,
+    yfinance_version: str | None = None,
 ) -> dict[str, Any]:
     frame = validate_market_history(market_history)
     serializable = frame.copy()
@@ -241,8 +242,8 @@ def write_market_input_artifact(
         "profiles": sorted(SUPPORTED_PROFILES),
         "sha256": hashlib.sha256(data_path.read_bytes()).hexdigest(),
     }
-    if source == "yfinance":
-        manifest["yfinance_version"] = importlib.metadata.version("yfinance")
+    if yfinance_version:
+        manifest["yfinance_version"] = yfinance_version
     (output_dir / "manifest.json").write_text(
         json.dumps(manifest, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
@@ -263,9 +264,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.market_history:
         market_history = pd.read_csv(args.market_history)
         source = "provided_file"
+        yfinance_version = None
     else:
         market_history = download_market_history(start=args.start, end=args.end)
         source = "yfinance"
+        yfinance_version = importlib.metadata.version("yfinance")
     validated = validate_market_history(
         market_history,
         reference_date=datetime.now(timezone.utc).date(),
@@ -277,6 +280,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         requested_start=args.start,
         requested_end=args.end,
         retrieved_at=retrieved_at,
+        yfinance_version=yfinance_version,
     )
     bundle = build_lifecycle_preflight_bundle(
         validated,
