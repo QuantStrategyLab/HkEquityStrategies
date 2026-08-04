@@ -10,7 +10,6 @@ from hk_equity_strategies.catalog import (
     HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
     HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE,
 )
-from hk_equity_strategies.strategies.hk_low_vol_dividend_quality_snapshot import SAFE_HAVEN
 from hk_equity_strategies.strategies.hk_global_etf_tactical_rotation import (
     DEFAULT_UNIVERSE_SYMBOLS as GLOBAL_ETF_UNIVERSE_SYMBOLS,
     HIGH_DIVIDEND_ETF_SYMBOL as GLOBAL_HIGH_DIVIDEND_ETF_SYMBOL,
@@ -41,7 +40,15 @@ def _global_etf_rotation_history() -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def test_global_etf_rotation_entrypoint_returns_volatility_targeted_weight_targets():
+def _assert_no_order(decision) -> None:
+    assert decision.positions == ()
+    assert decision.budgets == ()
+    assert decision.risk_flags == ("rejected:too_many_positions",)
+    assert decision.diagnostics["risk_gate"] == "REJECT"
+    assert "仅允许一个非零持仓" in decision.diagnostics["reason"]
+
+
+def test_global_etf_rotation_entrypoint_preserves_signal_but_fails_closed_without_snapshot():
     entrypoint = get_strategy_entrypoint(HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE)
 
     decision = entrypoint.evaluate(
@@ -52,15 +59,16 @@ def test_global_etf_rotation_entrypoint_returns_volatility_targeted_weight_targe
         )
     )
 
-    weights = {position.symbol: position.target_weight for position in decision.positions}
-    assert set(weights) == {NASDAQ100_ETF_SYMBOL, GLOBAL_HIGH_DIVIDEND_ETF_SYMBOL}
-    assert 0.0 < sum(weights.values()) < 1.0
+    _assert_no_order(decision)
     assert decision.diagnostics["signal_source"] == "daily_market_history"
     assert decision.diagnostics["target_annual_volatility"] == pytest.approx(0.16)
-    assert "cash_residual" in decision.risk_flags
+    assert set(decision.diagnostics["selected_symbols"]) == {
+        NASDAQ100_ETF_SYMBOL,
+        GLOBAL_HIGH_DIVIDEND_ETF_SYMBOL,
+    }
 
 
-def test_low_vol_dividend_quality_entrypoint_consumes_feature_snapshot():
+def test_low_vol_dividend_quality_entrypoint_preserves_signal_but_fails_closed_without_snapshot():
     entrypoint = get_strategy_entrypoint(HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE)
 
     decision = entrypoint.evaluate(
@@ -71,9 +79,6 @@ def test_low_vol_dividend_quality_entrypoint_consumes_feature_snapshot():
         )
     )
 
-    weights = {position.symbol: position.target_weight for position in decision.positions}
-    assert weights
-    assert sum(weights.values()) == pytest.approx(1.0)
-    assert SAFE_HAVEN not in weights
+    _assert_no_order(decision)
     assert decision.diagnostics["signal_source"] == "factor_snapshot"
     assert decision.diagnostics["snapshot_contract_version"] == "hk_low_vol_dividend_quality_snapshot.factor_snapshot.v1"

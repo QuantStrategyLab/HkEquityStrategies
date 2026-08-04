@@ -1,11 +1,20 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from types import SimpleNamespace
+from unittest.mock import Mock, patch
 
 from quant_platform_kit.common.models import PortfolioSnapshot, Position
-from quant_platform_kit.strategy_contracts import PositionTarget, StrategyContext, StrategyDecision
+from quant_platform_kit.strategy_contracts import BudgetIntent, PositionTarget, StrategyContext, StrategyDecision
 
 from hk_equity_strategies.entrypoints._common import apply_risk_gate
+
+
+def _portfolio_snapshot() -> PortfolioSnapshot:
+    return PortfolioSnapshot(
+        as_of=datetime(2026, 8, 5, tzinfo=timezone.utc),
+        total_equity=100_000.0,
+    )
 
 
 def test_apply_risk_gate_enriches_stop_loss_diagnostics_from_portfolio() -> None:
@@ -22,3 +31,98 @@ def test_apply_risk_gate_enriches_stop_loss_diagnostics_from_portfolio() -> None
     result = apply_risk_gate(decision, ctx=ctx)
     assert result.positions == ()
     assert "rejected:stop_loss" in result.risk_flags
+
+
+def test_apply_risk_gate_allows_explicit_unlevered_ten_percent_default() -> None:
+    decision = StrategyDecision(
+        positions=(PositionTarget(symbol="02800", target_weight=0.10),),
+    )
+
+    result = apply_risk_gate(
+        decision,
+        portfolio_snapshot=_portfolio_snapshot(),
+        product_leverage_factors={"02800": 1},
+    )
+
+    assert result.positions == decision.positions
+    assert result.risk_flags == ("risk_gate:passed",)
+
+
+def test_apply_risk_gate_default_contract_rejects_unauthorized_positions() -> None:
+    cases = (
+        (
+            (PositionTarget(symbol="02800", target_weight=0.11),),
+            {"02800": 1},
+            "rejected:concentration",
+        ),
+        (
+            (
+                PositionTarget(symbol="02800", target_weight=0.05),
+                PositionTarget(symbol="02822", target_weight=0.05),
+            ),
+            {"02800": 1, "02822": 1},
+            "rejected:too_many_positions",
+        ),
+        ((PositionTarget(symbol="02800", target_weight=0.10),), None, "rejected:leverage_classification"),
+        ((PositionTarget(symbol="02800", target_weight=0.10),), {"02800": 2}, "rejected:leverage_classification"),
+        ((PositionTarget(symbol="02800", target_weight=0.10),), {"02822": 1}, "rejected:leverage_classification"),
+    )
+
+    for positions, factors, expected_flag in cases:
+        decision = StrategyDecision(
+            positions=positions,
+            budgets=(BudgetIntent(name="risk_budget", amount=1.0),),
+        )
+        result = apply_risk_gate(
+            decision,
+            max_single_weight=1.0,
+            portfolio_snapshot=_portfolio_snapshot(),
+            product_leverage_factors=factors,
+        )
+
+        assert result.positions == ()
+        assert result.budgets == ()
+        assert result.risk_flags == (expected_flag,)
+
+
+def test_apply_risk_gate_rejects_missing_or_invalid_snapshot() -> None:
+    decision = StrategyDecision(
+        positions=(PositionTarget(symbol="02800", target_weight=0.10),),
+        budgets=(BudgetIntent(name="risk_budget", amount=1.0),),
+    )
+
+    for snapshot, reason in (
+        (None, "missing_portfolio_snapshot"),
+        ({"total_equity": float("nan")}, "invalid_portfolio_snapshot"),
+    ):
+        result = apply_risk_gate(
+            decision,
+            portfolio_snapshot=snapshot,
+            product_leverage_factors={"02800": 1},
+        )
+
+        assert result.positions == ()
+        assert result.budgets == ()
+        assert result.risk_flags == ("rejected:risk_engine",)
+        assert result.diagnostics["reason"] == reason
+
+
+def test_apply_risk_gate_rejects_non_approve_engine_action() -> None:
+    decision = StrategyDecision(
+        positions=(PositionTarget(symbol="02800", target_weight=0.10),),
+        budgets=(BudgetIntent(name="risk_budget", amount=1.0),),
+    )
+    engine = Mock()
+    engine.assess.return_value = SimpleNamespace(action="watch", reason="not approved")
+
+    with patch("quant_platform_kit.risk.gate.build_risk_engine", return_value=engine):
+        result = apply_risk_gate(
+            decision,
+            portfolio_snapshot=_portfolio_snapshot(),
+            product_leverage_factors={"02800": 1},
+        )
+
+    assert result.positions == ()
+    assert result.budgets == ()
+    assert result.risk_flags == ("rejected:risk_engine",)
+    assert result.diagnostics["reason"] == "not approved"
