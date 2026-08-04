@@ -76,10 +76,11 @@ def build_smoke_report() -> dict[str, object]:
         for platform in ("ibkr", "longbridge")
     }
     checks = {
-        "strategy_actionable": bool(decision.diagnostics.get("actionable")),
+        "signal_actionable": bool(decision.diagnostics.get("actionable")),
         "uses_direct_market_history": decision.diagnostics.get("signal_source") == "daily_market_history",
-        "weights_non_empty": bool(target_weights),
-        "gross_exposure_lte_one": 0.0 < gross_exposure <= 1.0,
+        "safe_no_order": not target_weights and not decision.budgets,
+        "all_cash": gross_exposure == 0.0,
+        "risk_gate_rejected": decision.diagnostics.get("risk_gate") == "REJECT",
         "ibkr_dry_run_only": readiness["ibkr"]["platform_dry_run_env"].get("IBKR_DRY_RUN_ONLY") == "true",
         "longbridge_dry_run_only": readiness["longbridge"]["platform_dry_run_env"].get("LONGBRIDGE_DRY_RUN_ONLY") == "true",
         "longbridge_requires_portfolio_snapshot": bool(
@@ -92,6 +93,8 @@ def build_smoke_report() -> dict[str, object]:
         "status": status,
         "profile": HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
         "as_of": SYNTHETIC_AS_OF,
+        "execution_mode": "synthetic_offline",
+        "order_authority": "none",
         "target_weights": target_weights,
         "gross_exposure": gross_exposure,
         "cash_weight": max(0.0, 1.0 - gross_exposure),
@@ -121,6 +124,7 @@ def _print_text(report: dict[str, object]) -> None:
     print(f"status: {report['status']}")
     print(f"profile: {report['profile']}")
     print(f"as_of: {report['as_of']}")
+    print(f"order_authority: {report['order_authority']}")
     print(f"gross_exposure: {float(report['gross_exposure']):.2%}")
     print(f"cash_weight: {float(report['cash_weight']):.2%}")
     print("target_weights:")

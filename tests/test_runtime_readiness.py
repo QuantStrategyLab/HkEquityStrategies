@@ -226,15 +226,20 @@ def test_smoke_hk_global_etf_tactical_rotation_dry_run_json():
     assert payload["status"] == "pass"
     assert payload["profile"] == HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE
     assert payload["checks"] == {
-        "strategy_actionable": True,
+        "signal_actionable": True,
         "uses_direct_market_history": True,
-        "weights_non_empty": True,
-        "gross_exposure_lte_one": True,
+        "safe_no_order": True,
+        "all_cash": True,
+        "risk_gate_rejected": True,
         "ibkr_dry_run_only": True,
         "longbridge_dry_run_only": True,
         "longbridge_requires_portfolio_snapshot": True,
         "ibkr_weight_native": True,
     }
-    assert 0.0 < payload["gross_exposure"] <= 1.0
+    assert payload["execution_mode"] == "synthetic_offline"
+    assert payload["order_authority"] == "none"
+    assert payload["target_weights"] == {}
+    assert payload["gross_exposure"] == 0.0
+    assert payload["cash_weight"] == 1.0
     assert payload["platforms"]["ibkr"]["market_defaults"]["market_exchange"] == "SEHK"
     assert payload["platforms"]["longbridge"]["market_defaults"]["symbol_suffix"] == ".HK"
