@@ -1,7 +1,7 @@
 from pathlib import Path
 
 
-QPK_REF = "92458590a463e7219f0369a3505031ee74414135"
+QPK_REF = "3acab1923a97b805b077c85c6c19657be0143bac"
 
 
 def test_drift_workflow_builds_and_wires_lifecycle_preflight() -> None:
