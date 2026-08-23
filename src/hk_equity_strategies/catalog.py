@@ -19,6 +19,7 @@ from hk_equity_strategies.strategies import hk_global_etf_tactical_rotation as g
 from hk_equity_strategies.strategies import hk_low_vol_dividend_quality_snapshot as low_vol_dividend_strategy
 
 from hk_equity_strategies.strategies import hk_equity_combo as hk_combo_strategy
+from hk_equity_strategies.runtime_allowlist import get_runtime_selectable_profiles
 
 HK_EQUITY_DOMAIN = global_etf_strategy.HK_EQUITY_DOMAIN
 HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE = global_etf_strategy.PROFILE_NAME
@@ -255,11 +256,7 @@ def get_strategy_metadata_map() -> dict[str, StrategyMetadata]:
 
 
 def get_runtime_enabled_profiles() -> frozenset[str]:
-    return frozenset(
-        profile
-        for profile, metadata in STRATEGY_METADATA.items()
-        if str(metadata.status or "").strip().lower() == "runtime_enabled"
-    )
+    return get_runtime_selectable_profiles()
 
 
 def get_direct_market_history_profiles() -> frozenset[str]:
