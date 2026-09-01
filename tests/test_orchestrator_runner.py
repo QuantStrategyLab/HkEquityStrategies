@@ -110,7 +110,10 @@ class HkEtfRotationBacktestRunnerTests(unittest.TestCase):
     def test_synthetic_result_has_controlled_data_provenance(self) -> None:
         result = HkEtfRotationBacktestRunner(synthetic_days=500).run(
             PROFILE_NAME,
-            {"min_history_days": DEFAULT_MIN_HISTORY_DAYS},
+            {
+                "min_history_days": DEFAULT_MIN_HISTORY_DAYS,
+                "data_provenance": {"synthetic_data": False, "synthetic_seed": 999},
+            },
             start_date=date(2023, 6, 1),
             end_date=date(2024, 6, 1),
         )
@@ -123,6 +126,20 @@ class HkEtfRotationBacktestRunnerTests(unittest.TestCase):
                 "synthetic_seed": 0,
             },
         )
+
+    def test_external_history_cannot_claim_synthetic_data_provenance(self) -> None:
+        history = _synthetic_market_history(days=500)
+        result = HkEtfRotationBacktestRunner(market_history=history).run(
+            PROFILE_NAME,
+            {
+                "min_history_days": DEFAULT_MIN_HISTORY_DAYS,
+                "data_provenance": {"synthetic_data": True, "synthetic_seed": 999},
+            },
+            start_date=date(2023, 6, 1),
+            end_date=date(2024, 6, 1),
+        )
+
+        self.assertNotIn("data_provenance", result.params)
 
     def test_unsupported_profile_raises(self) -> None:
         runner = HkEtfRotationBacktestRunner(synthetic_days=100)
@@ -150,6 +167,21 @@ class HkEquityComboBacktestRunnerTests(unittest.TestCase):
                 "synthetic_seed": 0,
             },
         )
+
+    def test_external_history_cannot_claim_synthetic_data_provenance(self) -> None:
+        history = _synthetic_market_history(days=500)
+        result = HkEquityComboBacktestRunner(market_history=history).run(
+            HK_EQUITY_COMBO_PROFILE,
+            {
+                "min_history_days": DEFAULT_MIN_HISTORY_DAYS,
+                "combo_mode": "dynamic",
+                "data_provenance": {"synthetic_data": True, "synthetic_seed": 999},
+            },
+            start_date=date(2023, 6, 1),
+            end_date=date(2024, 6, 1),
+        )
+
+        self.assertNotIn("data_provenance", result.params)
 
     def test_walk_forward_combo_profile(self) -> None:
         from pathlib import Path

@@ -87,13 +87,13 @@ def _signal_fn(history: Any, **kwargs: Any):
     return build_target_weights(history, **kwargs)
 
 
-def _params_with_data_provenance(params: Mapping[str, Any], market_history: pd.DataFrame) -> dict[str, Any]:
-    output = dict(params)
-    synthetic_seed = market_history.attrs.get("synthetic_seed")
-    if (
-        market_history.attrs.get("synthetic_generator_version") == SYNTHETIC_MARKET_HISTORY_GENERATOR_VERSION
-        and isinstance(synthetic_seed, int)
-    ):
+def _params_with_data_provenance(
+    params: Mapping[str, Any],
+    *,
+    synthetic_seed: int | None,
+) -> dict[str, Any]:
+    output = {key: value for key, value in params.items() if key != "data_provenance"}
+    if synthetic_seed is not None:
         output["data_provenance"] = {
             "synthetic_data": True,
             "synthetic_generator_version": SYNTHETIC_MARKET_HISTORY_GENERATOR_VERSION,
@@ -163,7 +163,9 @@ class HkEtfRotationBacktestRunner:
 
         min_history_days = int(params.get("min_history_days", DEFAULT_MIN_HISTORY_DAYS))
         history = self._market_history
+        synthetic_seed = None
         if history is None:
+            synthetic_seed = 0
             history = _synthetic_market_history(days=max(self._synthetic_days, min_history_days + 400))
         sliced = _slice_history(
             history,
@@ -187,7 +189,7 @@ class HkEtfRotationBacktestRunner:
             eval_frame = sliced[sliced["date"] >= pd.Timestamp(start_date)]
         return _metrics_to_backtest_result(
             strategy_profile=strategy_profile,
-            params=_params_with_data_provenance(params, history),
+            params=_params_with_data_provenance(params, synthetic_seed=synthetic_seed),
             metrics=result.metrics,
             start_date=start_date or (eval_frame["date"].min().date() if not eval_frame.empty else None),
             end_date=end_date or (eval_frame["date"].max().date() if not eval_frame.empty else None),
@@ -226,7 +228,9 @@ class HkEquityComboBacktestRunner:
             raise ValueError("combo_mode must be 'static' or 'dynamic'")
 
         history = self._market_history
+        synthetic_seed = None
         if history is None:
+            synthetic_seed = 0
             history = _synthetic_market_history(days=max(self._synthetic_days, min_history_days + 400))
         sliced = _slice_history(
             history,
@@ -254,7 +258,7 @@ class HkEquityComboBacktestRunner:
             eval_frame = sliced[sliced["date"] >= pd.Timestamp(start_date)]
         return _metrics_to_backtest_result(
             strategy_profile=strategy_profile,
-            params=_params_with_data_provenance(params, history),
+            params=_params_with_data_provenance(params, synthetic_seed=synthetic_seed),
             metrics=result.metrics,
             start_date=start_date or (eval_frame["date"].min().date() if not eval_frame.empty else None),
             end_date=end_date or (eval_frame["date"].max().date() if not eval_frame.empty else None),
