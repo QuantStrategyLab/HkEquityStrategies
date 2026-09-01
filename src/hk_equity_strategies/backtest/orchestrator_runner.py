@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
-from typing import Any, Mapping, cast
+import hashlib
+import math
+from collections.abc import Mapping
+from datetime import UTC, date, datetime, timezone
+from typing import Any, cast
 
 import pandas as pd
 
@@ -13,9 +16,11 @@ from hk_equity_strategies.strategies.hk_equity_combo import PROFILE_NAME as HK_E
 from hk_equity_strategies.strategies.hk_global_etf_tactical_rotation import (
     DEFAULT_MIN_HISTORY_DAYS,
     DEFAULT_UNIVERSE_SYMBOLS,
-    PROFILE_NAME as HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
     build_target_weights,
     extract_managed_symbols,
+)
+from hk_equity_strategies.strategies.hk_global_etf_tactical_rotation import (
+    PROFILE_NAME as HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
 )
 
 try:
@@ -25,21 +30,40 @@ except ImportError:  # pragma: no cover
 
 
 SUPPORTED_PROFILES = frozenset({HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE, HK_EQUITY_COMBO_PROFILE})
+SYNTHETIC_MARKET_HISTORY_GENERATOR_VERSION = "hk_equity_market_history.v1"
 
 
-def _synthetic_market_history(*, days: int = 900, start: str = "2022-01-03") -> pd.DataFrame:
+def _synthetic_path_parameter(*, seed: int, symbol: str, label: str) -> float:
+    material = "\x1f".join((SYNTHETIC_MARKET_HISTORY_GENERATOR_VERSION, str(seed), symbol, label)).encode("utf-8")
+    return int.from_bytes(hashlib.sha256(material).digest(), "big", signed=False) / (1 << 256)
+
+
+def _synthetic_market_history(
+    *,
+    days: int = 900,
+    start: str = "2022-01-03",
+    symbols: tuple[str, ...] | None = None,
+    seed: int = 0,
+) -> pd.DataFrame:
     dates = pd.bdate_range(start, periods=days)
-    symbols = tuple(extract_managed_symbols(universe_symbols=DEFAULT_UNIVERSE_SYMBOLS))
-    rates = {symbol: 1.00015 + (idx * 0.00004) for idx, symbol in enumerate(symbols)}
+    symbols = symbols if symbols is not None else tuple(extract_managed_symbols(universe_symbols=DEFAULT_UNIVERSE_SYMBOLS))
     rows: list[dict[str, object]] = []
     for symbol in symbols:
-        price = 12.0 + (hash(symbol) % 9)
-        rate = rates.get(symbol, 1.00015)
+        price = 12.0 + 8.0 * _synthetic_path_parameter(seed=seed, symbol=symbol, label="initial_price")
+        rate = 1.00015 + 0.0002 * _synthetic_path_parameter(seed=seed, symbol=symbol, label="growth_rate")
+        cycle_amplitude = 0.01 + 0.02 * _synthetic_path_parameter(
+            seed=seed, symbol=symbol, label="cycle_amplitude"
+        )
+        cycle_period = 8.0 + 8.0 * _synthetic_path_parameter(seed=seed, symbol=symbol, label="cycle_period")
+        cycle_phase = 2.0 * math.pi * _synthetic_path_parameter(seed=seed, symbol=symbol, label="cycle_phase")
         for idx, day in enumerate(dates):
             price *= rate
-            close = price * (1.0 + 0.02 * ((idx % 11) - 5) / 11)
+            close = price * (1.0 + cycle_amplitude * math.sin((2.0 * math.pi * idx / cycle_period) + cycle_phase))
             rows.append({"date": day, "symbol": symbol, "close": close})
-    return pd.DataFrame(rows)
+    history = pd.DataFrame(rows)
+    history.attrs["synthetic_generator_version"] = SYNTHETIC_MARKET_HISTORY_GENERATOR_VERSION
+    history.attrs["synthetic_seed"] = seed
+    return history
 
 
 def _slice_history(
@@ -92,7 +116,7 @@ def _metrics_to_backtest_result(
         end_date=end_date,
         observation_count=int(metrics.get("days") or 0),
         source_script="hk_equity_strategies.backtest.orchestrator_runner",
-        computed_at=datetime.now(timezone.utc).isoformat(),
+        computed_at=datetime.now(UTC).isoformat(),
         run_duration_seconds=run_duration_seconds,
     )
 
@@ -135,14 +159,14 @@ class HkEtfRotationBacktestRunner:
         if sliced.empty:
             raise ValueError("No market history rows for requested window")
 
-        started = datetime.now(timezone.utc)
+        started = datetime.now(UTC)
         result = run_etf_rotation_backtest(
             sliced,
             _signal_fn,
             config=HkRotationBacktestConfig(min_history_days=min_history_days),
             strategy_kwargs={"min_history_days": min_history_days},
         )
-        elapsed = (datetime.now(timezone.utc) - started).total_seconds()
+        elapsed = (datetime.now(UTC) - started).total_seconds()
         eval_frame = sliced
         if start_date is not None:
             eval_frame = sliced[sliced["date"] >= pd.Timestamp(start_date)]
@@ -198,7 +222,7 @@ class HkEquityComboBacktestRunner:
         if sliced.empty:
             raise ValueError("No market history rows for requested window")
 
-        started = datetime.now(timezone.utc)
+        started = datetime.now(UTC)
         result = run_combo_backtest(
             sliced,
             _signal_fn,
@@ -209,7 +233,7 @@ class HkEquityComboBacktestRunner:
             rotation_config=HkRotationBacktestConfig(min_history_days=min_history_days),
             strategy_kwargs={"min_history_days": min_history_days},
         )
-        elapsed = (datetime.now(timezone.utc) - started).total_seconds()
+        elapsed = (datetime.now(UTC) - started).total_seconds()
         eval_frame = sliced
         if start_date is not None:
             eval_frame = sliced[sliced["date"] >= pd.Timestamp(start_date)]
@@ -242,6 +266,7 @@ def build_backtest_runner(
 
 __all__ = [
     "SUPPORTED_PROFILES",
+    "SYNTHETIC_MARKET_HISTORY_GENERATOR_VERSION",
     "HkEquityComboBacktestRunner",
     "HkEtfRotationBacktestRunner",
     "build_backtest_runner",
