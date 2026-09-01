@@ -13,6 +13,7 @@ import pandas as pd
 
 from hk_equity_strategies.backtest.orchestrator_runner import (
     SUPPORTED_PROFILES,
+    SYNTHETIC_MARKET_HISTORY_GENERATOR_VERSION,
     HkEquityComboBacktestRunner,
     HkEtfRotationBacktestRunner,
     _synthetic_market_history,
@@ -106,6 +107,23 @@ class HkEtfRotationBacktestRunnerTests(unittest.TestCase):
         self.assertIsNotNone(result.sharpe_ratio)
         self.assertGreater(result.observation_count, 0)
 
+    def test_synthetic_result_has_controlled_data_provenance(self) -> None:
+        result = HkEtfRotationBacktestRunner(synthetic_days=500).run(
+            PROFILE_NAME,
+            {"min_history_days": DEFAULT_MIN_HISTORY_DAYS},
+            start_date=date(2023, 6, 1),
+            end_date=date(2024, 6, 1),
+        )
+
+        self.assertEqual(
+            result.params["data_provenance"],
+            {
+                "synthetic_data": True,
+                "synthetic_generator_version": SYNTHETIC_MARKET_HISTORY_GENERATOR_VERSION,
+                "synthetic_seed": 0,
+            },
+        )
+
     def test_unsupported_profile_raises(self) -> None:
         runner = HkEtfRotationBacktestRunner(synthetic_days=100)
         with self.assertRaises(ValueError):
@@ -124,6 +142,14 @@ class HkEquityComboBacktestRunnerTests(unittest.TestCase):
         self.assertEqual(result.strategy_profile, HK_EQUITY_COMBO_PROFILE)
         self.assertEqual(result.domain, "hk_equity")
         self.assertGreater(result.observation_count, 0)
+        self.assertEqual(
+            result.params["data_provenance"],
+            {
+                "synthetic_data": True,
+                "synthetic_generator_version": SYNTHETIC_MARKET_HISTORY_GENERATOR_VERSION,
+                "synthetic_seed": 0,
+            },
+        )
 
     def test_walk_forward_combo_profile(self) -> None:
         from pathlib import Path

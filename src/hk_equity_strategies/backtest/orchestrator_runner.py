@@ -87,6 +87,21 @@ def _signal_fn(history: Any, **kwargs: Any):
     return build_target_weights(history, **kwargs)
 
 
+def _params_with_data_provenance(params: Mapping[str, Any], market_history: pd.DataFrame) -> dict[str, Any]:
+    output = dict(params)
+    synthetic_seed = market_history.attrs.get("synthetic_seed")
+    if (
+        market_history.attrs.get("synthetic_generator_version") == SYNTHETIC_MARKET_HISTORY_GENERATOR_VERSION
+        and isinstance(synthetic_seed, int)
+    ):
+        output["data_provenance"] = {
+            "synthetic_data": True,
+            "synthetic_generator_version": SYNTHETIC_MARKET_HISTORY_GENERATOR_VERSION,
+            "synthetic_seed": synthetic_seed,
+        }
+    return output
+
+
 def _metrics_to_backtest_result(
     *,
     strategy_profile: str,
@@ -172,7 +187,7 @@ class HkEtfRotationBacktestRunner:
             eval_frame = sliced[sliced["date"] >= pd.Timestamp(start_date)]
         return _metrics_to_backtest_result(
             strategy_profile=strategy_profile,
-            params=params,
+            params=_params_with_data_provenance(params, history),
             metrics=result.metrics,
             start_date=start_date or (eval_frame["date"].min().date() if not eval_frame.empty else None),
             end_date=end_date or (eval_frame["date"].max().date() if not eval_frame.empty else None),
@@ -239,7 +254,7 @@ class HkEquityComboBacktestRunner:
             eval_frame = sliced[sliced["date"] >= pd.Timestamp(start_date)]
         return _metrics_to_backtest_result(
             strategy_profile=strategy_profile,
-            params=params,
+            params=_params_with_data_provenance(params, history),
             metrics=result.metrics,
             start_date=start_date or (eval_frame["date"].min().date() if not eval_frame.empty else None),
             end_date=end_date or (eval_frame["date"].max().date() if not eval_frame.empty else None),
