@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from quant_platform_kit.strategy_contracts import StrategyManifest
+from quant_platform_kit.common.strategy_contracts import StrategyManifest
 
 from hk_equity_strategies.strategies import hk_global_etf_tactical_rotation as global_etf_strategy
 from hk_equity_strategies.strategies import hk_low_vol_dividend_quality_snapshot as low_vol_dividend_strategy
