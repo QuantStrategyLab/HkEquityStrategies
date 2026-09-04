@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from quant_platform_kit.strategy_contracts import CallableStrategyEntrypoint, StrategyContext, StrategyDecision
+from quant_platform_kit.common.strategy_contracts import CallableStrategyEntrypoint, StrategyContext, StrategyDecision
 
 from hk_equity_strategies.manifests import (
     hk_global_etf_tactical_rotation_manifest,

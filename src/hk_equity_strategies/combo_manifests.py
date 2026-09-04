@@ -2,7 +2,7 @@
 """
 from __future__ import annotations
 
-from quant_platform_kit.strategy_contracts import StrategyManifest
+from quant_platform_kit.common.strategy_contracts import StrategyManifest
 
 from hk_equity_strategies.strategies import hk_equity_combo as combo_strategy
 
