@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+
 import hashlib
 import os
 import subprocess
@@ -233,6 +235,121 @@ class WalkForwardPilotTests(unittest.TestCase):
             )
             self.assertEqual(len(results), 2)
             self.assertTrue(all(item.strategy_profile == PROFILE_NAME for item in results))
+
+
+
+class AccountingMetricsRegressionTests(unittest.TestCase):
+    """QSL-20260906-006/008/009: MDD floor, event rebalance, arithmetic Sharpe, signed Calmar."""
+
+    def test_max_drawdown_includes_initial_nav(self) -> None:
+        from hk_equity_strategies.backtest.etf_rotation_simulator import compute_backtest_metrics
+
+        cases = (
+            ([-0.1], -0.1),
+            ([-0.1, 0.0], -0.1),
+            ([-0.1, 0.1], -0.1),
+            ([0.1, -0.2], -0.2),
+        )
+        for returns, expected in cases:
+            with self.subTest(returns=returns):
+                metrics = compute_backtest_metrics(pd.Series(returns, dtype=float))
+                self.assertAlmostEqual(metrics["max_drawdown"], expected)
+
+    def test_sharpe_uses_arithmetic_excess_mean(self) -> None:
+        from hk_equity_strategies.backtest.etf_rotation_simulator import compute_backtest_metrics
+
+        returns = pd.Series([0.02, -0.01], dtype=float)
+        metrics = compute_backtest_metrics(returns)
+        expected = float(returns.mean()) / float(returns.std(ddof=0)) * math.sqrt(252)
+        self.assertAlmostEqual(metrics["sharpe_ratio"], expected)
+
+    def test_calmar_preserves_loss_sign(self) -> None:
+        from hk_equity_strategies.backtest.orchestrator_runner import _metrics_to_backtest_result
+
+        for annual_return, drawdown, expected in (
+            (-0.1, -0.2, -0.5),
+            (0.1, -0.2, 0.5),
+            (0.1, 0.0, None),
+        ):
+            with self.subTest(annual_return=annual_return, drawdown=drawdown):
+                result = _metrics_to_backtest_result(
+                    strategy_profile=PROFILE_NAME,
+                    params={},
+                    metrics={"annual_return": annual_return, "max_drawdown": drawdown},
+                    start_date=None,
+                    end_date=None,
+                    run_duration_seconds=0.0,
+                )
+                self.assertEqual(result.calmar_ratio, expected)
+
+    def test_no_rebalance_days_do_not_freely_reset_weights(self) -> None:
+        from hk_equity_strategies.backtest.etf_rotation_simulator import (
+            HkRotationBacktestConfig,
+            run_etf_rotation_backtest,
+        )
+
+        history = pd.DataFrame(
+            {
+                "date": pd.to_datetime(
+                    ["2024-01-31", "2024-02-01", "2024-02-02"] * 2
+                ),
+                "symbol": ["A", "A", "A", "B", "B", "B"],
+                "close": [100.0, 200.0, 100.0, 100.0, 100.0, 100.0],
+            }
+        )
+        result = run_etf_rotation_backtest(
+            history,
+            lambda _history: ({"A": 0.5, "B": 0.5}, {}),
+            config=HkRotationBacktestConfig(min_history_days=1, cost_bps=0.0),
+            universe_symbols=["A", "B"],
+        )
+        self.assertAlmostEqual(float(result.daily_returns.iloc[0]), 0.0)
+        self.assertAlmostEqual(float(result.daily_returns.iloc[1]), 0.5)
+        self.assertAlmostEqual(float(result.daily_returns.iloc[2]), -1.0 / 3.0)
+        self.assertAlmostEqual(float((1.0 + result.daily_returns).prod()), 1.0)
+
+    def test_only_actual_rebalance_pays_costs_and_explicit_cash_exit_works(self) -> None:
+        from hk_equity_strategies.backtest.etf_rotation_simulator import (
+            HkRotationBacktestConfig,
+            run_etf_rotation_backtest,
+        )
+
+        history = pd.DataFrame(
+            {
+                "date": pd.to_datetime(
+                    [
+                        "2024-01-31",
+                        "2024-02-01",
+                        "2024-02-02",
+                        "2024-02-29",
+                        "2024-03-01",
+                    ]
+                    * 1
+                ),
+                "symbol": ["A"] * 5,
+                "close": [100.0, 100.0, 100.0, 100.0, 100.0],
+            }
+        )
+
+        def signal(frame):
+            as_of = pd.Timestamp(frame["date"].max())
+            if as_of.month == 1:
+                return {"A": 1.0}, {}
+            return {}, {}
+
+        result = run_etf_rotation_backtest(
+            history,
+            signal,
+            config=HkRotationBacktestConfig(min_history_days=1, cost_bps=100.0),
+            universe_symbols=["A"],
+        )
+        # Entry on first lagged rebalance day costs 1%; unchanged days are flat;
+        # February month-end explicit cash exit pays another 1% of remaining equity.
+        self.assertAlmostEqual(float(result.daily_returns.iloc[1]), 1.0 / 1.01 - 1.0)
+        self.assertAlmostEqual(float(result.daily_returns.iloc[2]), 0.0)
+        self.assertAlmostEqual(float(result.daily_returns.iloc[3]), 0.0)
+        self.assertAlmostEqual(float(result.daily_returns.iloc[4]), -0.01)
+
 
 
 if __name__ == "__main__":
