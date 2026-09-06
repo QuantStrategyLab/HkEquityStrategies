@@ -13,8 +13,8 @@ from hk_equity_strategies.backtest.etf_rotation_simulator import (
     HkRotationBacktestResult,
     StrategySignalFn,
     build_rebalance_dates,
-    build_rotation_target_weights,
     compute_backtest_metrics,
+    rebalance_holdings,
 )
 from hk_equity_strategies.strategies.etf_rotation_core import build_close_matrix
 from hk_equity_strategies.strategies.hk_equity_combo import (
@@ -65,7 +65,13 @@ def _breadth_regime(close: pd.DataFrame, as_of: pd.Timestamp) -> str:
     return "risk_on"
 
 
-def _combo_strategy_returns(
+def _history_slice(market_history: pd.DataFrame, as_of: pd.Timestamp) -> pd.DataFrame:
+    frame = market_history.copy()
+    frame["date"] = pd.to_datetime(frame["date"], utc=False).dt.tz_localize(None).dt.normalize()
+    return frame.loc[frame["date"] <= as_of]
+
+
+def _combo_target_weights(
     market_history: pd.DataFrame,
     close: pd.DataFrame,
     *,
@@ -73,30 +79,26 @@ def _combo_strategy_returns(
     rotation_config: HkRotationBacktestConfig,
     combo_config: HkComboBacktestConfig,
     strategy_kwargs: Mapping[str, Any],
-) -> pd.Series:
-    etf_targets = build_rotation_target_weights(
-        market_history,
-        close,
-        signal_fn=signal_fn,
-        config=rotation_config,
-        strategy_kwargs=strategy_kwargs,
-    )
-    dividend_returns = _simulate_dividend_returns(
-        close,
-        volatility_window_days=combo_config.volatility_window_days,
-    )
+    asset_columns: pd.Index,
+) -> pd.DataFrame:
+    """Build event targets only; NaN means hold prior shares/cash (no free reset)."""
     rebalance_dates = build_rebalance_dates(
         pd.DatetimeIndex(close.index),
         frequency=combo_config.rebalance_frequency,
     )
     rebalance_dates = rebalance_dates[rebalance_dates <= close.index[-1]]
-
-    weight_schedule: list[dict[str, Any]] = []
+    rows: list[dict[str, Any]] = []
     for target_date in rebalance_dates:
-        pos = close.index.searchsorted(target_date, side="right") - 1
-        if pos < 0:
+        position = close.index.searchsorted(target_date, side="right") - 1
+        if position < 0:
             continue
-        as_of = pd.Timestamp(close.index[pos])
+        as_of = pd.Timestamp(close.index[position])
+        history = _history_slice(market_history, as_of)
+        if len(history["date"].drop_duplicates()) < int(rotation_config.min_history_days):
+            etf_weights: dict[str, float] = {}
+        else:
+            etf_weights, _metadata = signal_fn(history, **dict(strategy_kwargs))
+
         if combo_config.combo_mode == "static":
             etf_target_weight = combo_config.etf_weight
             div_target_weight = combo_config.dividend_weight
@@ -107,36 +109,83 @@ def _combo_strategy_returns(
                 regime,
             )
 
-        base_etf_weights = (
-            etf_targets.loc[as_of]
-            if as_of in etf_targets.index
-            else pd.Series(0.0, index=close.columns)
-        )
-        etf_gross = float(base_etf_weights.sum())
+        selected = {symbol: float(etf_weights.get(symbol, 0.0)) for symbol in close.columns}
+        if any(not math.isfinite(weight) or weight < 0.0 for weight in selected.values()) or math.fsum(
+            selected.values()
+        ) > 1.0:
+            raise ValueError("target weights must be finite, non-negative and sum to at most one")
+        etf_gross = math.fsum(selected.values())
         if etf_gross > 0.0:
-            scaled_etf = base_etf_weights.multiply(etf_target_weight / etf_gross)
+            scaled = {
+                symbol: weight * etf_target_weight / etf_gross for symbol, weight in selected.items()
+            }
         else:
-            scaled_etf = base_etf_weights * 0.0
+            scaled = {symbol: 0.0 for symbol in close.columns}
 
-        row: dict[str, float] = {
-            symbol: float(scaled_etf.get(symbol, 0.0)) for symbol in close.columns
-        }
-        if DIVIDEND_SYMBOL not in row:
-            row[DIVIDEND_SYMBOL] = 0.0
-        row[DIVIDEND_SYMBOL] += div_target_weight
-        weight_schedule.append({"date": as_of, **row})
+        row = {symbol: float(scaled.get(symbol, 0.0)) for symbol in asset_columns}
+        row[DIVIDEND_SYMBOL] = float(row.get(DIVIDEND_SYMBOL, 0.0)) + float(div_target_weight)
+        if any(not math.isfinite(weight) or weight < 0.0 for weight in row.values()) or math.fsum(
+            row.values()
+        ) > 1.0:
+            raise ValueError("combo target weights must be finite, non-negative and sum to at most one")
+        rows.append({"date": as_of, **row})
 
-    weights = pd.DataFrame(weight_schedule).set_index("date")
-    weights = weights.reindex(close.index, method="ffill").fillna(0.0)
-    weights = weights.shift(1).fillna(0.0)
+    targets = pd.DataFrame(rows, columns=["date", *asset_columns]).set_index("date")
+    return targets.reindex(close.index).shift(1)
 
-    asset_returns = close.pct_change().fillna(0.0)
-    if DIVIDEND_SYMBOL in asset_returns.columns:
-        asset_returns[DIVIDEND_SYMBOL] = dividend_returns
 
-    portfolio_returns = (weights * asset_returns).sum(axis=1)
-    turnover = weights.diff().abs().sum(axis=1).fillna(0.0)
-    return portfolio_returns - turnover * combo_config.cost_bps / 10_000.0
+def _combo_strategy_returns(
+    market_history: pd.DataFrame,
+    close: pd.DataFrame,
+    *,
+    signal_fn: StrategySignalFn,
+    rotation_config: HkRotationBacktestConfig,
+    combo_config: HkComboBacktestConfig,
+    strategy_kwargs: Mapping[str, Any],
+) -> pd.Series:
+    dividend_returns = _simulate_dividend_returns(
+        close,
+        volatility_window_days=combo_config.volatility_window_days,
+    )
+    prices = close.copy()
+    if DIVIDEND_SYMBOL not in prices.columns:
+        prices[DIVIDEND_SYMBOL] = 1.0
+    prices[DIVIDEND_SYMBOL] = (1.0 + dividend_returns.reindex(prices.index).fillna(0.0)).cumprod()
+
+    cost_rate = float(combo_config.cost_bps) / 10_000.0
+    if not math.isfinite(cost_rate) or not 0.0 <= cost_rate < 1.0:
+        raise ValueError("cost_bps must be finite and in [0, 10000)")
+
+    targets = _combo_target_weights(
+        market_history,
+        close,
+        signal_fn=signal_fn,
+        rotation_config=rotation_config,
+        combo_config=combo_config,
+        strategy_kwargs=strategy_kwargs,
+        asset_columns=prices.columns,
+    )
+    shares = pd.Series(0.0, index=prices.columns)
+    cash = equity = 1.0
+    net = pd.Series(0.0, index=prices.index)
+    for position in range(1, len(prices)):
+        target = targets.iloc[position]
+        if target.notna().any():
+            shares, cash, _fees = rebalance_holdings(
+                shares,
+                cash,
+                prices.iloc[position - 1],
+                target.fillna(0.0),
+                cost_rate=cost_rate,
+            )
+        held = shares > 0.0
+        mark_prices = prices.iloc[position][held]
+        if any(not math.isfinite(price) or price <= 0.0 for price in mark_prices):
+            raise ValueError("held assets require positive finite mark prices")
+        marked_equity = cash + float((shares[held] * mark_prices).sum())
+        net.iloc[position] = marked_equity / equity - 1.0
+        equity = marked_equity
+    return net
 
 
 def run_combo_backtest(

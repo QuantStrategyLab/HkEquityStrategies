@@ -350,6 +350,39 @@ class AccountingMetricsRegressionTests(unittest.TestCase):
         self.assertAlmostEqual(float(result.daily_returns.iloc[3]), 0.0)
         self.assertAlmostEqual(float(result.daily_returns.iloc[4]), -0.01)
 
+    def test_combo_no_rebalance_days_do_not_freely_reset_weights(self) -> None:
+        from hk_equity_strategies.backtest.combo_simulator import (
+            HkComboBacktestConfig,
+            run_combo_backtest,
+        )
+        from hk_equity_strategies.backtest.etf_rotation_simulator import HkRotationBacktestConfig
+
+        history = pd.DataFrame(
+            {
+                "date": pd.to_datetime(["2024-01-31", "2024-02-01", "2024-02-02"] * 2),
+                "symbol": ["A", "A", "A", "B", "B", "B"],
+                "close": [100.0, 200.0, 100.0, 100.0, 100.0, 100.0],
+            }
+        )
+        result = run_combo_backtest(
+            history,
+            lambda _history: ({"A": 0.5, "B": 0.5}, {}),
+            combo_config=HkComboBacktestConfig(
+                combo_mode="static",
+                etf_weight=1.0,
+                dividend_weight=0.0,
+                min_history_days=1,
+                cost_bps=0.0,
+                rebalance_frequency="monthly",
+            ),
+            rotation_config=HkRotationBacktestConfig(min_history_days=1, cost_bps=0.0),
+            universe_symbols=["A", "B"],
+        )
+        # Same path as ETF rotation: hold shares between events instead of ffill weights.
+        self.assertAlmostEqual(float(result.daily_returns.iloc[0]), 0.0)
+        self.assertAlmostEqual(float(result.daily_returns.iloc[1]), 0.5)
+        self.assertAlmostEqual(float(result.daily_returns.iloc[2]), -1.0 / 3.0)
+        self.assertAlmostEqual(float((1.0 + result.daily_returns).prod()), 1.0)
 
 
 if __name__ == "__main__":
