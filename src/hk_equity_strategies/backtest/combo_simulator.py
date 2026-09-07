@@ -12,11 +12,11 @@ from hk_equity_strategies.backtest.etf_rotation_simulator import (
     HkRotationBacktestConfig,
     HkRotationBacktestResult,
     StrategySignalFn,
+    _build_observed_close_matrix,
     build_rebalance_dates,
     compute_backtest_metrics,
     rebalance_holdings,
 )
-from hk_equity_strategies.strategies.etf_rotation_core import build_close_matrix
 from hk_equity_strategies.strategies.hk_equity_combo import (
     DEFAULT_DIVIDEND_WEIGHT,
     DEFAULT_ETF_WEIGHT,
@@ -151,6 +151,10 @@ def _combo_strategy_returns(
     if DIVIDEND_SYMBOL not in prices.columns:
         prices[DIVIDEND_SYMBOL] = 1.0
     prices[DIVIDEND_SYMBOL] = (1.0 + dividend_returns.reindex(prices.index).fillna(0.0)).cumprod()
+    # A modeled dividend price is not evidence of an observed source quote.
+    dividend_sources = close[[DIVIDEND_SYMBOL]] if DIVIDEND_SYMBOL in close.columns else close
+    observed = (dividend_sources.gt(0.0) & dividend_sources.lt(math.inf)).all(axis=1)
+    prices[DIVIDEND_SYMBOL] = prices[DIVIDEND_SYMBOL].where(observed)
 
     cost_rate = float(combo_config.cost_bps) / 10_000.0
     if not math.isfinite(cost_rate) or not 0.0 <= cost_rate < 1.0:
@@ -203,7 +207,7 @@ def run_combo_backtest(
         cost_bps=combo.cost_bps,
         rebalance_frequency=combo.rebalance_frequency,
     )
-    close = build_close_matrix(market_history, universe_symbols=universe_symbols)
+    close = _build_observed_close_matrix(market_history, universe_symbols=universe_symbols)
     if len(close) < int(combo.min_history_days):
         raise ValueError(
             f"market_history requires at least {int(combo.min_history_days)} overlapping trading days"

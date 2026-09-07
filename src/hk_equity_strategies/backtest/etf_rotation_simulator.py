@@ -8,7 +8,7 @@ from typing import Any, Callable, Mapping, Sequence
 
 import pandas as pd
 
-from hk_equity_strategies.strategies.etf_rotation_core import build_close_matrix, normalize_symbol
+from hk_equity_strategies.strategies.etf_rotation_core import normalize_symbol, normalize_universe_symbols
 
 StrategySignalFn = Callable[[Any], tuple[Mapping[str, float], Mapping[str, object]]]
 
@@ -24,6 +24,27 @@ class HkRotationBacktestConfig:
 class HkRotationBacktestResult:
     daily_returns: pd.Series
     metrics: dict[str, float | int] = field(default_factory=dict)
+
+
+def _build_observed_close_matrix(market_history: pd.DataFrame, *, universe_symbols=None) -> pd.DataFrame:
+    """Keep missing observations visible to fill/mark checks, unlike signal history."""
+    frame = market_history.copy()
+    missing_columns = {"date", "symbol", "close"} - set(frame.columns)
+    if missing_columns:
+        raise ValueError(f"market_history missing required columns: {', '.join(sorted(missing_columns))}")
+    frame["date"] = pd.to_datetime(frame["date"], utc=False).dt.tz_localize(None).dt.normalize()
+    frame["symbol"] = frame["symbol"].map(normalize_symbol)
+    frame["close"] = pd.to_numeric(frame["close"], errors="coerce")
+    symbols = normalize_universe_symbols(universe_symbols)
+    missing = set(symbols) - set(frame.loc[frame["close"].notna(), "symbol"])
+    if missing:
+        raise ValueError(f"market_history missing required strategy symbols: {', '.join(sorted(missing))}")
+    close = (
+        frame.loc[frame["symbol"].isin(symbols)]
+        .pivot_table(index="date", columns="symbol", values="close", aggfunc="last", dropna=False)
+        .sort_index()
+    )
+    return close.loc[:, list(symbols)]
 
 
 def _rebalance_dates(index: pd.DatetimeIndex, *, frequency: str) -> pd.DatetimeIndex:
@@ -133,7 +154,7 @@ def run_etf_rotation_backtest(
 ) -> HkRotationBacktestResult:
     settings = config or HkRotationBacktestConfig()
     kwargs = dict(strategy_kwargs or {})
-    close = build_close_matrix(market_history, universe_symbols=universe_symbols)
+    close = _build_observed_close_matrix(market_history, universe_symbols=universe_symbols)
     if len(close) < int(settings.min_history_days):
         raise ValueError(
             f"market_history requires at least {int(settings.min_history_days)} overlapping trading days"
