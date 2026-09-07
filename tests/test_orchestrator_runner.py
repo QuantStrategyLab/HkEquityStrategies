@@ -12,6 +12,7 @@ from datetime import date
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 from hk_equity_strategies.backtest.orchestrator_runner import (
     SUPPORTED_PROFILES,
@@ -27,6 +28,82 @@ from hk_equity_strategies.strategies.hk_global_etf_tactical_rotation import (
     DEFAULT_MIN_HISTORY_DAYS,
     PROFILE_NAME,
 )
+
+
+def _run_observed_price_case(history, runner, weights=None):
+    from hk_equity_strategies.backtest.etf_rotation_simulator import HkRotationBacktestConfig, run_etf_rotation_backtest
+    from hk_equity_strategies.backtest.combo_simulator import HkComboBacktestConfig, run_combo_backtest
+
+    def signal(_):
+        return weights if weights is not None else {"A": 1.0}, {}
+    config = HkRotationBacktestConfig(min_history_days=1, cost_bps=0.0)
+    if runner == "rotation":
+        return run_etf_rotation_backtest(history, signal, config=config, universe_symbols=["A", "B"])
+    return run_combo_backtest(
+        history, signal, rotation_config=config, universe_symbols=["A", "B"],
+        combo_config=HkComboBacktestConfig(combo_mode="static", etf_weight=1.0,
+                                          dividend_weight=0.0, min_history_days=1, cost_bps=0.0),
+    )
+
+
+def _observed_price_history():
+    return pd.DataFrame({
+        "date": pd.to_datetime(["2024-01-31", "2024-02-01", "2024-02-02"] * 2),
+        "symbol": ["A"] * 3 + ["B"] * 3, "close": [100.0] * 6,
+    })
+
+
+@pytest.mark.parametrize("runner", ["rotation", "combo"])
+@pytest.mark.parametrize("invalid", [float("nan"), 0.0, -1.0, float("inf"), "omitted"])
+def test_held_asset_missing_or_invalid_marks_are_not_filled_or_dropped(runner, invalid):
+    history = _observed_price_history()
+    if invalid == "omitted":
+        history = history.drop(index=[1, 2])
+    else:
+        history.loc[[1, 2], "close"] = invalid
+    with pytest.raises(ValueError, match="positive finite.*prices"):
+        _run_observed_price_case(history, runner)
+
+
+@pytest.mark.parametrize("runner", ["rotation", "combo"])
+def test_all_missing_observed_day_is_not_removed(runner):
+    history = _observed_price_history()
+    history.loc[[1, 4], "close"] = float("nan")
+    with pytest.raises(ValueError, match="positive finite.*prices"):
+        _run_observed_price_case(history, runner)
+
+
+@pytest.mark.parametrize("runner", ["rotation", "combo"])
+def test_missing_execution_price_is_not_borrowed_from_earlier_day(runner):
+    history = _observed_price_history()
+    history["date"] = pd.to_datetime(["2024-01-30", "2024-01-31", "2024-02-01"] * 2)
+    history.loc[1, "close"] = float("nan")
+    with pytest.raises(ValueError, match="positive finite fill prices"):
+        _run_observed_price_case(history, runner)
+
+
+@pytest.mark.parametrize("runner", ["rotation", "combo"])
+def test_unused_missing_asset_and_explicit_cash_do_not_require_a_price(runner):
+    history = _observed_price_history()
+    history.loc[4, "close"] = float("nan")
+    assert _run_observed_price_case(history, runner).daily_returns.tolist() == [0.0] * 3
+    assert _run_observed_price_case(history, runner, weights={}).daily_returns.tolist() == [0.0] * 3
+
+
+@pytest.mark.parametrize("has_dividend_source", [True, False])
+def test_held_dividend_proxy_does_not_hide_missing_source_quote(has_dividend_source):
+    from hk_equity_strategies.backtest.combo_simulator import HkComboBacktestConfig, run_combo_backtest
+
+    history = _observed_price_history()
+    if has_dividend_source:
+        history = history.replace({"B": "03110"})
+    history.loc[4, "close"] = float("nan")
+    with pytest.raises(ValueError, match="positive finite mark prices"):
+        run_combo_backtest(
+            history, lambda _: ({}, {}), universe_symbols=["A", "03110" if has_dividend_source else "B"],
+            combo_config=HkComboBacktestConfig(combo_mode="static", etf_weight=0.0,
+                                              dividend_weight=1.0, min_history_days=1, cost_bps=0.0),
+        )
 
 
 def _synthetic_history_digest(history: pd.DataFrame) -> str:
