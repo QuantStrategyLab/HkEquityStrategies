@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-import math
-
 import hashlib
+import math
 import os
 import subprocess
 import sys
@@ -14,6 +13,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+from hk_equity_strategies.backtest.combo_simulator import HkComboBacktestConfig
 from hk_equity_strategies.backtest.orchestrator_runner import (
     SUPPORTED_PROFILES,
     SYNTHETIC_MARKET_HISTORY_GENERATOR_VERSION,
@@ -31,8 +31,8 @@ from hk_equity_strategies.strategies.hk_global_etf_tactical_rotation import (
 
 
 def _run_observed_price_case(history, runner, weights=None):
-    from hk_equity_strategies.backtest.etf_rotation_simulator import HkRotationBacktestConfig, run_etf_rotation_backtest
     from hk_equity_strategies.backtest.combo_simulator import HkComboBacktestConfig, run_combo_backtest
+    from hk_equity_strategies.backtest.etf_rotation_simulator import HkRotationBacktestConfig, run_etf_rotation_backtest
 
     def signal(_):
         return weights if weights is not None else {"A": 1.0}, {}
@@ -51,6 +51,89 @@ def _observed_price_history():
         "date": pd.to_datetime(["2024-01-31", "2024-02-01", "2024-02-02"] * 2),
         "symbol": ["A"] * 3 + ["B"] * 3, "close": [100.0] * 6,
     })
+
+
+def test_combo_target_rounding_reclaims_one_ulp_without_relaxing_budget() -> None:
+    from hk_equity_strategies.backtest.combo_simulator import (
+        _combo_target_weights,
+        run_combo_backtest,
+    )
+    from hk_equity_strategies.backtest.etf_rotation_simulator import HkRotationBacktestConfig
+
+    dates = pd.to_datetime(["2024-01-31", "2024-02-01", "2024-02-02"] * 3)
+    history = pd.DataFrame(
+        {
+            "date": dates,
+            "symbol": ["A"] * 3 + ["B"] * 3 + ["03110"] * 3,
+            "close": [100.0] * 9,
+        }
+    )
+
+    combo_config = HkComboBacktestConfig(
+        combo_mode="static",
+        etf_weight=0.6,
+        dividend_weight=0.4,
+        min_history_days=1,
+        cost_bps=0.0,
+    )
+    rotation_config = HkRotationBacktestConfig(min_history_days=1, cost_bps=0.0)
+    close = history.pivot(index="date", columns="symbol", values="close")
+    targets = _combo_target_weights(
+        history,
+        close,
+        signal_fn=lambda _history: ({"A": 0.3, "B": 0.1, "03110": 0.3}, {}),
+        rotation_config=rotation_config,
+        combo_config=combo_config,
+        strategy_kwargs={},
+        asset_columns=close.columns,
+    )
+    target = targets.dropna(how="all").iloc[0]
+    assert math.fsum(target.to_dict().values()) <= 1.0
+
+    result = run_combo_backtest(
+        history,
+        lambda _history: ({"A": 0.3, "B": 0.1, "03110": 0.3}, {}),
+        combo_config=combo_config,
+        rotation_config=rotation_config,
+        universe_symbols=["A", "B", "03110"],
+    )
+
+    assert result.daily_returns.eq(0.0).all()
+
+
+@pytest.mark.parametrize(
+    "config",
+    [
+        HkComboBacktestConfig(combo_mode="static", etf_weight=0.61, dividend_weight=0.40, min_history_days=1),
+        HkComboBacktestConfig(
+            combo_mode="static",
+            etf_weight=math.nextafter(math.nextafter(0.6, math.inf), math.inf),
+            dividend_weight=0.4,
+            min_history_days=1,
+        ),
+        HkComboBacktestConfig(combo_mode="static", etf_weight=float("nan"), dividend_weight=0.4, min_history_days=1),
+        HkComboBacktestConfig(combo_mode="static", etf_weight=-0.1, dividend_weight=1.0, min_history_days=1),
+    ],
+)
+def test_combo_target_rejects_invalid_leg_budgets(config) -> None:
+    from hk_equity_strategies.backtest.combo_simulator import run_combo_backtest
+    from hk_equity_strategies.backtest.etf_rotation_simulator import HkRotationBacktestConfig
+
+    history = pd.DataFrame(
+        {
+            "date": pd.to_datetime(["2024-01-31", "2024-02-01"] * 3),
+            "symbol": ["A"] * 2 + ["B"] * 2 + ["03110"] * 2,
+            "close": [100.0] * 6,
+        }
+    )
+    with pytest.raises(ValueError, match="combo target weights"):
+        run_combo_backtest(
+            history,
+            lambda _history: ({"A": 0.3, "B": 0.1, "03110": 0.3}, {}),
+            combo_config=config,
+            rotation_config=HkRotationBacktestConfig(min_history_days=1, cost_bps=0.0),
+            universe_symbols=["A", "B", "03110"],
+        )
 
 
 @pytest.mark.parametrize("runner", ["rotation", "combo"])
