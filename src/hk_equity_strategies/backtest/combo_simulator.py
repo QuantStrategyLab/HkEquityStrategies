@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Literal, Mapping
+from typing import Any, Literal
 
 import pandas as pd
 
@@ -109,6 +110,16 @@ def _combo_target_weights(
                 regime,
             )
 
+        leg_budget = math.fsum((etf_target_weight, div_target_weight))
+        if (
+            any(
+                not math.isfinite(float(weight)) or float(weight) < 0.0
+                for weight in (etf_target_weight, div_target_weight)
+            )
+            or leg_budget > 1.0
+        ):
+            raise ValueError("combo target weights must be finite, non-negative and sum to at most one")
+
         selected = {symbol: float(etf_weights.get(symbol, 0.0)) for symbol in close.columns}
         if any(not math.isfinite(weight) or weight < 0.0 for weight in selected.values()) or math.fsum(
             selected.values()
@@ -124,9 +135,15 @@ def _combo_target_weights(
 
         row = {symbol: float(scaled.get(symbol, 0.0)) for symbol in asset_columns}
         row[DIVIDEND_SYMBOL] = float(row.get(DIVIDEND_SYMBOL, 0.0)) + float(div_target_weight)
-        if any(not math.isfinite(weight) or weight < 0.0 for weight in row.values()) or math.fsum(
-            row.values()
-        ) > 1.0:
+        row_total = math.fsum(row.values())
+        if 1.0 < row_total <= math.nextafter(1.0, math.inf) and leg_budget <= 1.0:
+            largest_symbol = max(
+                (symbol for symbol, weight in row.items() if weight > 0.0),
+                key=lambda symbol: (row[symbol], symbol),
+            )
+            row[largest_symbol] -= row_total - 1.0
+            row_total = math.fsum(row.values())
+        if any(not math.isfinite(weight) or weight < 0.0 for weight in row.values()) or row_total > 1.0:
             raise ValueError("combo target weights must be finite, non-negative and sum to at most one")
         rows.append({"date": as_of, **row})
 
