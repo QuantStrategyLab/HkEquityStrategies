@@ -28,8 +28,13 @@ def evaluate_hk_equity_combo(ctx: StrategyContext) -> StrategyDecision:
         config=config,
     )
     diagnostics = {
-        **metadata, "signal_description": f"etf={config.get('etf_weight', 0.60):.0%} div={config.get('dividend_weight', 0.40):.0%}",
-        "status_description": f"etf={config.get('etf_weight', 0.60):.0%} div={config.get('dividend_weight', 0.40):.0%}",
+        **metadata,
+        "signal_description": (
+            f"etf={metadata['etf_weight']:.0%} div={metadata['dividend_weight']:.0%}"
+        ),
+        "status_description": (
+            f"etf={metadata['etf_weight']:.0%} div={metadata['dividend_weight']:.0%}"
+        ),
         "signal_source": hk_equity_combo.SIGNAL_SOURCE, "actionable": True,
     }
     return StrategyDecision(

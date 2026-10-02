@@ -86,7 +86,6 @@ STRATEGY_DEFAULT_CONFIG: dict[str, dict[str, object]] = {
     },
     HK_EQUITY_COMBO_PROFILE: {
         "etf_weight": 0.60,
-        "dividend_weight": 0.40,
         "execution_cash_reserve_ratio": 0.02,
         "rebalance_frequency": "monthly",
     },
