@@ -9,10 +9,13 @@ The ETF leg reuses the backtest runner from the existing ETF rotation script.
 The dividend leg is simulated from the same underlying ETF data with a lower
 volatility / return profile (defensive dividend stocks).
 
-Dynamic mode applies a "breadth-regime" overlay to the dividend leg weight:
+Dynamic mode reduces the ETF budget and sends the complement to the dividend leg:
   - risk_on       : full 40 % weight
-  - soft_defense  : cut to 20 %
-  - hard_defense  : cut to  0 %
+  - soft_defense  : dividend 49 %, ETF 51 %
+  - hard_defense  : dividend 70 %, ETF 30 %
+
+The 2026-06-28 JSON records an earlier 40/20/0 dividend policy. Its historical
+metrics have not been rerun for this policy; see the research correction note.
 
 Usage:
     python scripts/research_hk_equity_combo_backtest.py [--json-output PATH]

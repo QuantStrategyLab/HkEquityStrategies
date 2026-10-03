@@ -17,6 +17,7 @@ SIGNAL_SOURCE = "combo"
 STATUS_ICON = "\U0001f1ed\U0001f1f0"  # Hong Kong flag
 
 DEFAULT_ETF_WEIGHT = 0.60
+# Legacy backtest config import; build_target_weights ignores this independent input.
 DEFAULT_DIVIDEND_WEIGHT = 0.40
 DEFAULT_REBALANCE_THRESHOLD = 0.05  # 5% drift triggers rebalance
 
@@ -74,7 +75,9 @@ def build_target_weights(
     config : dict[str, Any] | None
         Optional override dictionary.  Recognised keys:
 
-        * ``etf_weight`` / ``dividend_weight`` (float, default 0.60 / 0.40)
+        * ``etf_weight`` (float, default 0.60). The effective dividend-leg
+          weight is always its complement. Legacy ``dividend_weight`` is
+          accepted for config compatibility, but deprecated and ignored.
         * ``dividend_regime`` (str | None) — dynamic regime override
           (``"risk_on"``, ``"soft_defense"``, or ``"hard_defense"``).
           When set, the ETF weight is scaled down: ``risk_on`` = normal (no
@@ -95,7 +98,7 @@ def build_target_weights(
         config = {}
 
     raw_etf_weight = config.get("etf_weight", DEFAULT_ETF_WEIGHT)
-    raw_dividend_weight = config.get("dividend_weight", DEFAULT_DIVIDEND_WEIGHT)
+    requested_dividend_weight = config.get("dividend_weight")
 
     etf_weight, dividend_weight, regime_label = _apply_dividend_regime(
         raw_etf_weight,
@@ -122,7 +125,8 @@ def build_target_weights(
         "etf_weight": etf_weight,
         "dividend_weight": dividend_weight,
         "raw_etf_weight": raw_etf_weight,
-        "raw_dividend_weight": raw_dividend_weight,
+        "raw_dividend_weight": requested_dividend_weight,
+        "raw_dividend_weight_status": "deprecated_ignored",
         "dividend_regime": regime_label,
         "profile": PROFILE_NAME,
         "rebalance": compute_portfolio_drift(
