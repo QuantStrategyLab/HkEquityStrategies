@@ -1,14 +1,5 @@
 # HkEquityStrategies
 
-
-## QSL architecture role
-
-- **Layer**: `strategy-library`.
-- **Responsibility**: Hong Kong equity strategy implementation package.
-- **Owns**: HK strategy code, manifests, runtime adapters, live-readiness checks.
-- **Consumes**: QuantPlatformKit and validated HK snapshot artifacts.
-- **Must not**: own broker credentials or deployment switches.
-
 [Chinese README](README.zh-CN.md)
 
 > Investing involves risk. This project does not provide investment advice and is for education, research, and engineering review only.
@@ -18,6 +9,14 @@
 `HkEquityStrategies` is the Hong Kong equity strategy package for QuantStrategyLab. It contains reusable strategy implementations, manifests, catalog metadata, runtime adapters, and live-enablement checks shared by HK-capable platform repositories.
 
 This repository is a strategy layer, not a broker or deployment layer. It does not store broker credentials, submit orders by itself, publish snapshot artifacts, or decide whether a profile is safe for live trading without external evidence.
+
+## QSL architecture role
+
+- **Layer**: `strategy-library`.
+- **Responsibility**: Hong Kong equity strategy implementation package.
+- **Owns**: HK strategy code, manifests, runtime adapters, live-readiness checks.
+- **Consumes**: QuantPlatformKit and validated HK snapshot artifacts.
+- **Must not**: own broker credentials or deployment switches.
 
 ## Current runtime surface
 
