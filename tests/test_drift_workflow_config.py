@@ -1,7 +1,7 @@
 from pathlib import Path
 
 
-QPK_REF = "c7646a7168b3dafa763ef7751a182d23e8de7790"
+QPK_REF = "eae362bd3e3fad5be59a7615eeba10be839a9934"
 
 
 def test_drift_workflow_builds_and_wires_lifecycle_preflight() -> None:
@@ -21,8 +21,12 @@ def test_drift_workflow_builds_and_wires_lifecycle_preflight() -> None:
     assert "snapshot_repository_ref: ${{ needs.preflight_backtests.outputs.snapshot_repository_ref }}" in workflow
     assert f"quant_platform_kit_ref: {QPK_REF}" in workflow
     assert "lifecycle_preflight_artifact: lifecycle-preflight-${{ github.run_id }}-${{ github.run_attempt }}" in workflow
-    assert "ai_gateway_service_url: ${{ vars.AI_GATEWAY_SERVICE_URL }}" in workflow
-    assert "codex_audit_service_url: ${{ secrets.CODEX_AUDIT_SERVICE_URL }}" in workflow
+    # Retired v1 Codex/GPT/Claude reviewer wiring must not return.
+    assert "codex_audit_service_url" not in workflow
+    assert "ai_gateway_service_url" not in workflow
+    assert "ai_service_url: ${{ vars.AI_SERVICE_URL }}" in workflow
+    assert "ai_service_audience: ${{ vars.AI_SERVICE_AUDIENCE }}" in workflow
+    assert "ai_service_reviewers_json: ${{ vars.AI_SERVICE_REVIEWERS_JSON }}" in workflow
     assert (
         "snapshot_repository_token: "
         "${{ secrets.SNAPSHOT_REPOSITORY_TOKEN || secrets.QSL_REPO_SYNC_TOKEN || github.token }}"
