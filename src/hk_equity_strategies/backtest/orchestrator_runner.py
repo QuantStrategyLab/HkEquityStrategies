@@ -24,7 +24,7 @@ from hk_equity_strategies.strategies.hk_global_etf_tactical_rotation import (
 )
 
 try:
-    from quant_platform_kit.strategy_lifecycle.contracts import BacktestResult
+    from quant_platform_kit.strategy_lifecycle.contracts import BacktestResult, resolve_return_observation_contract
 except ImportError:  # pragma: no cover
     BacktestResult = None  # type: ignore[misc, assignment]
 
@@ -114,6 +114,7 @@ def _metrics_to_backtest_result(
     if BacktestResult is None:
         raise ImportError("quant_platform_kit is required to build BacktestResult")
     annual_return = float(metrics.get("annual_return") or 0.0)
+    observation_contract = resolve_return_observation_contract("hk_equity")
     max_drawdown = float(metrics.get("max_drawdown") or 0.0)
     calmar = annual_return / abs(max_drawdown) if max_drawdown else None
     return BacktestResult(
@@ -133,6 +134,8 @@ def _metrics_to_backtest_result(
         source_script="hk_equity_strategies.backtest.orchestrator_runner",
         computed_at=datetime.now(UTC).isoformat(),
         run_duration_seconds=run_duration_seconds,
+        periods_per_year=observation_contract.periods_per_year,
+        calendar_id=observation_contract.calendar_id,
     )
 
 
