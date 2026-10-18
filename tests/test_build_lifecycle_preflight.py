@@ -9,12 +9,99 @@ from datetime import date
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 from hk_equity_strategies.backtest.orchestrator_runner import (
     SUPPORTED_PROFILES,
     _synthetic_market_history,
 )
 from scripts import build_lifecycle_preflight as lifecycle
+
+
+def _persist_test_baseline(profile, store_root, *, layout="store", fault=None):
+    from quant_platform_kit.strategy_lifecycle.contracts import BacktestResult
+    from quant_platform_kit.strategy_lifecycle.performance_store import PerformanceStore
+
+    run_id = f"{profile}-baseline"
+    if fault != "missing":
+        result = BacktestResult(
+            strategy_profile=profile,
+            domain="hk_equity",
+            param_set_id=f"{profile}_baseline",
+            params={},
+            run_id=run_id,
+            computed_at="2026-01-01T00:00:00+00:00",
+            periods_per_year=252.0,
+            calendar_id="XHKG",
+        )
+        PerformanceStore(local_root=store_root).save_backtest_result(result)
+        directory = store_root / "backtest" / "hk_equity" / profile
+        path = next(directory.rglob("backtest_*.json"))
+        if layout == "flat":
+            target = directory / "backtest_v1.json"
+            if path != target:
+                path.replace(target)
+            path = target
+        payload = json.loads(path.read_text())
+        if fault == "run_id":
+            payload["run_id"] = "another-run"
+        elif fault == "profile":
+            payload["strategy_profile"] = "another-profile"
+        elif fault == "domain":
+            payload["domain"] = "another-domain"
+        path.write_text(json.dumps(payload), encoding="utf-8")
+        if fault == "duplicate":
+            (directory / "backtest_v1_duplicate.json").write_text(
+                json.dumps(payload), encoding="utf-8"
+            )
+    return {"baseline": {"run_id": run_id}}
+
+
+def _stub_preflight_matrix(monkeypatch):
+    monkeypatch.setattr(
+        lifecycle,
+        "build_profile_return_matrix",
+        lambda profile, _history: pd.DataFrame(
+            {"as_of": ["2026-01-01"], profile: [0.0], "buy_hold_2800": [0.0]}
+        ),
+    )
+
+
+@pytest.mark.parametrize("layout", ["store", "flat"])
+def test_preflight_accepts_persisted_run_id_in_supported_store_layouts(
+    tmp_path: Path, monkeypatch, layout
+) -> None:
+    _stub_preflight_matrix(monkeypatch)
+    monkeypatch.setattr(
+        lifecycle, "run_walk_forward",
+        lambda *, profile, store_root, **_kwargs: _persist_test_baseline(
+            profile, store_root, layout=layout
+        ),
+    )
+
+    result = lifecycle.build_lifecycle_preflight_bundle(
+        _synthetic_market_history(days=320), bundle_root=tmp_path
+    )
+
+    assert result["profiles"] == sorted(SUPPORTED_PROFILES)
+
+
+@pytest.mark.parametrize("fault", ["missing", "duplicate", "run_id", "profile", "domain"])
+def test_preflight_rejects_missing_duplicate_or_mismatched_baseline(
+    tmp_path: Path, monkeypatch, fault
+) -> None:
+    _stub_preflight_matrix(monkeypatch)
+    monkeypatch.setattr(
+        lifecycle, "run_walk_forward",
+        lambda *, profile, store_root, **_kwargs: _persist_test_baseline(
+            profile, store_root, layout="flat", fault=fault
+        ),
+    )
+
+    with pytest.raises(RuntimeError, match="expected one persisted lifecycle baseline"):
+        lifecycle.build_lifecycle_preflight_bundle(
+            _synthetic_market_history(days=320), bundle_root=tmp_path
+        )
 
 
 def test_script_entrypoint_loads_from_repository_root() -> None:
@@ -39,19 +126,7 @@ def test_builds_lifecycle_contract_for_every_configured_profile(
     bundle_root = tmp_path / "bundle"
 
     def persist_baseline(*, profile, store_root, **_kwargs):
-        path = store_root / "backtest" / "hk_equity" / profile / "backtest_v1.json"
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(
-            json.dumps(
-                {
-                    "strategy_profile": profile,
-                    "domain": "hk_equity",
-                    "param_set_id": f"{profile}_baseline",
-                }
-            ),
-            encoding="utf-8",
-        )
-        return {"strategy_profile": profile}
+        return _persist_test_baseline(profile, store_root)
 
     monkeypatch.setattr(lifecycle, "run_walk_forward", persist_baseline)
 
@@ -70,7 +145,7 @@ def test_builds_lifecycle_contract_for_every_configured_profile(
                 / "backtest"
                 / "hk_equity"
                 / profile
-            ).glob("backtest_*.json")
+            ).rglob("backtest_*.json")
         )
         assert len(backtests) == 1
         matrix = pd.read_csv(

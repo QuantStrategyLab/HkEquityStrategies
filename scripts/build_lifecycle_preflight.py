@@ -190,18 +190,30 @@ def build_lifecycle_preflight_bundle(
     *,
     bundle_root: Path,
 ) -> dict[str, Any]:
+    from quant_platform_kit.strategy_lifecycle.performance_store import PerformanceStore
+
     frame = validate_market_history(market_history)
     profiles = sorted(SUPPORTED_PROFILES)
     store_root = bundle_root / "data" / "lifecycle_store"
     matrix_rows: dict[str, int] = {}
     for profile in profiles:
-        run_walk_forward(
+        result = run_walk_forward(
             profile=profile,
             store_root=store_root,
             market_history=frame.copy(deep=True),
         )
         backtest_dir = store_root / "backtest" / DOMAIN / profile
-        if len(list(backtest_dir.glob("backtest_*.json"))) != 1:
+        expected_run_id = result["baseline"]["run_id"]
+        baseline = PerformanceStore(local_root=store_root).load_latest_backtest(DOMAIN, profile)
+        if (
+            len(list(backtest_dir.rglob("backtest_*.json"))) != 1
+            or not isinstance(expected_run_id, str)
+            or not expected_run_id.strip()
+            or baseline is None
+            or baseline.run_id != expected_run_id
+            or baseline.strategy_profile != profile
+            or baseline.domain != DOMAIN
+        ):
             raise RuntimeError(
                 f"expected one persisted lifecycle baseline for profile={profile!r}"
             )

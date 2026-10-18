@@ -19,6 +19,7 @@ from hk_equity_strategies.backtest.orchestrator_runner import (
     SYNTHETIC_MARKET_HISTORY_GENERATOR_VERSION,
     HkEquityComboBacktestRunner,
     HkEtfRotationBacktestRunner,
+    _metrics_to_backtest_result,
     _synthetic_market_history,
     _synthetic_path_parameter,
     build_backtest_runner,
@@ -28,6 +29,42 @@ from hk_equity_strategies.strategies.hk_global_etf_tactical_rotation import (
     DEFAULT_MIN_HISTORY_DAYS,
     PROFILE_NAME,
 )
+
+
+@pytest.mark.parametrize("profile", sorted(SUPPORTED_PROFILES))
+def test_adapter_preserves_existing_hk_annualization_contract(profile) -> None:
+    from dataclasses import replace
+
+    from quant_platform_kit.strategy_lifecycle.contracts import resolve_return_observation_contract
+    from quant_platform_kit.strategy_lifecycle.performance_metrics import (
+        annualization_basis_is_comparable,
+        compute_window_metrics,
+    )
+
+    contract = resolve_return_observation_contract("hk_equity")
+    result = _metrics_to_backtest_result(
+        strategy_profile=profile,
+        params={},
+        metrics={"annual_return": 0.1, "annual_volatility": 0.2, "days": 126},
+        start_date=date(2025, 1, 1),
+        end_date=date(2025, 6, 30),
+        run_duration_seconds=0.0,
+    )
+
+    assert contract.periods_per_year == 252.0
+    assert contract.calendar_id == "XHKG"
+    assert result.periods_per_year == contract.periods_per_year
+    assert result.calendar_id == contract.calendar_id
+    assert result.to_dict()["periods_per_year"] == contract.periods_per_year
+    window = compute_window_metrics(
+        pd.Series([0.0, 0.01], index=pd.bdate_range("2025-01-01", periods=2)),
+        window_days=126,
+        periods_per_year=contract.periods_per_year,
+        calendar_id=contract.calendar_id,
+    )
+    assert annualization_basis_is_comparable(window, result)
+    assert not annualization_basis_is_comparable(window, replace(result, periods_per_year=None))
+    assert not annualization_basis_is_comparable(window, replace(result, periods_per_year=365.25))
 
 
 def _run_observed_price_case(history, runner, weights=None):
