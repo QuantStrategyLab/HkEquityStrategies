@@ -217,6 +217,10 @@ def build_lifecycle_preflight_bundle(
             raise RuntimeError(
                 f"expected one persisted lifecycle baseline for profile={profile!r}"
             )
+        baseline_path = next(backtest_dir.rglob("backtest_*.json"))
+        export_path = backtest_dir / f"backtest_v{baseline.param_version}.json"
+        if baseline_path != export_path:
+            baseline_path.replace(export_path)
         matrix = build_profile_return_matrix(profile, frame.copy(deep=True))
         output_path = (
             bundle_root
