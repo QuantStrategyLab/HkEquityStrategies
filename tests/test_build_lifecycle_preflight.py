@@ -84,6 +84,14 @@ def test_preflight_accepts_persisted_run_id_in_supported_store_layouts(
     )
 
     assert result["profiles"] == sorted(SUPPORTED_PROFILES)
+    for profile in SUPPORTED_PROFILES:
+        directory = tmp_path / "data" / "lifecycle_store" / "backtest" / "hk_equity" / profile
+        backtests = list(directory.rglob("backtest_*.json"))
+        assert len(backtests) == 1
+        assert backtests[0].parent == directory
+        payload = json.loads(backtests[0].read_text())
+        assert payload["run_id"] == f"{profile}-baseline"
+        assert backtests[0].name == f"backtest_v{payload['param_version']}.json"
 
 
 @pytest.mark.parametrize("fault", ["missing", "duplicate", "run_id", "profile", "domain"])
