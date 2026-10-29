@@ -2,6 +2,7 @@ from pathlib import Path
 
 
 QPK_REF = "eae362bd3e3fad5be59a7615eeba10be839a9934"
+WORKFLOW_REF = "55d973a1b10566ee34377449b179e634a8c3cc71"
 
 
 def test_drift_workflow_builds_and_wires_lifecycle_preflight() -> None:
@@ -12,7 +13,7 @@ def test_drift_workflow_builds_and_wires_lifecycle_preflight() -> None:
     assert "--start 2020-08-27" in workflow
     assert "lifecycle-preflight-${{ github.run_id }}-${{ github.run_attempt }}" in workflow
     assert "hk-lifecycle-inputs-${{ github.run_id }}-${{ github.run_attempt }}" in workflow
-    assert f"uses: QuantStrategyLab/QuantPlatformKit/.github/workflows/reusable-drift-check.yml@{QPK_REF}" in workflow
+    assert f"uses: QuantStrategyLab/QuantPlatformKit/.github/workflows/reusable-drift-check.yml@{WORKFLOW_REF}" in workflow
     assert "strategy_domain: hk_equity" in workflow
     assert "caller_event_name: ${{ github.event_name }}" in workflow
     assert "caller_pr_head_repository: ${{ github.event.pull_request.head.repo.full_name || '' }}" in workflow
