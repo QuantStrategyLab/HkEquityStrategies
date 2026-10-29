@@ -1,5 +1,14 @@
 # Platform Integration
 
+## Research maintenance status
+
+New Hong Kong research and selection are on hold. The package's runtime
+selection allowlist is empty. Profiles and metadata below are
+historical interfaces, not authorization for new selection. Existing schedules,
+deployed or pinned consumers, platform bindings, and risk controls are not
+changed by this package update. Resumption requires an explicit owner decision
+and the existing evidence and platform approval checks.
+
 ## Supported platforms
 
 Runtime catalog profiles declare structural support for:
@@ -12,7 +21,8 @@ Runtime catalog profiles declare structural support for:
 | `hk_global_etf_tactical_rotation` | `market_history` | `runtime_enabled` | Retained ETF-rotation candidate; broader ETF product checks required. |
 | `hk_low_vol_dividend_quality_snapshot` | `feature_snapshot` + manifest | `runtime_enabled` | First retained snapshot-backed profile; artifact generation stays in `HkEquitySnapshotPipelines`. |
 
-Platforms should expose only `get_runtime_enabled_profiles()` as selectable runtime targets.
+`get_runtime_enabled_profiles()` returns an empty set; retained catalog status labels
+do not represent current selectability.
 
 ## Live-enable matrix
 
@@ -26,7 +36,7 @@ python scripts/print_hk_live_enablement_matrix.py --profile hk_low_vol_dividend_
 
 Matrix semantics:
 
-- `selectable_by_platform=true` means the profile is a strategy-package runtime profile. It still requires platform dry-run/paper/live mode, account scope, and operator approval to be handled by the platform repository.
+- `selectable_by_platform=true` means the profile is currently selectable in the strategy package. It still requires platform dry-run/paper/live mode, account scope, and operator approval to be handled by the platform repository.
 - `live_enablement_gate=requires_runtime_live_enablement_evidence` means the profile must pass `validate_hk_runtime_live_enablement.py` evidence validation before dry-run can be removed.
 - Rejected research and snapshot scaffold names should not appear as matrix rows or platform selectable targets.
 

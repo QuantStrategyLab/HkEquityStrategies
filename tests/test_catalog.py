@@ -37,7 +37,7 @@ def test_catalog_declares_runtime_enabled_hk_direct_strategies():
     assert definition.target_mode == "weight"
     assert get_compatible_platforms(HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE) == frozenset({"ibkr", "longbridge"})
     assert get_strategy_metadata(HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE).status == "runtime_enabled"
-    assert HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE in get_runtime_enabled_profiles()
+    assert HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE not in get_runtime_enabled_profiles()
 
     component_map = get_strategy_component_map(definition)
     assert component_map["signal_logic"].module_path == (
@@ -50,7 +50,7 @@ def test_catalog_declares_runtime_enabled_hk_direct_strategies():
     assert low_vol_definition.target_mode == "weight"
     assert get_compatible_platforms(HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE) == frozenset({"ibkr", "longbridge"})
     assert get_strategy_metadata(HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE).status == "runtime_enabled"
-    assert HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE in get_runtime_enabled_profiles()
+    assert HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE not in get_runtime_enabled_profiles()
 
     low_vol_component_map = get_strategy_component_map(low_vol_definition)
     assert low_vol_component_map["signal_logic"].module_path == (
@@ -67,12 +67,7 @@ def test_profile_groups_keep_runtime_research_and_snapshot_scaffolds_separate():
     assert get_snapshot_backed_profiles() == frozenset({HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE})
     assert get_external_snapshot_scaffold_profiles() == frozenset()
     assert get_research_backtest_only_profiles() == frozenset({HK_EQUITY_COMBO_PROFILE})
-    assert get_runtime_enabled_profiles() == frozenset(
-        {
-            HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
-            HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE,
-        }
-    )
+    assert get_runtime_enabled_profiles() == frozenset()
     assert get_research_backtest_only_profiles().isdisjoint(get_runtime_enabled_profiles())
     assert get_external_snapshot_scaffold_profiles().isdisjoint(get_runtime_enabled_profiles())
 

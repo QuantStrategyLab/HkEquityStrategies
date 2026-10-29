@@ -4,6 +4,16 @@
 
 > 投资有风险。本项目不构成投资建议，仅用于学习、研究和工程审阅。
 
+## 研究维护状态
+
+当前以美股为主要研究方向，暂停新增策略研究和新选择。
+`get_runtime_selectable_profiles()` 与 `get_runtime_enabled_profiles()`
+均返回空集合，不再通过这些接口提供新的运行时选择。catalog 元数据、策略代码、
+证据和历史接口仍保留，用于解析既有基线；历史标签不构成新增选择的授权。
+
+此变更不会停止既有定时工作流，也不会更新已部署或固定版本的消费者、
+既有目标或风险控制。恢复需要所有者明确决定，并经过既有证据与平台审批检查。
+
 ## 这个仓库是什么
 
 `HkEquityStrategies` 是 QuantStrategyLab 的港股策略包，提供港股策略实现、manifest、catalog metadata、runtime adapter 和 live-enablement 检查，供支持港股的执行平台复用。

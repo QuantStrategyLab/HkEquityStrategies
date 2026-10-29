@@ -537,7 +537,7 @@ def _runtime_row(profile: str) -> LiveEnablementRow:
         profile_type="runtime_snapshot_backed"
         if profile in get_snapshot_backed_profiles()
         else "runtime_market_history",
-        selectable_by_platform=True,
+        selectable_by_platform=profile in get_runtime_enabled_profiles(),
         runtime_enabled=profile in get_runtime_enabled_profiles(),
         live_enablement_gate=RUNTIME_LIVE_GATE,
         supported_platforms=tuple(sorted(definition.supported_platforms)),
@@ -612,14 +612,14 @@ def _snapshot_scaffold_row(profile: str) -> LiveEnablementRow:
 
 
 def build_live_enablement_row(profile: str) -> dict[str, Any]:
-    if profile in get_runtime_enabled_profiles():
+    if profile in get_direct_market_history_profiles() | get_snapshot_backed_profiles():
         return _runtime_row(profile).as_dict()
     if profile in get_research_backtest_only_profiles():
         return _research_only_row(profile).as_dict()
     if profile in get_external_snapshot_scaffold_profiles():
         return _snapshot_scaffold_row(profile).as_dict()
     known = sorted(
-        set(get_runtime_enabled_profiles())
+        set(get_direct_market_history_profiles()) | set(get_snapshot_backed_profiles())
         | set(get_research_backtest_only_profiles())
         | set(get_external_snapshot_scaffold_profiles())
     )
@@ -627,7 +627,7 @@ def build_live_enablement_row(profile: str) -> dict[str, Any]:
 
 
 def build_live_enablement_matrix() -> dict[str, Any]:
-    runtime_profiles = set(get_runtime_enabled_profiles())
+    runtime_profiles = set(get_direct_market_history_profiles()) | set(get_snapshot_backed_profiles())
     runtime_rows = [_runtime_row(profile).as_dict() for profile in sorted(runtime_profiles)]
     research_rows = [_research_only_row(profile).as_dict() for profile in sorted(get_research_backtest_only_profiles())]
     snapshot_rows = [
