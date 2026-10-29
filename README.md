@@ -130,3 +130,7 @@ Supported HK runtime platforms currently include:
 ## License
 
 See [LICENSE](LICENSE).
+
+### Manual AI verification
+
+Run `Drift Check` with `verification_only=true` to exercise the existing input and AI-review path without publishing drift issues. The review receives measured dimensions, thresholds and baseline lineage. Missing evidence or a non-approving advisory still parks the result; verification never grants trading authority.
