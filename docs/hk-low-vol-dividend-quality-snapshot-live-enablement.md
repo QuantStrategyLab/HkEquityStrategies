@@ -1,6 +1,6 @@
 # HK Low-Volatility Dividend Quality live-enable runbook
 
-[简体中文](hk_low_vol_dividend_quality_snapshot_live_enablement.zh-CN.md)
+[简体中文](hk-low-vol-dividend-quality-snapshot-live-enablement.zh-CN.md)
 
 This runbook is the operational gate for making `hk_low_vol_dividend_quality_snapshot` truly live-enable capable. The strategy is runtime-enabled in the HK strategy package, but real order submission must remain blocked until every evidence gate below passes.
 

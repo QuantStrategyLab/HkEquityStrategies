@@ -44,7 +44,7 @@ The strategy package exposes one promoted snapshot-backed runtime entrypoint. `H
 
 Rejected prototypes are no longer part of the public catalog, manifests, entrypoints, runtime adapters, or snapshot contracts. Platform repositories should only expose profiles returned by `get_runtime_enabled_profiles()`.
 
-See [`docs/research/hk_strategy_selection_20260603.md`](docs/research/hk_strategy_selection_20260603.md) for retained and rejected strategy notes.
+See [`docs/research/hk-strategy-selection-20260603.md`](docs/research/hk-strategy-selection-20260603.md) for retained and rejected strategy notes.
 
 ## Performance and evidence boundary
 
@@ -108,10 +108,10 @@ Supported HK runtime platforms currently include:
 
 ## Useful docs
 
-- [`docs/platform_integration.md`](docs/platform_integration.md)
-- [`docs/research/hk_strategy_selection_20260603.md`](docs/research/hk_strategy_selection_20260603.md)
-- [`docs/research/hk_global_etf_tactical_rotation.md`](docs/research/hk_global_etf_tactical_rotation.md)
-- [`docs/hk_low_vol_dividend_quality_snapshot_live_enablement.md`](docs/hk_low_vol_dividend_quality_snapshot_live_enablement.md)
+- [`docs/platform-integration.md`](docs/platform-integration.md)
+- [`docs/research/hk-strategy-selection-20260603.md`](docs/research/hk-strategy-selection-20260603.md)
+- [`docs/research/hk-global-etf-tactical-rotation.md`](docs/research/hk-global-etf-tactical-rotation.md)
+- [`docs/hk-low-vol-dividend-quality-snapshot-live-enablement.md`](docs/hk-low-vol-dividend-quality-snapshot-live-enablement.md)
 
 ## Safety and contribution notes
 

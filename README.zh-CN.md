@@ -42,7 +42,7 @@
 
 被拒绝的研究原型不再进入公开 catalog、manifest、entrypoint、runtime adapter 或 snapshot contract。平台仓库只应该暴露 `get_runtime_enabled_profiles()` 返回的 profile。
 
-保留和剔除原因见 [`docs/research/hk_strategy_selection_20260603.md`](docs/research/hk_strategy_selection_20260603.md)。
+保留和剔除原因见 [`docs/research/hk-strategy-selection-20260603.md`](docs/research/hk-strategy-selection-20260603.md)。
 
 ## 表现和证据边界
 
@@ -106,10 +106,10 @@ python scripts/smoke_hk_global_etf_tactical_rotation_dry_run.py --json
 
 ## 延伸文档
 
-- [`docs/platform_integration.md`](docs/platform_integration.md)
-- [`docs/research/hk_strategy_selection_20260603.md`](docs/research/hk_strategy_selection_20260603.md)
-- [`docs/research/hk_global_etf_tactical_rotation.md`](docs/research/hk_global_etf_tactical_rotation.md)
-- [`docs/hk_low_vol_dividend_quality_snapshot_live_enablement.zh-CN.md`](docs/hk_low_vol_dividend_quality_snapshot_live_enablement.zh-CN.md)
+- [`docs/platform-integration.md`](docs/platform-integration.md)
+- [`docs/research/hk-strategy-selection-20260603.md`](docs/research/hk-strategy-selection-20260603.md)
+- [`docs/research/hk-global-etf-tactical-rotation.md`](docs/research/hk-global-etf-tactical-rotation.md)
+- [`docs/hk-low-vol-dividend-quality-snapshot-live-enablement.zh-CN.md`](docs/hk-low-vol-dividend-quality-snapshot-live-enablement.zh-CN.md)
 
 ## 安全和贡献说明
 

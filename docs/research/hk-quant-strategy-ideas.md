@@ -6,7 +6,7 @@ Risk notice: this is research documentation only and is not investment advice.
 
 ## Current package decision
 
-Use [`hk_strategy_selection_20260603.md`](./hk_strategy_selection_20260603.md) as the authoritative ranking.
+Use [`hk-strategy-selection-20260603.md`](./hk-strategy-selection-20260603.md) as the authoritative ranking.
 
 Retained profiles:
 
