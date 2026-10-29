@@ -337,7 +337,7 @@ SAMSUNG_CRUDE_OIL_FUTURES_ETF_URL = "https://www.samsungetfhk.com/en/product/317
 
 RUNTIME_RESEARCH_EVIDENCE_URLS: dict[str, tuple[str, ...]] = {
     HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE: (
-        "docs/research/hk_global_etf_tactical_rotation.md",
+        "docs/research/hk-global-etf-tactical-rotation.md",
         TRAHK_PRODUCT_URL,
         CSOP_A50_ETF_URL,
         CHINAAMC_CSI300_ETF_URL,
@@ -386,8 +386,8 @@ RESEARCH_ONLY_PROFILES: dict[str, dict[str, object]] = {
         ),
         "research_evidence_urls": (
             "docs/research/hk_equity_combo_backtest_20260628.json",
-            "docs/research/hk_strategy_selection_20260603.md",
-            "docs/research/hk_quant_strategy_ideas.md",
+            "docs/research/hk-strategy-selection-20260603.md",
+            "docs/research/hk-quant-strategy-ideas.md",
         ),
     },
 }
