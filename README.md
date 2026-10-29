@@ -4,6 +4,20 @@
 
 > Investing involves risk. This project does not provide investment advice and is for education, research, and engineering review only.
 
+## Research maintenance status
+
+New Hong Kong strategy research and selection are on hold while the project
+focuses on US equities. `get_runtime_selectable_profiles()` and
+`get_runtime_enabled_profiles()` now return an empty set: these package
+selection interfaces offer no profiles for new runtime selection. Catalog
+metadata, strategy code, evidence and historical interfaces remain available
+for existing baseline resolution; their historical labels do not authorize
+new selection.
+
+This change does not stop existing schedules, update deployed or pinned
+consumers, or change existing targets or risk controls. Resumption requires an
+explicit owner decision and the existing evidence and platform approval checks.
+
 ## What this repository is
 
 `HkEquityStrategies` is the Hong Kong equity strategy package for QuantStrategyLab. It contains reusable strategy implementations, manifests, catalog metadata, runtime adapters, and live-enablement checks shared by HK-capable platform repositories.

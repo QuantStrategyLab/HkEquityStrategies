@@ -256,11 +256,11 @@ def _evidence(**overrides):
     return payload
 
 
-def test_validate_runtime_live_enablement_evidence_accepts_complete_pack():
+def test_validate_runtime_live_enablement_evidence_rejects_retired_complete_pack():
     result = validate_runtime_live_enablement_evidence(_evidence())
 
-    assert result["validation_status"] == "passed"
-    assert result["live_enablement_allowed"] is True
+    assert result["validation_status"] == "failed"
+    assert result["live_enablement_allowed"] is False
     assert result["live_enablement_thresholds"] == {
         "max_allowed_backtest_drawdown": 0.30,
         "min_required_return_to_drawdown_ratio": 0.5,
@@ -313,7 +313,7 @@ def test_validate_runtime_live_enablement_evidence_accepts_complete_pack():
     assert "fee_breakdown_reconciled_to_broker_preview" in (
         result["dry_run_order_preview_policy"]["required_boolean_fields"]
     )
-    assert result["errors"] == []
+    assert result["errors"] == ["profile 'hk_global_etf_tactical_rotation' is not runtime_enabled"]
 
 
 def test_build_runtime_live_enablement_evidence_template_is_not_preapproved():
@@ -449,15 +449,15 @@ def _low_vol_dividend_evidence():
     return payload
 
 
-def test_validate_runtime_live_enablement_evidence_accepts_snapshot_backed_single_name_pack():
+def test_validate_runtime_live_enablement_evidence_rejects_retired_snapshot_pack():
     result = validate_runtime_live_enablement_evidence(_low_vol_dividend_evidence())
 
-    assert result["validation_status"] == "passed"
-    assert result["live_enablement_allowed"] is True
+    assert result["validation_status"] == "failed"
+    assert result["live_enablement_allowed"] is False
     assert result["profile"] == HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE
     assert result["live_enablement_thresholds"]["max_allowed_backtest_drawdown"] == 0.30
     assert result["runtime_equity_product_policy"]["policy_version"] == "hk_runtime_equity_product_due_diligence.v1"
-    assert result["errors"] == []
+    assert result["errors"] == ["profile 'hk_low_vol_dividend_quality_snapshot' is not runtime_enabled"]
 
 
 def test_build_low_vol_dividend_evidence_template_requires_snapshot_artifact_lineage():
@@ -1049,14 +1049,16 @@ def test_runtime_live_enablement_evidence_cli_json(tmp_path):
             str(evidence_file),
             "--json",
         ],
-        check=True,
+        check=False,
         capture_output=True,
         text=True,
     )
     payload = json.loads(completed.stdout)
 
-    assert payload["validation_status"] == "passed"
-    assert payload["live_enablement_allowed"] is True
+    assert completed.returncode == 1
+    assert payload["validation_status"] == "failed"
+    assert payload["live_enablement_allowed"] is False
+    assert payload["errors"] == ["profile 'hk_global_etf_tactical_rotation' is not runtime_enabled"]
     assert payload["evidence_uri_policy"]["allowed_schemes"] == ["gs://", "https://", "s3://"]
     assert payload["evidence_freshness_policy"]["required"] is True
     assert payload["execution_capacity_policy"]["required"] is True

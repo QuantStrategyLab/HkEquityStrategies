@@ -20,7 +20,7 @@ def test_ibkr_global_etf_readiness_uses_hk_market_defaults():
         platform_id="ibkr",
     )
 
-    assert plan["runtime_enabled"] is True
+    assert plan["runtime_enabled"] is False
     assert plan["dry_run_only"] is True
     assert plan["market_defaults"] == {
         "market": "HK",
@@ -131,7 +131,7 @@ def test_low_vol_dividend_quality_readiness_requires_snapshot_artifacts():
         platform_id="longbridge",
     )
 
-    assert plan["runtime_enabled"] is True
+    assert plan["runtime_enabled"] is False
     assert plan["required_inputs"] == ["feature_snapshot"]
     assert plan["available_inputs"] == ["feature_snapshot", "portfolio_snapshot"]
     assert plan["managed_symbols"] == []
