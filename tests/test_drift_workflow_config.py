@@ -21,7 +21,11 @@ def test_drift_workflow_builds_and_wires_lifecycle_preflight() -> None:
     assert "snapshot_checkout_path: external/HkEquitySnapshotPipelines" in workflow
     assert "snapshot_repository_ref: ${{ needs.preflight_backtests.outputs.snapshot_repository_ref }}" in workflow
     assert f"quant_platform_kit_ref: {QPK_REF}" in workflow
-    assert "lifecycle_preflight_artifact: lifecycle-preflight-${{ github.run_id }}-${{ github.run_attempt }}" in workflow
+    # A failed-job rerun reuses the successful preflight job's original output.
+    producer, consumer = workflow.split("  drift:", 1)
+    assert "lifecycle_preflight_artifact: lifecycle-preflight-${{ github.run_id }}-${{ github.run_attempt }}" in producer
+    assert "lifecycle_preflight_artifact: ${{ needs.preflight_backtests.outputs.lifecycle_preflight_artifact }}" in consumer
+    assert "github.run_attempt" not in consumer
     # Retired v1 Codex/GPT/Claude reviewer wiring must not return.
     assert "codex_audit_service_url" not in workflow
     assert "ai_gateway_service_url" not in workflow
