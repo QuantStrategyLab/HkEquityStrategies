@@ -65,6 +65,8 @@ Organization documentation rules are checked by `python scripts/check_style.py`,
 
 ## Do not
 
+- Only the owner, or a reviewer explicitly authorized by the owner, may apply the `owner-approved` label; coding agents must never apply it to their own PRs.
+
 - Do not add broker credentials, order submission or deployment switches.
 - Do not loosen the live-enablement checks or bypass them with a manual override.
 - Do not rewrite the thesis ledger or frozen research records to satisfy a test.
