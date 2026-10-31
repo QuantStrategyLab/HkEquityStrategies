@@ -61,7 +61,7 @@ def _evidence(**overrides):
             "benchmark_annual_return": 0.08,
             "strategy_excess_return": 0.1084,
             "evidence_generated_at": "2026-04-15",
-            "evidence_uri": "gs://qsl-hk-evidence/runtime/hk-global-etf-tactical-rotation/backtest.json",
+            "evidence_uri": "gs://synthetic-hk-evidence/runtime/hk-global-etf-tactical-rotation/backtest.json",
         },
         "runtime_readiness": {
             "status": "passed",
@@ -75,13 +75,13 @@ def _evidence(**overrides):
             "market_history_coverage_start": "2021-09-01",
             "market_history_coverage_end": "2026-05-29",
             "market_history_source_uri": (
-                "gs://qsl-hk-prod-sources/runtime/hk-global-etf-tactical-rotation/20260601/market-history.parquet"
+                "gs://synthetic-hk-prod-sources/runtime/hk-global-etf-tactical-rotation/20260601/market-history.parquet"
             ),
             "market_history_quality_report_uri": (
-                "gs://qsl-hk-prod-sources/runtime/hk-global-etf-tactical-rotation/20260601/market-history-quality.json"
+                "gs://synthetic-hk-prod-sources/runtime/hk-global-etf-tactical-rotation/20260601/market-history-quality.json"
             ),
             "point_in_time_data_dictionary_uri": (
-                "gs://qsl-hk-prod-sources/runtime/hk-global-etf-tactical-rotation/20260601/data-dictionary.json"
+                "gs://synthetic-hk-prod-sources/runtime/hk-global-etf-tactical-rotation/20260601/data-dictionary.json"
             ),
             "point_in_time_market_history": True,
             "adjusted_price_history": True,
@@ -94,7 +94,7 @@ def _evidence(**overrides):
             "etf_nav_or_inav_source_verified": True,
             "stamp_duty_or_etf_exemption_source_verified": True,
             "evidence_generated_at": "2026-05-25",
-            "evidence_uri": "gs://qsl-hk-evidence/runtime/hk-global-etf-tactical-rotation/readiness.json",
+            "evidence_uri": "gs://synthetic-hk-evidence/runtime/hk-global-etf-tactical-rotation/readiness.json",
         },
         "platform_dry_run_order_preview": {
             "status": "passed",
@@ -117,21 +117,21 @@ def _evidence(**overrides):
             "notification_contains_order_preview_summary": True,
             "notification_redacts_sensitive_fields": True,
             "notification_delivery_log_uri": (
-                "gs://qsl-hk-evidence/runtime/hk-global-etf-tactical-rotation/notifications/"
+                "gs://synthetic-hk-evidence/runtime/hk-global-etf-tactical-rotation/notifications/"
                 "20260602-dryrun.json"
             ),
             "dry_run_session_id": "hk-runtime-global-etf-longbridge-20260602-dryrun-001",
             "raw_order_preview_uri": (
-                "gs://qsl-hk-evidence/runtime/hk-global-etf-tactical-rotation/order-preview/"
+                "gs://synthetic-hk-evidence/runtime/hk-global-etf-tactical-rotation/order-preview/"
                 "raw-order-preview.json"
             ),
             "raw_order_preview_sha256": "b" * 64,
             "quote_snapshot_uri": (
-                "gs://qsl-hk-evidence/runtime/hk-global-etf-tactical-rotation/order-preview/quote-snapshot.json"
+                "gs://synthetic-hk-evidence/runtime/hk-global-etf-tactical-rotation/order-preview/quote-snapshot.json"
             ),
             "quote_snapshot_sha256": "c" * 64,
             "fee_breakdown_uri": (
-                "gs://qsl-hk-evidence/runtime/hk-global-etf-tactical-rotation/order-preview/fee-breakdown.json"
+                "gs://synthetic-hk-evidence/runtime/hk-global-etf-tactical-rotation/order-preview/fee-breakdown.json"
             ),
             "fee_breakdown_sha256": "d" * 64,
             "order_preview_artifact_not_sample": True,
@@ -151,7 +151,7 @@ def _evidence(**overrides):
             "vcm_price_band_controls_verified": True,
             "etf_nav_or_spread_guard_verified": True,
             "evidence_generated_at": "2026-05-28",
-            "evidence_uri": "gs://qsl-hk-evidence/runtime/hk-global-etf-tactical-rotation/order-preview.json",
+            "evidence_uri": "gs://synthetic-hk-evidence/runtime/hk-global-etf-tactical-rotation/order-preview.json",
         },
         "broker_permission_and_fee_verification": {
             "status": "passed",
@@ -164,39 +164,39 @@ def _evidence(**overrides):
             "etf_product_audit_id": "hk-runtime-global-etf-longbridge-20260602-etf-product-audit-001",
             "managed_etf_symbols_audited_count": 8,
             "etf_product_universe_audit_uri": (
-                "gs://qsl-hk-evidence/runtime/hk-global-etf-tactical-rotation/etf-product/product-universe.json"
+                "gs://synthetic-hk-evidence/runtime/hk-global-etf-tactical-rotation/etf-product/product-universe.json"
             ),
             "official_product_document_uri": (
-                "gs://qsl-hk-evidence/runtime/hk-global-etf-tactical-rotation/etf-product/product-documents.json"
+                "gs://synthetic-hk-evidence/runtime/hk-global-etf-tactical-rotation/etf-product/product-documents.json"
             ),
             "underlying_index_or_reference_asset_source_uri": (
-                "gs://qsl-hk-evidence/runtime/hk-global-etf-tactical-rotation/etf-product/"
+                "gs://synthetic-hk-evidence/runtime/hk-global-etf-tactical-rotation/etf-product/"
                 "underlying-index-reference-asset.json"
             ),
             "nav_or_inav_source_uri": (
-                "gs://qsl-hk-evidence/runtime/hk-global-etf-tactical-rotation/etf-product/nav-inav.json"
+                "gs://synthetic-hk-evidence/runtime/hk-global-etf-tactical-rotation/etf-product/nav-inav.json"
             ),
             "market_maker_or_liquidity_provider_source_uri": (
-                "gs://qsl-hk-evidence/runtime/hk-global-etf-tactical-rotation/etf-product/"
+                "gs://synthetic-hk-evidence/runtime/hk-global-etf-tactical-rotation/etf-product/"
                 "market-maker-liquidity-provider.json"
             ),
             "stock_connect_etf_eligibility_source_uri": (
-                "gs://qsl-hk-evidence/runtime/hk-global-etf-tactical-rotation/etf-product/"
+                "gs://synthetic-hk-evidence/runtime/hk-global-etf-tactical-rotation/etf-product/"
                 "stock-connect-etf-eligibility.json"
             ),
             "southbound_etf_turnover_and_fund_flow_source_uri": (
-                "gs://qsl-hk-evidence/runtime/hk-global-etf-tactical-rotation/etf-product/"
+                "gs://synthetic-hk-evidence/runtime/hk-global-etf-tactical-rotation/etf-product/"
                 "southbound-etf-turnover-flow.json"
             ),
             "distribution_tax_and_fee_treatment_source_uri": (
-                "gs://qsl-hk-evidence/runtime/hk-global-etf-tactical-rotation/etf-product/"
+                "gs://synthetic-hk-evidence/runtime/hk-global-etf-tactical-rotation/etf-product/"
                 "distribution-tax-fees.json"
             ),
             "etf_fee_and_stamp_duty_audit_uri": (
-                "gs://qsl-hk-evidence/runtime/hk-global-etf-tactical-rotation/etf-product/fees-stamp-duty.json"
+                "gs://synthetic-hk-evidence/runtime/hk-global-etf-tactical-rotation/etf-product/fees-stamp-duty.json"
             ),
             "broker_product_permission_audit_uri": (
-                "gs://qsl-hk-evidence/runtime/hk-global-etf-tactical-rotation/etf-product/broker-permission.json"
+                "gs://synthetic-hk-evidence/runtime/hk-global-etf-tactical-rotation/etf-product/broker-permission.json"
             ),
             "all_managed_symbols_confirmed_etp": True,
             "leveraged_inverse_or_synthetic_flags_audited": True,
@@ -223,7 +223,7 @@ def _evidence(**overrides):
             "currency_and_board_lot_per_symbol_verified": True,
             "distribution_and_corporate_action_treatment_verified": True,
             "evidence_generated_at": "2026-05-20",
-            "evidence_uri": "gs://qsl-hk-evidence/runtime/hk-global-etf-tactical-rotation/broker-fees.json",
+            "evidence_uri": "gs://synthetic-hk-evidence/runtime/hk-global-etf-tactical-rotation/broker-fees.json",
         },
         "runtime_switch_plan": {
             "status": "passed",
@@ -385,7 +385,7 @@ def _low_vol_dividend_evidence():
             "annualized_turnover": 0.62,
             "benchmark_annual_return": 0.04,
             "strategy_excess_return": 0.0934,
-            "evidence_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality-snapshot/backtest.json",
+            "evidence_uri": "gs://synthetic-hk-evidence/runtime/hk-low-vol-dividend-quality-snapshot/backtest.json",
         }
     )
     payload["runtime_readiness"].update(
@@ -399,14 +399,14 @@ def _low_vol_dividend_evidence():
             "feature_snapshot_contract_version_matched": True,
             "point_in_time_feature_snapshot_lineage_verified": True,
             "feature_snapshot_source_name": "audited-prod-hk-low-vol-dividend-factor-snapshot",
-            "feature_snapshot_path": "gs://qsl-hk-artifacts/hk_low_vol_dividend_quality_snapshot/hk_low_vol_dividend_quality_snapshot_factor_snapshot_latest.csv",
-            "feature_snapshot_manifest_path": "gs://qsl-hk-artifacts/hk_low_vol_dividend_quality_snapshot/hk_low_vol_dividend_quality_snapshot_factor_snapshot_latest.csv.manifest.json",
+            "feature_snapshot_path": "gs://synthetic-hk-artifacts/hk_low_vol_dividend_quality_snapshot/hk_low_vol_dividend_quality_snapshot_factor_snapshot_latest.csv",
+            "feature_snapshot_manifest_path": "gs://synthetic-hk-artifacts/hk_low_vol_dividend_quality_snapshot/hk_low_vol_dividend_quality_snapshot_factor_snapshot_latest.csv.manifest.json",
             "feature_snapshot_contract_version": "hk_low_vol_dividend_quality_snapshot.factor_snapshot.v1",
-            "feature_snapshot_uri": "gs://qsl-hk-artifacts/hk_low_vol_dividend_quality_snapshot/hk_low_vol_dividend_quality_snapshot_factor_snapshot_latest.csv",
-            "feature_snapshot_manifest_uri": "gs://qsl-hk-artifacts/hk_low_vol_dividend_quality_snapshot/hk_low_vol_dividend_quality_snapshot_factor_snapshot_latest.csv.manifest.json",
-            "feature_snapshot_artifact_pack_validation_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality-snapshot/artifact-pack-validation.json",
-            "feature_snapshot_source_lineage_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality-snapshot/source-lineage.json",
-            "evidence_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality-snapshot/readiness.json",
+            "feature_snapshot_uri": "gs://synthetic-hk-artifacts/hk_low_vol_dividend_quality_snapshot/hk_low_vol_dividend_quality_snapshot_factor_snapshot_latest.csv",
+            "feature_snapshot_manifest_uri": "gs://synthetic-hk-artifacts/hk_low_vol_dividend_quality_snapshot/hk_low_vol_dividend_quality_snapshot_factor_snapshot_latest.csv.manifest.json",
+            "feature_snapshot_artifact_pack_validation_uri": "gs://synthetic-hk-evidence/runtime/hk-low-vol-dividend-quality-snapshot/artifact-pack-validation.json",
+            "feature_snapshot_source_lineage_uri": "gs://synthetic-hk-evidence/runtime/hk-low-vol-dividend-quality-snapshot/source-lineage.json",
+            "evidence_uri": "gs://synthetic-hk-evidence/runtime/hk-low-vol-dividend-quality-snapshot/readiness.json",
         }
     )
     payload["platform_dry_run_order_preview"].update(
@@ -414,11 +414,11 @@ def _low_vol_dividend_evidence():
             "orders_previewed": 11,
             "median_daily_turnover_hkd": 120_000_000,
             "equity_spread_and_trading_status_guard_verified": True,
-            "evidence_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality-snapshot/order-preview.json",
-            "raw_order_preview_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality-snapshot/order-preview/raw.json",
-            "quote_snapshot_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality-snapshot/order-preview/quotes.json",
-            "fee_breakdown_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality-snapshot/order-preview/fees.json",
-            "notification_delivery_log_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality-snapshot/notifications/dry-run.json",
+            "evidence_uri": "gs://synthetic-hk-evidence/runtime/hk-low-vol-dividend-quality-snapshot/order-preview.json",
+            "raw_order_preview_uri": "gs://synthetic-hk-evidence/runtime/hk-low-vol-dividend-quality-snapshot/order-preview/raw.json",
+            "quote_snapshot_uri": "gs://synthetic-hk-evidence/runtime/hk-low-vol-dividend-quality-snapshot/order-preview/quotes.json",
+            "fee_breakdown_uri": "gs://synthetic-hk-evidence/runtime/hk-low-vol-dividend-quality-snapshot/order-preview/fees.json",
+            "notification_delivery_log_uri": "gs://synthetic-hk-evidence/runtime/hk-low-vol-dividend-quality-snapshot/notifications/dry-run.json",
         }
     )
     payload["broker_permission_and_fee_verification"].update(
@@ -427,14 +427,14 @@ def _low_vol_dividend_evidence():
             "single_name_equity_trading_permission_verified": True,
             "equity_universe_audit_id": "hk-runtime-low-vol-dividend-longbridge-20260602-equity-audit-001",
             "managed_equity_symbols_audited_count": 11,
-            "equity_universe_audit_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality-snapshot/equity/universe.json",
-            "stock_connect_eligibility_source_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality-snapshot/equity/stock-connect.json",
-            "board_lot_source_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality-snapshot/equity/board-lots.json",
-            "corporate_action_source_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality-snapshot/equity/corporate-actions.json",
-            "suspension_trading_status_source_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality-snapshot/equity/suspensions.json",
-            "dividend_payout_source_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality-snapshot/equity/dividend-payout.json",
-            "fee_and_stamp_duty_audit_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality-snapshot/equity/fees-stamp-duty.json",
-            "broker_product_permission_audit_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality-snapshot/equity/broker-permission.json",
+            "equity_universe_audit_uri": "gs://synthetic-hk-evidence/runtime/hk-low-vol-dividend-quality-snapshot/equity/universe.json",
+            "stock_connect_eligibility_source_uri": "gs://synthetic-hk-evidence/runtime/hk-low-vol-dividend-quality-snapshot/equity/stock-connect.json",
+            "board_lot_source_uri": "gs://synthetic-hk-evidence/runtime/hk-low-vol-dividend-quality-snapshot/equity/board-lots.json",
+            "corporate_action_source_uri": "gs://synthetic-hk-evidence/runtime/hk-low-vol-dividend-quality-snapshot/equity/corporate-actions.json",
+            "suspension_trading_status_source_uri": "gs://synthetic-hk-evidence/runtime/hk-low-vol-dividend-quality-snapshot/equity/suspensions.json",
+            "dividend_payout_source_uri": "gs://synthetic-hk-evidence/runtime/hk-low-vol-dividend-quality-snapshot/equity/dividend-payout.json",
+            "fee_and_stamp_duty_audit_uri": "gs://synthetic-hk-evidence/runtime/hk-low-vol-dividend-quality-snapshot/equity/fees-stamp-duty.json",
+            "broker_product_permission_audit_uri": "gs://synthetic-hk-evidence/runtime/hk-low-vol-dividend-quality-snapshot/equity/broker-permission.json",
             "all_managed_symbols_confirmed_hk_equity": True,
             "stock_connect_eligibility_or_broker_route_reviewed": True,
             "broker_trading_permission_per_symbol_verified": True,
@@ -443,7 +443,7 @@ def _low_vol_dividend_evidence():
             "suspension_and_trading_status_verified": True,
             "dividend_yield_and_payout_source_verified": True,
             "sector_and_single_name_caps_verified": True,
-            "evidence_uri": "gs://qsl-hk-evidence/runtime/hk-low-vol-dividend-quality-snapshot/broker-fees.json",
+            "evidence_uri": "gs://synthetic-hk-evidence/runtime/hk-low-vol-dividend-quality-snapshot/broker-fees.json",
         }
     )
     return payload
