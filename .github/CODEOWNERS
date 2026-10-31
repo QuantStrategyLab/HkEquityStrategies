@@ -1,0 +1,7 @@
+
+
+# Risk-sensitive changes require the repository owner.
+/.github/CODEOWNERS @Pigbibi
+/.github/workflows/ @Pigbibi
+/src/hk_equity_strategies/execution_capacity_policy.py @Pigbibi
+/src/hk_equity_strategies/rollout_risk_policy.py @Pigbibi
