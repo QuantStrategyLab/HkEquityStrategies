@@ -14,7 +14,7 @@ metadata, strategy code, evidence and historical interfaces remain available
 for existing baseline resolution; their historical labels do not authorize
 new selection.
 
-This change does not stop existing schedules, update deployed or pinned
+Paused selection does not stop existing schedules, update deployed or pinned
 consumers, or change existing targets or risk controls. Resumption requires an
 explicit owner decision and the existing evidence and platform approval checks.
 
