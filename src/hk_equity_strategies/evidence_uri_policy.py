@@ -1,30 +1,11 @@
 from __future__ import annotations
 
-from typing import Any
+from .policy_catalog import build_evidence_uri_policy, get_policy_spec
 
-ALLOWED_EVIDENCE_URI_SCHEMES = ("gs", "https", "s3")
-SENSITIVE_EVIDENCE_URI_MARKERS = (
-    "access_token=",
-    "api_key=",
-    "auth=",
-    "jwt=",
-    "password=",
-    "secret=",
-    "signature=",
-    "token=",
-    "x-amz-signature=",
-    "x-goog-signature=",
-)
+_SPEC = get_policy_spec("evidence_uri")
 
-
-def build_evidence_uri_policy() -> dict[str, Any]:
-    return {
-        "required": True,
-        "allowed_schemes": [f"{scheme}://" for scheme in ALLOWED_EVIDENCE_URI_SCHEMES],
-        "rejected_query_markers": list(SENSITIVE_EVIDENCE_URI_MARKERS),
-        "description": "Evidence sections must point to stable audit artifacts and must not embed secrets.",
-    }
-
+ALLOWED_EVIDENCE_URI_SCHEMES: tuple[str, ...] = tuple(_SPEC["allowed_schemes"])
+SENSITIVE_EVIDENCE_URI_MARKERS: tuple[str, ...] = tuple(_SPEC["rejected_query_markers"])
 
 __all__ = [
     "ALLOWED_EVIDENCE_URI_SCHEMES",

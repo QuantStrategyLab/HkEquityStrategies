@@ -14,36 +14,6 @@ from hk_equity_strategies.backtest_validation_policy import (
     MIN_REQUIRED_OOS_FOLD_COUNT,
     MIN_RETURN_TO_DRAWDOWN_RATIO,
     REQUIRED_BACKTEST_VALIDATION_BOOLEAN_FIELDS,
-    build_backtest_validation_policy,
-)
-from hk_equity_strategies.evidence_freshness_policy import (
-    EVIDENCE_GENERATED_AT_FIELD,
-    MAX_ALLOWED_EVIDENCE_AGE_DAYS_BY_SECTION,
-    build_evidence_freshness_policy,
-)
-from hk_equity_strategies.evidence_uri_policy import (
-    ALLOWED_EVIDENCE_URI_SCHEMES,
-    SENSITIVE_EVIDENCE_URI_MARKERS,
-    build_evidence_uri_policy,
-)
-from hk_equity_strategies.execution_capacity_policy import (
-    build_execution_capacity_policy,
-    get_min_median_daily_turnover_hkd,
-    get_required_execution_capacity_fields,
-)
-from hk_equity_strategies.dry_run_order_preview_policy import (
-    REQUIRED_DRY_RUN_ORDER_PREVIEW_BOOLEAN_FIELDS,
-    REQUIRED_DRY_RUN_ORDER_PREVIEW_FIELDS,
-    REQUIRED_DRY_RUN_ORDER_PREVIEW_SHA256_FIELDS,
-    REQUIRED_DRY_RUN_ORDER_PREVIEW_URI_FIELDS,
-    build_dry_run_order_preview_policy,
-)
-from hk_equity_strategies.notification_audit_policy import (
-    NOTIFICATION_SCHEMA_VERSION,
-    REQUIRED_NOTIFICATION_AUDIT_BOOLEAN_FIELDS,
-    REQUIRED_NOTIFICATION_AUDIT_FIELDS,
-    RUNTIME_DRY_RUN_NOTIFICATION_EVENT_TYPE,
-    build_notification_audit_policy,
 )
 from hk_equity_strategies.catalog import (
     get_runtime_enabled_profiles,
@@ -51,31 +21,57 @@ from hk_equity_strategies.catalog import (
     get_strategy_metadata,
     resolve_canonical_profile,
 )
-from hk_equity_strategies.runtime_adapters import SUPPORTED_RUNTIME_PLATFORMS
-from hk_equity_strategies.runtime_readiness import (
-    PROFILE_LIVE_ENABLEMENT_THRESHOLDS,
-    build_hk_runtime_readiness,
-    get_required_live_evidence_fields,
+from hk_equity_strategies.dry_run_order_preview_policy import (
+    REQUIRED_DRY_RUN_ORDER_PREVIEW_BOOLEAN_FIELDS,
+    REQUIRED_DRY_RUN_ORDER_PREVIEW_FIELDS,
+    REQUIRED_DRY_RUN_ORDER_PREVIEW_SHA256_FIELDS,
+    REQUIRED_DRY_RUN_ORDER_PREVIEW_URI_FIELDS,
 )
+from hk_equity_strategies.evidence_freshness_policy import (
+    EVIDENCE_GENERATED_AT_FIELD,
+    MAX_ALLOWED_EVIDENCE_AGE_DAYS_BY_SECTION,
+)
+from hk_equity_strategies.evidence_uri_policy import (
+    ALLOWED_EVIDENCE_URI_SCHEMES,
+    SENSITIVE_EVIDENCE_URI_MARKERS,
+)
+from hk_equity_strategies.execution_capacity_policy import (
+    get_min_median_daily_turnover_hkd,
+    get_required_execution_capacity_fields,
+)
+from hk_equity_strategies.notification_audit_policy import (
+    NOTIFICATION_SCHEMA_VERSION,
+    REQUIRED_NOTIFICATION_AUDIT_BOOLEAN_FIELDS,
+    REQUIRED_NOTIFICATION_AUDIT_FIELDS,
+    RUNTIME_DRY_RUN_NOTIFICATION_EVENT_TYPE,
+)
+from hk_equity_strategies.policy_catalog import (
+    build_execution_capacity_policy,
+    build_rollout_risk_policy,
+    build_shared_runtime_policies,
+)
+from hk_equity_strategies.rollout_risk_policy import REQUIRED_ROLLOUT_RISK_FIELDS
+from hk_equity_strategies.runtime_adapters import SUPPORTED_RUNTIME_PLATFORMS
 from hk_equity_strategies.runtime_equity_product_policy import (
     REQUIRED_RUNTIME_EQUITY_PRODUCT_BOOLEAN_FIELDS,
     REQUIRED_RUNTIME_EQUITY_PRODUCT_FIELDS,
     REQUIRED_RUNTIME_EQUITY_PRODUCT_URI_FIELDS,
-    build_runtime_equity_product_policy,
 )
 from hk_equity_strategies.runtime_etf_product_policy import (
     REQUIRED_RUNTIME_ETF_PRODUCT_BOOLEAN_FIELDS,
     REQUIRED_RUNTIME_ETF_PRODUCT_FIELDS,
     REQUIRED_RUNTIME_ETF_PRODUCT_URI_FIELDS,
-    build_runtime_etf_product_policy,
 )
 from hk_equity_strategies.runtime_market_data_policy import (
     REQUIRED_RUNTIME_MARKET_DATA_AUDIT_FIELDS,
     REQUIRED_RUNTIME_MARKET_DATA_PROVENANCE_FIELDS,
     REQUIRED_RUNTIME_MARKET_DATA_URI_FIELDS,
-    build_runtime_market_data_policy,
 )
-from hk_equity_strategies.rollout_risk_policy import REQUIRED_ROLLOUT_RISK_FIELDS, build_rollout_risk_policy
+from hk_equity_strategies.runtime_readiness import (
+    PROFILE_LIVE_ENABLEMENT_THRESHOLDS,
+    build_hk_runtime_readiness,
+    get_required_live_evidence_fields,
+)
 
 EVIDENCE_TYPE = "hk_runtime_live_enablement"
 REQUIRED_SECTIONS: tuple[str, ...] = (
@@ -138,17 +134,7 @@ def _add_missing_bool_errors(errors: list[str], section_name: str, section: Mapp
 
 
 def _require_evidence_uri(errors: list[str], section_name: str, section: Mapping[str, Any]) -> None:
-    raw_uri = str(section.get("evidence_uri", "")).strip()
-    if not raw_uri:
-        errors.append(f"{section_name}.evidence_uri is required")
-        return
-    parsed_uri = urlparse(raw_uri)
-    if parsed_uri.scheme.lower() not in ALLOWED_EVIDENCE_URI_SCHEMES or not parsed_uri.netloc or not parsed_uri.path:
-        allowed = ", ".join(f"{scheme}://" for scheme in ALLOWED_EVIDENCE_URI_SCHEMES)
-        errors.append(f"{section_name}.evidence_uri must be a stable URI using one of: {allowed}")
-    lowered_uri = raw_uri.lower()
-    if any(marker in lowered_uri for marker in SENSITIVE_EVIDENCE_URI_MARKERS):
-        errors.append(f"{section_name}.evidence_uri must not contain secret-like query parameters")
+    _require_stable_uri_field(errors, section_name, section, "evidence_uri")
 
 
 def _require_stable_uri_field(errors: list[str], section_name: str, section: Mapping[str, Any], field: str) -> None:
@@ -650,16 +636,10 @@ def build_runtime_live_enablement_evidence_template(profile: str, *, platform: s
         "display_name": get_strategy_metadata(canonical_profile).display_name,
         "platform": normalized_platform,
         "live_enablement_thresholds": dict(PROFILE_LIVE_ENABLEMENT_THRESHOLDS[canonical_profile]),
-        "evidence_uri_policy": build_evidence_uri_policy(),
-        "evidence_freshness_policy": build_evidence_freshness_policy(),
-        "execution_capacity_policy": build_execution_capacity_policy(canonical_profile),
-        "dry_run_order_preview_policy": build_dry_run_order_preview_policy(),
-        "rollout_risk_policy": build_rollout_risk_policy(),
-        "runtime_etf_product_policy": build_runtime_etf_product_policy(),
-        "runtime_equity_product_policy": build_runtime_equity_product_policy(),
-        "runtime_market_data_policy": build_runtime_market_data_policy(),
-        "backtest_validation_policy": build_backtest_validation_policy(),
-        "notification_audit_policy": build_notification_audit_policy(RUNTIME_DRY_RUN_NOTIFICATION_EVENT_TYPE),
+        **build_shared_runtime_policies(
+            canonical_profile,
+            expected_notification_event_type=RUNTIME_DRY_RUN_NOTIFICATION_EVENT_TYPE,
+        ),
         "validation_as_of": "<YYYY-MM-DD>",
         "required_live_evidence_fields": list(get_required_live_evidence_fields(canonical_profile)),
         "strategy_backtest": {
@@ -928,16 +908,10 @@ def validate_runtime_live_enablement_evidence(
         "validation_status": "failed",
         "live_enablement_allowed": False,
         "live_enablement_thresholds": dict(thresholds),
-        "evidence_uri_policy": build_evidence_uri_policy(),
-        "evidence_freshness_policy": build_evidence_freshness_policy(),
-        "execution_capacity_policy": build_execution_capacity_policy(profile),
-        "dry_run_order_preview_policy": build_dry_run_order_preview_policy(),
-        "rollout_risk_policy": build_rollout_risk_policy(),
-        "runtime_etf_product_policy": build_runtime_etf_product_policy(),
-        "runtime_equity_product_policy": build_runtime_equity_product_policy(),
-        "runtime_market_data_policy": build_runtime_market_data_policy(),
-        "backtest_validation_policy": build_backtest_validation_policy(),
-        "notification_audit_policy": build_notification_audit_policy(RUNTIME_DRY_RUN_NOTIFICATION_EVENT_TYPE),
+        **build_shared_runtime_policies(
+            profile,
+            expected_notification_event_type=RUNTIME_DRY_RUN_NOTIFICATION_EVENT_TYPE,
+        ),
         "required_sections": list(REQUIRED_SECTIONS),
         "required_live_evidence_fields": list(get_required_live_evidence_fields(profile)),
         "errors": errors,
@@ -965,15 +939,11 @@ def validate_runtime_live_enablement_evidence_file(
             "validation_status": "failed",
             "live_enablement_allowed": False,
             "live_enablement_thresholds": {},
-            "evidence_uri_policy": build_evidence_uri_policy(),
-            "evidence_freshness_policy": build_evidence_freshness_policy(),
-            "execution_capacity_policy": build_execution_capacity_policy(""),
-            "dry_run_order_preview_policy": build_dry_run_order_preview_policy(),
-            "rollout_risk_policy": build_rollout_risk_policy(),
-            "runtime_etf_product_policy": build_runtime_etf_product_policy(),
-            "runtime_equity_product_policy": build_runtime_equity_product_policy(),
-            "runtime_market_data_policy": build_runtime_market_data_policy(),
-            "notification_audit_policy": build_notification_audit_policy(RUNTIME_DRY_RUN_NOTIFICATION_EVENT_TYPE),
+            **build_shared_runtime_policies(
+                "",
+                include_backtest_validation=False,
+                expected_notification_event_type=RUNTIME_DRY_RUN_NOTIFICATION_EVENT_TYPE,
+            ),
             "required_sections": list(REQUIRED_SECTIONS),
             "required_live_evidence_fields": [],
             "errors": [*validation_as_of_errors, "evidence file must contain a JSON object"],

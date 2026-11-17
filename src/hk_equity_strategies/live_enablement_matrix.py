@@ -5,10 +5,7 @@ import json
 from dataclasses import dataclass
 from typing import Any
 
-from hk_equity_strategies.backtest_validation_policy import (
-    BACKTEST_VALIDATION_POLICY_VERSION,
-    build_backtest_validation_policy,
-)
+from hk_equity_strategies.backtest_validation_policy import BACKTEST_VALIDATION_POLICY_VERSION
 from hk_equity_strategies.catalog import (
     HK_GLOBAL_ETF_TACTICAL_ROTATION_PROFILE,
     HK_LOW_VOL_DIVIDEND_QUALITY_SNAPSHOT_PROFILE,
@@ -22,16 +19,8 @@ from hk_equity_strategies.catalog import (
 )
 from hk_equity_strategies.evidence_freshness_policy import build_evidence_freshness_policy
 from hk_equity_strategies.evidence_uri_policy import build_evidence_uri_policy
-from hk_equity_strategies.execution_capacity_policy import build_execution_capacity_policy
-from hk_equity_strategies.dry_run_order_preview_policy import build_dry_run_order_preview_policy
-from hk_equity_strategies.notification_audit_policy import (
-    RUNTIME_DRY_RUN_NOTIFICATION_EVENT_TYPE,
-    build_notification_audit_policy,
-)
-from hk_equity_strategies.rollout_risk_policy import build_rollout_risk_policy
-from hk_equity_strategies.runtime_equity_product_policy import build_runtime_equity_product_policy
-from hk_equity_strategies.runtime_etf_product_policy import build_runtime_etf_product_policy
-from hk_equity_strategies.runtime_market_data_policy import build_runtime_market_data_policy
+from hk_equity_strategies.notification_audit_policy import RUNTIME_DRY_RUN_NOTIFICATION_EVENT_TYPE
+from hk_equity_strategies.policy_catalog import build_shared_runtime_policies
 from hk_equity_strategies.runtime_readiness import (
     PROFILE_LIVE_ENABLEMENT_THRESHOLDS,
     get_required_live_evidence_fields,
@@ -495,16 +484,10 @@ class LiveEnablementRow:
             "evidence_commands": list(self.evidence_commands),
             "required_evidence": list(self.required_evidence),
             "research_evidence_urls": list(self.research_evidence_urls),
-            "backtest_validation_policy": build_backtest_validation_policy(),
-            "evidence_uri_policy": EVIDENCE_URI_POLICY,
-            "evidence_freshness_policy": EVIDENCE_FRESHNESS_POLICY,
-            "execution_capacity_policy": build_execution_capacity_policy(self.profile),
-            "dry_run_order_preview_policy": build_dry_run_order_preview_policy(),
-            "rollout_risk_policy": build_rollout_risk_policy(),
-            "runtime_equity_product_policy": build_runtime_equity_product_policy(),
-            "runtime_etf_product_policy": build_runtime_etf_product_policy(),
-            "runtime_market_data_policy": build_runtime_market_data_policy(),
-            "notification_audit_policy": build_notification_audit_policy(RUNTIME_DRY_RUN_NOTIFICATION_EVENT_TYPE),
+            **build_shared_runtime_policies(
+                self.profile,
+                expected_notification_event_type=RUNTIME_DRY_RUN_NOTIFICATION_EVENT_TYPE,
+            ),
             "notes": list(self.notes),
         }
 
@@ -652,16 +635,10 @@ def build_live_enablement_matrix() -> dict[str, Any]:
         "runtime_live_gate": RUNTIME_LIVE_GATE,
         "snapshot_scaffold_gate": SNAPSHOT_SCAFFOLD_GATE,
         "research_only_gate": RESEARCH_ONLY_GATE,
-        "backtest_validation_policy": build_backtest_validation_policy(),
-        "evidence_uri_policy": EVIDENCE_URI_POLICY,
-        "evidence_freshness_policy": EVIDENCE_FRESHNESS_POLICY,
-        "execution_capacity_policy": build_execution_capacity_policy(""),
-        "dry_run_order_preview_policy": build_dry_run_order_preview_policy(),
-        "rollout_risk_policy": build_rollout_risk_policy(),
-        "runtime_equity_product_policy": build_runtime_equity_product_policy(),
-        "runtime_etf_product_policy": build_runtime_etf_product_policy(),
-        "runtime_market_data_policy": build_runtime_market_data_policy(),
-        "notification_audit_policy": build_notification_audit_policy(RUNTIME_DRY_RUN_NOTIFICATION_EVENT_TYPE),
+        **build_shared_runtime_policies(
+            "",
+            expected_notification_event_type=RUNTIME_DRY_RUN_NOTIFICATION_EVENT_TYPE,
+        ),
         "profiles": rows,
     }
 

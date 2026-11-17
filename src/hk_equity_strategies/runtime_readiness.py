@@ -6,18 +6,8 @@ from hk_equity_strategies.backtest_validation_policy import (
     MAX_SINGLE_PERIOD_RETURN_CONTRIBUTION,
     MIN_REQUIRED_OOS_FOLD_COUNT,
 )
-from hk_equity_strategies.evidence_freshness_policy import build_evidence_freshness_policy
-from hk_equity_strategies.evidence_uri_policy import build_evidence_uri_policy
-from hk_equity_strategies.execution_capacity_policy import build_execution_capacity_policy
-from hk_equity_strategies.dry_run_order_preview_policy import build_dry_run_order_preview_policy
-from hk_equity_strategies.notification_audit_policy import (
-    RUNTIME_DRY_RUN_NOTIFICATION_EVENT_TYPE,
-    build_notification_audit_policy,
-)
-from hk_equity_strategies.rollout_risk_policy import build_rollout_risk_policy
-from hk_equity_strategies.runtime_equity_product_policy import build_runtime_equity_product_policy
-from hk_equity_strategies.runtime_etf_product_policy import build_runtime_etf_product_policy
-from hk_equity_strategies.runtime_market_data_policy import build_runtime_market_data_policy
+from hk_equity_strategies.notification_audit_policy import RUNTIME_DRY_RUN_NOTIFICATION_EVENT_TYPE
+from hk_equity_strategies.policy_catalog import build_shared_runtime_policies
 from hk_equity_strategies.catalog import (
     HK_EQUITY_COMBO_PROFILE,
     HK_EQUITY_DOMAIN,
@@ -323,15 +313,11 @@ def build_hk_runtime_readiness(
         "live_enablement_requirements": list(LIVE_ENABLEMENT_REQUIREMENTS),
         "live_enablement_thresholds": dict(PROFILE_LIVE_ENABLEMENT_THRESHOLDS[canonical_profile]),
         "required_live_evidence_fields": list(get_required_live_evidence_fields(canonical_profile)),
-        "evidence_uri_policy": build_evidence_uri_policy(),
-        "evidence_freshness_policy": build_evidence_freshness_policy(),
-        "execution_capacity_policy": build_execution_capacity_policy(canonical_profile),
-        "dry_run_order_preview_policy": build_dry_run_order_preview_policy(),
-        "rollout_risk_policy": build_rollout_risk_policy(),
-        "runtime_equity_product_policy": build_runtime_equity_product_policy(),
-        "runtime_etf_product_policy": build_runtime_etf_product_policy(),
-        "runtime_market_data_policy": build_runtime_market_data_policy(),
-        "notification_audit_policy": build_notification_audit_policy(RUNTIME_DRY_RUN_NOTIFICATION_EVENT_TYPE),
+        **build_shared_runtime_policies(
+            canonical_profile,
+            include_backtest_validation=False,
+            expected_notification_event_type=RUNTIME_DRY_RUN_NOTIFICATION_EVENT_TYPE,
+        ),
         "profile_live_optimization_checks": list(PROFILE_LIVE_OPTIMIZATION_CHECKS.get(canonical_profile, ())),
         "risk_notes": list(_build_risk_notes(canonical_profile, managed_symbols, runtime_enabled=runtime_enabled)),
     }
