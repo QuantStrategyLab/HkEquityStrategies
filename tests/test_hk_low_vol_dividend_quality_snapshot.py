@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import FrozenInstanceError, dataclass
 from datetime import datetime
 
 import pandas as pd
@@ -127,3 +127,59 @@ def test_extract_managed_symbols_ignores_runtime_adapter_kwargs():
 def test_low_vol_dividend_quality_rejects_incomplete_snapshot():
     with pytest.raises(ValueError, match="factor_snapshot missing required columns"):
         strategy.build_target_weights(pd.DataFrame({"symbol": ["00001"]}))
+
+
+def test_config_object_is_frozen_with_slots_and_validates_bounds():
+    cfg = strategy.LowVolDividendSnapshotConfig(safe_haven="2800.HK", holdings_count=5)
+    assert cfg.safe_haven == "02800"
+    assert not hasattr(cfg, "__dict__")
+    with pytest.raises(FrozenInstanceError):
+        cfg.holdings_count = 3  # type: ignore[misc]
+    with pytest.raises(ValueError, match="holdings_count must be positive"):
+        strategy.LowVolDividendSnapshotConfig(holdings_count=0)
+    with pytest.raises(ValueError, match="single_name_cap must be positive"):
+        strategy.LowVolDividendSnapshotConfig(single_name_cap=0.0)
+    with pytest.raises(ValueError, match="sector_cap must be positive"):
+        strategy.LowVolDividendSnapshotConfig(sector_cap=0.0)
+
+
+def test_config_object_and_legacy_kwargs_produce_identical_results():
+    snapshot = sample_factor_snapshot()
+    cfg = strategy.LowVolDividendSnapshotConfig(
+        holdings_count=4,
+        single_name_cap=0.15,
+        sector_cap=0.30,
+        min_dividend_yield=0.03,
+        hold_bonus=0.10,
+    )
+    w_cfg, r_cfg, m_cfg = strategy.build_target_weights(snapshot, {"00104"}, config=cfg)
+    w_kw, r_kw, m_kw = strategy.build_target_weights(
+        snapshot,
+        {"00104"},
+        holdings_count=4,
+        single_name_cap=0.15,
+        sector_cap=0.30,
+        min_dividend_yield=0.03,
+        hold_bonus=0.10,
+    )
+    assert w_cfg == pytest.approx(w_kw)
+    assert m_cfg == m_kw
+    assert r_cfg["symbol"].tolist() == r_kw["symbol"].tolist()
+
+    w_override, _, m_override = strategy.build_target_weights(snapshot, config=cfg, holdings_count=2)
+    assert m_override["requested_holdings_count"] == 2
+    assert m_override["selected_count"] == 2
+    assert len(w_override) == 3
+
+    ranked_cfg = strategy.score_candidates(snapshot, {"00104"}, config=cfg)
+    ranked_kw = strategy.score_candidates(snapshot, {"00104"}, min_dividend_yield=0.03, hold_bonus=0.10)
+    assert ranked_cfg["symbol"].tolist() == ranked_kw["symbol"].tolist()
+
+    exposure_cfg = strategy._resolve_stock_exposure(strategy._to_frame(snapshot), config=cfg)
+    exposure_kw = strategy._resolve_stock_exposure(strategy._to_frame(snapshot), min_dividend_yield=0.03)
+    assert exposure_cfg == exposure_kw
+
+    with pytest.raises(TypeError, match="Unexpected keyword argument"):
+        strategy.score_candidates(snapshot, unknown_option=1)
+    with pytest.raises(TypeError, match="Unexpected keyword argument"):
+        strategy._resolve_stock_exposure(strategy._to_frame(snapshot), unknown_option=1)
