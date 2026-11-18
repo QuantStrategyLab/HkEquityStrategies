@@ -135,6 +135,10 @@ python scripts/smoke_hk_global_etf_tactical_rotation_dry_run.py --json
 - 讨论、issue 和 review 请遵守 [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)。
 - 涉及密钥、自动化、券商/交易所或云资源的漏洞请按 [SECURITY.md](SECURITY.md) 私密报告；不要为 secret 或实盘风险开公开 issue。
 
+## 手动 AI 验证
+
+使用 `verification_only=true` 运行 `Drift Check`，可在不发布 drift issue 的情况下演练既有输入与 AI review 路径。review 会接收实测维度、阈值和基线 lineage；若证据缺失或建议为非批准状态，结果仍会挂起，验证本身不会授予交易权限。
+
 ## 许可证
 
 详见 [LICENSE](LICENSE)。
