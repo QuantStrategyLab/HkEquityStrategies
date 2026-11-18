@@ -2,7 +2,7 @@ from pathlib import Path
 
 
 QPK_REF = "eae362bd3e3fad5be59a7615eeba10be839a9934"
-WORKFLOW_REF = "474b701dabcb910f085bfff25a41daf5c0a52a5b"
+WORKFLOW_REF = "76550ba38c7a9b83c4d91a7292bf54f24e7fa6fe"
 
 
 def test_drift_workflow_builds_and_wires_lifecycle_preflight() -> None:
@@ -32,8 +32,16 @@ def test_drift_workflow_builds_and_wires_lifecycle_preflight() -> None:
     assert "ai_service_url: ${{ vars.AI_SERVICE_URL }}" in workflow
     assert "ai_service_audience: ${{ vars.AI_SERVICE_AUDIENCE }}" in workflow
     assert "ai_service_reviewers_json: ${{ vars.AI_SERVICE_REVIEWERS_JSON }}" in workflow
+    assert "disable_legacy_pat_fallback:" in producer
+    assert "disable_legacy_pat_fallback: ${{ github.event_name == 'workflow_dispatch' && inputs.disable_legacy_pat_fallback }}" in consumer
+    assert "qsl_drift_app_id: ${{ secrets.QSL_DRIFT_APP_ID || secrets.QSL_GITHUB_APP_ID }}" in consumer
+    assert (
+        "qsl_drift_app_private_key: "
+        "${{ secrets.QSL_DRIFT_APP_PRIVATE_KEY || secrets.QSL_GITHUB_APP_PRIVATE_KEY }}"
+    ) in consumer
     assert (
         "snapshot_repository_token: "
-        "${{ secrets.SNAPSHOT_REPOSITORY_TOKEN || secrets.QSL_REPO_SYNC_TOKEN || github.token }}"
+        "${{ !(github.event_name == 'workflow_dispatch' && inputs.disable_legacy_pat_fallback) "
+        "&& (secrets.SNAPSHOT_REPOSITORY_TOKEN || secrets.QSL_REPO_SYNC_TOKEN || github.token) || '' }}"
     ) in workflow
     assert "synthetic" not in workflow.lower()
