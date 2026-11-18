@@ -12,6 +12,11 @@ on:
         required: false
         type: boolean
         default: false
+      disable_legacy_pat_fallback:
+        description: "Fail closed instead of falling back to legacy PATs when minting the read-only GitHub App token"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -101,9 +106,10 @@ jobs:
       contents: read
       issues: write
       id-token: write
-    uses: QuantStrategyLab/QuantPlatformKit/.github/workflows/reusable-drift-check.yml@474b701dabcb910f085bfff25a41daf5c0a52a5b
+    uses: QuantStrategyLab/QuantPlatformKit/.github/workflows/reusable-drift-check.yml@76550ba38c7a9b83c4d91a7292bf54f24e7fa6fe
     with:
       verification_only: ${{ github.event_name == 'workflow_dispatch' && inputs.verification_only }}
+      disable_legacy_pat_fallback: ${{ github.event_name == 'workflow_dispatch' && inputs.disable_legacy_pat_fallback }}
       strategy_domain: hk_equity
       caller_event_name: ${{ github.event_name }}
       caller_pr_head_repository: ${{ github.event.pull_request.head.repo.full_name || '' }}
@@ -116,4 +122,6 @@ jobs:
       quant_platform_kit_ref: eae362bd3e3fad5be59a7615eeba10be839a9934
       lifecycle_preflight_artifact: ${{ needs.preflight_backtests.outputs.lifecycle_preflight_artifact }}
     secrets:
-      snapshot_repository_token: ${{ secrets.SNAPSHOT_REPOSITORY_TOKEN || secrets.QSL_REPO_SYNC_TOKEN || github.token }}
+      qsl_drift_app_id: ${{ secrets.QSL_DRIFT_APP_ID || secrets.QSL_GITHUB_APP_ID }}
+      qsl_drift_app_private_key: ${{ secrets.QSL_DRIFT_APP_PRIVATE_KEY || secrets.QSL_GITHUB_APP_PRIVATE_KEY }}
+      snapshot_repository_token: ${{ !(github.event_name == 'workflow_dispatch' && inputs.disable_legacy_pat_fallback) && (secrets.SNAPSHOT_REPOSITORY_TOKEN || secrets.QSL_REPO_SYNC_TOKEN || github.token) || '' }}
