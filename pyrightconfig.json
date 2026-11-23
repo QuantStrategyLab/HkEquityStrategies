@@ -1,0 +1,15 @@
+{
+  "include": [
+    "src/hk_equity_strategies/backtest_validation_policy.py",
+    "src/hk_equity_strategies/dry_run_order_preview_policy.py",
+    "src/hk_equity_strategies/evidence_freshness_policy.py",
+    "src/hk_equity_strategies/evidence_uri_policy.py",
+    "src/hk_equity_strategies/execution_capacity_policy.py",
+    "src/hk_equity_strategies/notification_audit_policy.py"
+  ],
+  "extraPaths": [
+    "src"
+  ],
+  "pythonVersion": "3.11",
+  "typeCheckingMode": "basic"
+}
