@@ -1,0 +1,11 @@
+[importlinter]
+root_package = hk_equity_strategies
+
+[importlinter:contract:strategies_no_entrypoints]
+name = Live strategies must not import entrypoints or backtest
+type = forbidden
+source_modules =
+    hk_equity_strategies.strategies
+forbidden_modules =
+    hk_equity_strategies.entrypoints
+    hk_equity_strategies.backtest
