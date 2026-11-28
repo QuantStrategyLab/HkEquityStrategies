@@ -106,7 +106,7 @@ jobs:
       contents: read
       issues: write
       id-token: write
-    uses: QuantStrategyLab/QuantPlatformKit/.github/workflows/reusable-drift-check.yml@76550ba38c7a9b83c4d91a7292bf54f24e7fa6fe
+    uses: QuantStrategyLab/QuantPlatformKit/.github/workflows/reusable-drift-check.yml@c9d5d26a7a1599801755e6d5193cd472e47dcfb8
     with:
       verification_only: ${{ github.event_name == 'workflow_dispatch' && inputs.verification_only }}
       disable_legacy_pat_fallback: ${{ github.event_name == 'workflow_dispatch' && inputs.disable_legacy_pat_fallback }}
